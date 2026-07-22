@@ -6,8 +6,12 @@ test("storefront purchase journey and accessibility", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Security");
     await expect(page.locator("main > section")).toHaveCount(6);
+    // Search has a single entry point: the header icon. No inline field in the hero.
     await expect(
       page.locator('main button[aria-label="Search products by exact model"]'),
+    ).toHaveCount(0);
+    await expect(
+      page.locator('header button[aria-label="Search products by exact model"]'),
     ).toHaveCount(1);
     await expect(page.locator("[data-home-collection]")).toHaveCount(3);
     await expect(page.locator("[data-home-brands-trust]")).toHaveCount(1);

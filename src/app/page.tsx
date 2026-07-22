@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { brands, catalogue, categories } from "@/data/catalog";
 import { ProductCard } from "@/components/product-card";
-import { ProductSearch } from "@/components/product-search";
 import { HeroProducts } from "@/components/hero-products";
 import { HomeMotion } from "@/components/home-motion";
 import { PointerField } from "@/components/pointer-field";
@@ -114,10 +113,7 @@ export default function Home() {
               Shop cameras, recorders, biometric devices and networking hardware with clear prices
               and model-specific documents.
             </p>
-            <div data-hero-copy className="mt-7 max-w-xl">
-              <ProductSearch mode="hero" />
-            </div>
-            <div data-hero-copy className="mt-6 flex flex-wrap gap-3">
+            <div data-hero-copy className="mt-8 flex flex-wrap gap-3">
               <Link href="/products" className="button-primary">
                 Shop all products <ArrowRight size={17} />
               </Link>
