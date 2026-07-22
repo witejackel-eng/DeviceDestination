@@ -18,6 +18,7 @@ export function Brand({
     >
       <span
         aria-hidden="true"
+        data-anime-brand
         className="brand-mark grid h-10 w-10 shrink-0 place-items-center rounded-[13px] bg-[var(--tangerine)] font-display text-sm font-black tracking-[-0.06em] text-[var(--ink)] transition-transform group-hover:-rotate-3 group-hover:scale-105"
       >
         DD

@@ -1,0 +1,72 @@
+{
+  "auditedAt": "2026-07-22T00:00:00.000Z",
+  "existingProductCount": 19,
+  "existingBrands": ["CP Plus", "ESSL"],
+  "existingModelNumbers": [
+    "CP-UNC-DA41L3C-D-Q",
+    "CP-UNC-TA41L3C-Q",
+    "CP-UNC-DA41L3C-LQ",
+    "CP-UNC-TA41L3C-LQ",
+    "CP-UNC-DA21L3C-Q",
+    "CP-UNC-TA21L3C-Q",
+    "CP-UNC-DA21L3C-LQ",
+    "CP-UNC-TA21L3C-LQ",
+    "CP-UNC-108F1",
+    "CP-UNC-4K2161",
+    "X-990",
+    "F22",
+    "F18",
+    "SF100",
+    "K30 Pro",
+    "FR1200",
+    "K90 Pro",
+    "AiFace Mars",
+    "AiFace Mars + HID"
+  ],
+  "existingSlugs": [
+    "cp-unc-da41l3c-q",
+    "cp-unc-ta41l3c-q",
+    "cp-unc-da41l3c-lq",
+    "cp-unc-ta41l3c-lq",
+    "cp-unc-da21l3c-q",
+    "cp-unc-ta21l3c-q",
+    "cp-unc-da21l3c-lq",
+    "cp-unc-ta21l3c-lq",
+    "cp-unc-108f1",
+    "cp-unc-4k2161",
+    "essl-x990",
+    "essl-f22",
+    "essl-f18",
+    "essl-sf100",
+    "essl-k30-pro",
+    "essl-fr1200",
+    "essl-k90-pro",
+    "essl-aiface-mars",
+    "essl-aiface-mars-hid"
+  ],
+  "potentialDuplicates": [],
+  "missingImages": [],
+  "missingDocuments": ["SF100"],
+  "conflictingModelData": [
+    {
+      "storedModel": "CP-UNC-108F1",
+      "verifiedModel": "CP-UNR-108F1",
+      "resolution": "corrected with legacy route retained"
+    },
+    {
+      "storedModel": "CP-UNC-4K2161",
+      "verifiedModel": "CP-UNR-4K2161-V2",
+      "resolution": "corrected with legacy route retained"
+    },
+    {
+      "storedModel": "X-990",
+      "verifiedModel": "X990",
+      "resolution": "display model corrected; route retained"
+    },
+    {
+      "storedModel": "F22",
+      "verifiedModel": "F22+ID+WIFI",
+      "resolution": "variant made explicit; legacy route retained"
+    }
+  ]
+}

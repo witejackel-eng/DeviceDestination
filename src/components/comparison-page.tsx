@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AddToCart } from "@/components/add-to-cart";
 import { catalogue } from "@/data/catalog";
 import { useCompareStore } from "@/lib/compare-store";
-import { formatPrice, getPurchaseEligibility } from "@/lib/products";
+import { comparisonGroup, formatPrice, getPurchaseEligibility } from "@/lib/products";
 import { getPriceMaxAgeDays } from "@/config/site";
 
 export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
@@ -28,8 +28,11 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
       Array.from(new Set(selected.flatMap((product) => Object.keys(product.specs)))).slice(0, 24),
     [selected],
   );
-  const categories = new Set(selected.map((product) => product.categorySlug));
-  const available = catalogue.filter((product) => !ids.includes(product.id));
+  const selectedGroup = selected[0] ? comparisonGroup(selected[0]) : null;
+  const available = catalogue.filter(
+    (product) =>
+      !ids.includes(product.id) && (!selectedGroup || comparisonGroup(product) === selectedGroup),
+  );
   const sharePath = `/compare?ids=${selected.map((product) => product.id).join(",")}`;
   const share = async () => {
     await navigator.clipboard.writeText(new URL(sharePath, window.location.origin).toString());
@@ -75,12 +78,6 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
         </select>
         <span className="text-xs text-[var(--muted)]">{selected.length}/4 selected</span>
       </div>
-      {categories.size > 1 && (
-        <p className="mt-4 rounded-xl bg-[var(--tangerine-soft)] p-4 text-sm">
-          <strong>Different product types selected.</strong> Some rows will not apply across
-          categories; a dash means the source record has no comparable value.
-        </p>
-      )}
       {!selected.length ? (
         <div className="surface-card mt-10 grid min-h-[360px] place-content-center p-8 text-center">
           <Plus className="mx-auto text-[var(--tangerine-dark)]" size={32} />

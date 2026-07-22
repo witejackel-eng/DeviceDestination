@@ -77,6 +77,8 @@ async function exerciseViewport(executablePath, viewport, label) {
   });
   try {
     const context = await browser.newContext({ viewport });
+    const mobile = viewport.width < 1024;
+    const filterPrefix = mobile ? "mobile" : "desktop";
     const page = await context.newPage();
     const browserErrors = [];
     page.on("pageerror", (error) => browserErrors.push(error.message));
@@ -103,7 +105,7 @@ async function exerciseViewport(executablePath, viewport, label) {
       true,
       `${label}: skip link receives keyboard focus`,
     );
-    if (label === "mobile") {
+    if (mobile) {
       await page.getByRole("button", { name: "Open menu" }).click();
       await assertVisible(page.getByRole("heading", { name: "Menu" }), "mobile menu opens");
       await page.getByRole("button", { name: "Close menu" }).click();
@@ -135,8 +137,8 @@ async function exerciseViewport(executablePath, viewport, label) {
     );
     console.log(`PASS ${label}: catalogue navigation`);
 
-    if (label === "mobile") await page.getByText("Filters", { exact: true }).click();
-    const productFilters = page.getByRole("form", { name: `${label} product filters` });
+    if (mobile) await page.getByText("Filters", { exact: true }).click();
+    const productFilters = page.getByRole("form", { name: `${filterPrefix} product filters` });
     await productFilters.getByLabel("Search exact model").fill("CP-UNR-108F1");
     await Promise.all([
       page.waitForURL(/q=CP-UNR-108F1/),
@@ -195,17 +197,27 @@ async function exerciseViewport(executablePath, viewport, label) {
     assert.ok(documentUrl, `${label}: datasheet URL`);
     assert.equal((await context.request.get(`${baseUrl}${documentUrl}`)).ok(), true);
     await assertVisible(
-      page.getByText("Inclusive of all taxes", { exact: true }),
+      page.getByText("Inclusive of all taxes", { exact: true }).first(),
       `${label}: GST copy`,
     );
-    const brokenImages = await page
+    const imageUrls = await page
       .locator("img")
-      .evaluateAll((images) =>
-        images
-          .filter((image) => !image.complete || image.naturalWidth === 0)
-          .map((image) => image.getAttribute("src")),
+      .evaluateAll((images) => images.map((image) => image.currentSrc || image.src));
+    for (const imageUrl of imageUrls) {
+      assert.equal(
+        (await context.request.get(imageUrl)).ok(),
+        true,
+        `${label}: product image responds successfully: ${imageUrl}`,
       );
-    assert.deepEqual(brokenImages, [], `${label}: product page has no broken images`);
+    }
+    await page.locator("main img").first().waitFor({ state: "visible" });
+    assert.ok(
+      await page
+        .locator("main img")
+        .first()
+        .evaluate((image) => image.naturalWidth > 0),
+      `${label}: primary product image renders`,
+    );
     console.log(`PASS ${label}: product documents`);
 
     await page.route("**/api/enquiries", async (route) => {
@@ -257,7 +269,15 @@ async function exerciseViewport(executablePath, viewport, label) {
       assert.equal(
         serious.length,
         0,
-        `${label}: ${route} accessibility: ${serious.map((item) => item.id).join(", ")}`,
+        `${label}: ${route} accessibility: ${serious
+          .map(
+            (item) =>
+              `${item.id} (${item.nodes
+                .slice(0, 3)
+                .map((node) => `${node.target.join(" ")}: ${node.failureSummary}`)
+                .join(" | ")})`,
+          )
+          .join(", ")}`,
       );
     }
 
@@ -282,6 +302,53 @@ async function exerciseViewport(executablePath, viewport, label) {
   }
 }
 
+async function exerciseResponsiveWidths(executablePath, widths) {
+  const browser = await chromium.launch({
+    executablePath,
+    args: serverlessChromium.args,
+    headless: true,
+  });
+  try {
+    const context = await browser.newContext({ viewport: { width: widths[0], height: 900 } });
+    const page = await context.newPage();
+    const browserErrors = [];
+    page.on("pageerror", (error) => browserErrors.push(error.message));
+    for (const width of widths) {
+      browserErrors.length = 0;
+      await page.setViewportSize({ width, height: 900 });
+      for (const route of ["/", "/products", "/compare"]) {
+        await page.goto(`${baseUrl}${route}`);
+        await page.locator("main").waitFor({ state: "visible" });
+        const overflow = await page.evaluate(() => ({
+          viewport: window.innerWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          offenders: Array.from(document.querySelectorAll("body *"))
+            .map((element) => {
+              const rect = element.getBoundingClientRect();
+              return {
+                tag: element.tagName,
+                className: element.className,
+                left: rect.left,
+                right: rect.right,
+                width: rect.width,
+              };
+            })
+            .filter((element) => element.right > window.innerWidth + 1 || element.left < -1)
+            .slice(0, 8),
+        }));
+        assert.ok(
+          overflow.documentWidth <= overflow.viewport,
+          `${width}px: ${route} horizontally overflows (${JSON.stringify(overflow)})`,
+        );
+      }
+      assert.deepEqual(browserErrors, [], `${width}px: no render or hydration errors`);
+      console.log(`PASS ${width}px: responsive homepage, catalogue and comparison layout`);
+    }
+  } finally {
+    await browser.close().catch(() => undefined);
+  }
+}
+
 if (process.env.SKIP_BUILD !== "1") {
   const build = spawnSync(process.execPath, [nextBin, "build"], { stdio: "inherit" });
   assert.equal(build.status, 0, "Production build failed before browser checks");
@@ -299,9 +366,10 @@ server.stderr.on("data", (chunk) => (logs.value += chunk.toString()));
 try {
   await waitForServer(logs);
   const executablePath = await prepareBrowser();
-  await exerciseViewport(executablePath, { width: 1440, height: 960 }, "desktop");
-  await exerciseViewport(executablePath, { width: 390, height: 844 }, "mobile");
-  console.log("E2E PASS: 2 viewports and 14 flow/accessibility assertions");
+  await exerciseViewport(executablePath, { width: 1440, height: 960 }, "1440px");
+  await exerciseViewport(executablePath, { width: 375, height: 844 }, "375px");
+  await exerciseResponsiveWidths(executablePath, [320, 430, 768, 1024]);
+  console.log("E2E PASS: 6 required widths plus full desktop/mobile flow and accessibility checks");
 } finally {
   server.kill("SIGTERM");
 }

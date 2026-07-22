@@ -25,10 +25,13 @@
 html {
   scroll-behavior: smooth;
   background: var(--canvas);
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
+  max-width: 100%;
+  overflow-x: clip;
   background: var(--canvas);
   color: var(--ink);
   font-family: var(--font-body), "DM Sans", ui-sans-serif, system-ui, sans-serif;

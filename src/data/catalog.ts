@@ -1,4 +1,5 @@
 import { products as sourceProducts } from "./seed-products-source";
+import { exactCatalogueExpansion } from "./catalogue-expansion";
 import {
   normaliseSearchTerm,
   normalizeModel,
@@ -13,6 +14,8 @@ const modelCorrections: Record<string, { model: string; slug: string }> = {
   "CP-UNC-DA41L3C-D-Q": { model: "CP-UNC-DA41L3C-D-Q", slug: "cp-unc-da41l3c-d-q" },
   "CP-UNC-108F1": { model: "CP-UNR-108F1", slug: "cp-unr-108f1" },
   "CP-UNC-4K2161": { model: "CP-UNR-4K2161-V2", slug: "cp-unr-4k2161-v2" },
+  "X-990": { model: "X990", slug: "x-990" },
+  F22: { model: "F22+ID+WIFI", slug: "essl-f22-id-wifi" },
 };
 
 const officialSources: Record<string, string> = {
@@ -26,8 +29,8 @@ const officialSources: Record<string, string> = {
   "CP-UNC-TA21L3C-LQ": "https://cpplusworld.com/cp-unc-ta21l3c-lq",
   "CP-UNR-108F1": "https://cpplusworld.com/cp-unr-108f1",
   "CP-UNR-4K2161-V2": "https://cpplusworld.com/cp-unr-4k2161-v2",
-  "X-990": "https://esslsecurity.com/fingerprint/x990",
-  F22: "https://esslsecurity.com/fingerprint/f22",
+  X990: "https://esslsecurity.com/fingerprint/x990",
+  "F22+ID+WIFI": "https://esslsecurity.com/fingerprint/f22",
   F18: "https://esslsecurity.com/fingerprint/f18",
   SF100: "https://esslsecurity.com/fingerprint/sf100",
   "K30-PRO": "https://esslsecurity.com/fingerprint/k30",
@@ -90,11 +93,11 @@ const documents: Record<string, Omit<ProductDocument, "model">[]> = {
     { type: "datasheet", title: "Datasheet", url: "/docs/datasheets/CP-UNR-4K2161-V2.pdf" },
     { type: "manual", title: "User manual", url: "/docs/manuals/CP-UNR-4K2161-V2-manual.pdf" },
   ],
-  "X-990": [
+  X990: [
     { type: "datasheet", title: "Datasheet", url: "/docs/datasheets/X990Catalog.pdf" },
     { type: "manual", title: "User manual", url: "/docs/manuals/X990_usermanual.pdf" },
   ],
-  F22: [
+  "F22+ID+WIFI": [
     { type: "datasheet", title: "Datasheet", url: "/docs/datasheets/F22.pdf" },
     { type: "manual", title: "User manual", url: "/docs/manuals/F22_usermanual-.pdf" },
   ],
@@ -122,7 +125,15 @@ function sourceKey(model: string) {
   return normalizeModel(model);
 }
 
-export const catalogue: Product[] = sourceProducts.map((source) => {
+const publicPriceOverrides: Record<
+  string,
+  { price: number; priceSourceStatus: Product["priceSourceStatus"] }
+> = {
+  SF100: { price: 825_000, priceSourceStatus: "verified" },
+  FR1200: { price: 589_900, priceSourceStatus: "verified" },
+};
+
+const legacyCatalogue: Product[] = sourceProducts.map((source) => {
   const correction = modelCorrections[source.model];
   const model = correction?.model ?? source.model;
   const key = sourceKey(model);
@@ -132,7 +143,7 @@ export const catalogue: Product[] = sourceProducts.map((source) => {
   const warrantySummary = source.specs.Warranty ?? "OEM warranty terms apply";
 
   const productDocuments = (documents[key] ?? []).map((document) => ({ ...document, model }));
-  const priceRequiresConfirmation = key === "SF100";
+  const publicPriceOverride = publicPriceOverrides[key];
 
   return {
     id: canonicalSlug,
@@ -159,14 +170,14 @@ export const catalogue: Product[] = sourceProducts.map((source) => {
     stockStatus: source.inStock ? "in_stock" : "lead_time",
     // The legacy storefront charged its tax-inclusive `mrp` field. Preserve that public amount,
     // but do not present it as verified MRP until documentary evidence is available.
-    sellingPriceInclGstPaise: Math.round(source.mrp * 100),
+    sellingPriceInclGstPaise: publicPriceOverride?.price ?? Math.round(source.mrp * 100),
     mrpInclGstPaise: null,
     compareAtPriceInclGstPaise: null,
     compareAtLabel: null,
     gstRateBasisPoints: 1800,
     gstIncluded: true,
-    priceVerifiedAt: priceRequiresConfirmation ? null : verifiedAt,
-    priceSourceStatus: priceRequiresConfirmation ? "request-price" : "verified",
+    priceVerifiedAt: verifiedAt,
+    priceSourceStatus: publicPriceOverride?.priceSourceStatus ?? "verified",
     officialSourceUrl: officialSources[key] ?? "https://esslsecurity.com/",
     verifiedAt,
     warrantySummary,
@@ -179,6 +190,8 @@ export const catalogue: Product[] = sourceProducts.map((source) => {
       : [],
   } satisfies Product;
 });
+
+export const catalogue: Product[] = [...legacyCatalogue, ...exactCatalogueExpansion];
 
 export const catalogueBySlug = new Map(
   catalogue.flatMap((product) => [
@@ -209,7 +222,10 @@ export function searchProducts(query: string) {
       product.model,
       product.brand,
       product.category,
+      product.shortDescription,
       ...product.highlights,
+      ...product.useCases,
+      ...Object.entries(product.specs).flatMap(([label, value]) => [label, value]),
     ]
       .join(" ")
       .toLowerCase();

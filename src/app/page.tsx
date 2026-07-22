@@ -5,6 +5,7 @@ import { ArrowRight, BadgeCheck, FileText, IndianRupee, ShieldCheck, Wrench } fr
 import { catalogue, categories } from "@/data/catalog";
 import { ProductCard } from "@/components/product-card";
 import { HeroProducts } from "@/components/hero-products";
+import { HomeMotion } from "@/components/home-motion";
 import { publicPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = publicPageMetadata({
@@ -78,6 +79,7 @@ const faq = [
 export default function Home() {
   return (
     <>
+      <HomeMotion />
       <section className="overflow-hidden border-b border-[var(--line)]">
         <div className="container-standard grid min-h-[calc(100svh-105px)] items-center gap-10 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:py-10">
           <div className="relative z-10">
@@ -116,7 +118,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section-space">
+      <section className="section-space" data-gsap-reveal>
         <div className="container-standard">
           <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
@@ -152,7 +154,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section-space border-y border-[var(--line)] bg-[var(--canvas-alt)]">
+      <section
+        className="section-space border-y border-[var(--line)] bg-[var(--canvas-alt)]"
+        data-gsap-reveal
+      >
         <div className="container-standard">
           <p className="eyebrow">Shop by category</p>
           <div className="mt-5 flex items-end justify-between gap-4">
@@ -195,7 +200,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section-space">
+      <section className="section-space" data-gsap-reveal>
         <div className="container-standard">
           <div className="flex items-end justify-between gap-5">
             <div>
@@ -214,7 +219,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section-space overflow-hidden bg-[var(--ink)] text-white">
+      <section
+        className="section-space overflow-hidden bg-[var(--ink)] text-white"
+        data-gsap-reveal
+      >
         <div className="container-standard grid items-center gap-12 lg:grid-cols-[1fr_0.95fr]">
           <div>
             <p className="eyebrow !text-white/55">Guided system builder</p>

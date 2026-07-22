@@ -13,21 +13,64 @@ export const metadata: Metadata = {
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
+function resolutionOf(product: (typeof catalogue)[number]) {
+  const value =
+    `${product.model} ${product.specs["Max Resolution"] ?? ""} ${product.specs["Max resolution"] ?? ""}`.toLowerCase();
+  if (/\b6\s?mp\b|3200\s*[×x]\s*1800/.test(value)) return "6mp";
+  if (/\b4\s?mp\b|2560\s*[×x]\s*1440|2688\s*[×x]\s*1520/.test(value)) return "4mp";
+  if (/\b2\s?mp\b|1920\s*[×x]\s*1080/.test(value)) return "2mp";
+  return "";
+}
+
+function authenticationOf(product: (typeof catalogue)[number]) {
+  const value = `${product.specs.Authentication ?? ""} ${product.title}`.toLowerCase();
+  if (value.includes("face")) return "face";
+  if (value.includes("fingerprint")) return "fingerprint";
+  return "";
+}
+
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const category = typeof params.category === "string" ? params.category : "";
   const brand = typeof params.brand === "string" ? params.brand : "";
   const sort = typeof params.sort === "string" ? params.sort : "relevance";
+  const resolution = typeof params.resolution === "string" ? params.resolution : "";
+  const poe = typeof params.poe === "string" ? params.poe : "";
+  const availability = typeof params.availability === "string" ? params.availability : "";
+  const price = typeof params.price === "string" ? params.price : "";
+  const authentication = typeof params.authentication === "string" ? params.authentication : "";
 
   const queryMatches = new Set(searchProducts(q).map((product) => product.id));
   let products = catalogue.filter((product) => {
     return (
       (!q || queryMatches.has(product.id)) &&
       (!category || product.categorySlug === category) &&
-      (!brand || product.brandSlug === brand)
+      (!brand || product.brandSlug === brand) &&
+      (!resolution || resolutionOf(product) === resolution) &&
+      (!poe ||
+        (poe === "yes"
+          ? /poe/i.test(Object.values(product.specs).join(" "))
+          : !/poe/i.test(Object.values(product.specs).join(" ")))) &&
+      (!authentication || authenticationOf(product) === authentication) &&
+      (!availability ||
+        (availability === "buy-now"
+          ? product.priceSourceStatus === "verified" && product.stockStatus === "in_stock"
+          : product.priceSourceStatus !== "verified" || product.stockStatus !== "in_stock")) &&
+      (!price ||
+        (price === "under-5000"
+          ? (product.sellingPriceInclGstPaise ?? Infinity) < 500_000
+          : price === "5000-15000"
+            ? (product.sellingPriceInclGstPaise ?? 0) >= 500_000 &&
+              (product.sellingPriceInclGstPaise ?? Infinity) <= 1_500_000
+            : (product.sellingPriceInclGstPaise ?? 0) > 1_500_000))
     );
   });
+
+  const selectedCategory = categories.find((item) => item.slug === category)?.name ?? "";
+  const cameraContext = !category || /camera/i.test(selectedCategory);
+  const biometricContext = !category || /biometric/i.test(selectedCategory);
+  const poeContext = !category || /camera|switch/i.test(selectedCategory);
   products = [...products].sort((a, b) => {
     if (sort === "price-low")
       return (a.sellingPriceInclGstPaise ?? Infinity) - (b.sellingPriceInclGstPaise ?? Infinity);
@@ -53,6 +96,89 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
             className="h-12 min-w-0 flex-1 bg-transparent px-2 outline-none"
           />
         </div>
+      </div>
+      {cameraContext && (
+        <div>
+          <label htmlFor={`${prefix}-resolution`} className="eyebrow">
+            Resolution
+          </label>
+          <select
+            id={`${prefix}-resolution`}
+            name="resolution"
+            defaultValue={resolution}
+            className="mt-2 h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3"
+          >
+            <option value="">All resolutions</option>
+            <option value="2mp">2 MP</option>
+            <option value="4mp">4 MP</option>
+            <option value="6mp">6 MP</option>
+          </select>
+        </div>
+      )}
+      {poeContext && (
+        <div>
+          <label htmlFor={`${prefix}-poe`} className="eyebrow">
+            PoE
+          </label>
+          <select
+            id={`${prefix}-poe`}
+            name="poe"
+            defaultValue={poe}
+            className="mt-2 h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3"
+          >
+            <option value="">Any power method</option>
+            <option value="yes">PoE supported</option>
+            <option value="no">Without PoE</option>
+          </select>
+        </div>
+      )}
+      {biometricContext && (
+        <div>
+          <label htmlFor={`${prefix}-authentication`} className="eyebrow">
+            Authentication
+          </label>
+          <select
+            id={`${prefix}-authentication`}
+            name="authentication"
+            defaultValue={authentication}
+            className="mt-2 h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3"
+          >
+            <option value="">All methods</option>
+            <option value="face">Face recognition</option>
+            <option value="fingerprint">Fingerprint</option>
+          </select>
+        </div>
+      )}
+      <div>
+        <label htmlFor={`${prefix}-availability`} className="eyebrow">
+          Availability
+        </label>
+        <select
+          id={`${prefix}-availability`}
+          name="availability"
+          defaultValue={availability}
+          className="mt-2 h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3"
+        >
+          <option value="">All availability</option>
+          <option value="buy-now">Available to buy</option>
+          <option value="quote">Request price / lead time</option>
+        </select>
+      </div>
+      <div>
+        <label htmlFor={`${prefix}-price`} className="eyebrow">
+          Price
+        </label>
+        <select
+          id={`${prefix}-price`}
+          name="price"
+          defaultValue={price}
+          className="mt-2 h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3"
+        >
+          <option value="">Any price</option>
+          <option value="under-5000">Under ₹5,000</option>
+          <option value="5000-15000">₹5,000–₹15,000</option>
+          <option value="over-15000">Over ₹15,000</option>
+        </select>
       </div>
       <div>
         <label htmlFor={`${prefix}-category`} className="eyebrow">

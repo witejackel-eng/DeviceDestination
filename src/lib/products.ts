@@ -48,6 +48,15 @@ export function normalizeModel(model: string) {
     .replace(/-+/g, "-");
 }
 
+export function comparisonGroup(product: Pick<Product, "categorySlug">) {
+  if (product.categorySlug.includes("camera")) return "camera";
+  if (product.categorySlug.includes("nvr")) return "nvr";
+  if (product.categorySlug.includes("biometric")) return "biometric";
+  if (product.categorySlug.includes("switch")) return "network-switch";
+  if (product.categorySlug.includes("storage")) return "storage";
+  return product.categorySlug;
+}
+
 export function normaliseSearchTerm(value: string) {
   return value
     .normalize("NFKD")

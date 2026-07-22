@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import type { Product } from "@/lib/products";
 
 const tiles = [
@@ -16,6 +16,8 @@ const tiles = [
 ];
 
 export function HeroProducts({ products }: { products: Product[] }) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <div
       className="relative grid h-[540px] grid-cols-4 grid-rows-4 gap-3 lg:h-[690px]"
@@ -35,9 +37,11 @@ export function HeroProducts({ products }: { products: Product[] }) {
         return (
           <motion.div
             key={product.id}
-            initial={{ opacity: 0, y: 18 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.06, duration: 0.5 }}
+            transition={
+              shouldReduceMotion ? { duration: 0 } : { delay: index * 0.06, duration: 0.5 }
+            }
             className={`relative overflow-hidden rounded-[20px] border border-[var(--line)] ${positions[index]}`}
             style={{ background: tiles[index] }}
           >
