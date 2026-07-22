@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ChevronDown, Menu, Scale, ShoppingBag, UserRound, X } from "lucide-react";
@@ -55,10 +55,18 @@ const shopGroups = [
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
+  const [compact, setCompact] = useState(false);
   const reduceMotion = useReducedMotion();
   const items = useCartStore((state) => state.items);
   const openCart = useCartStore((state) => state.open);
   const count = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  useEffect(() => {
+    const onScroll = () => setCompact(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <>
@@ -66,9 +74,13 @@ export function Header() {
         GST-inclusive prices · Exact-model documents · Secure checkout · {siteConfig.serviceArea}{" "}
         support
       </div>
-      <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[rgb(255_253_248/0.95)] backdrop-blur-xl">
-        <div className="container-standard flex h-[76px] items-center justify-between gap-3">
-          <Brand responsive />
+      <header className="sticky top-3 z-50 px-3 sm:top-4 sm:px-4">
+        <div className="container-standard">
+          <div
+            data-header-capsule
+            className={`header-capsule flex items-center justify-between gap-3 text-white ${compact ? "header-capsule--compact" : ""}`}
+          >
+          <Brand responsive inverted />
 
           <nav className="hidden items-center gap-4 xl:flex" aria-label="Primary navigation">
             <div className="relative">
@@ -76,7 +88,7 @@ export function Header() {
                 type="button"
                 onClick={() => setShopOpen((value) => !value)}
                 onKeyDown={(event) => event.key === "Escape" && setShopOpen(false)}
-                className="flex min-h-11 items-center gap-1 text-sm font-bold"
+                className="flex min-h-11 items-center gap-1 text-sm font-bold text-white"
                 aria-expanded={shopOpen}
                 aria-haspopup="true"
               >
@@ -118,7 +130,7 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="whitespace-nowrap text-xs font-semibold text-[var(--muted)] transition-colors hover:text-[var(--ink)] 2xl:text-sm"
+                className="whitespace-nowrap text-xs font-semibold text-white/70 transition-colors hover:text-white 2xl:text-sm"
               >
                 {item.label}
               </Link>
@@ -131,14 +143,14 @@ export function Header() {
             <ProductSearch mode="mobile" />
             <Link
               href="/compare"
-              className="hidden min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-[var(--tangerine-subtle)] sm:flex"
+              className="hidden min-h-11 min-w-11 items-center justify-center rounded-xl text-white/85 hover:bg-white/10 sm:flex"
               aria-label="Compare products"
             >
               <Scale size={19} />
             </Link>
             <Link
               href="/account"
-              className="hidden min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-[var(--tangerine-subtle)] sm:flex"
+              className="hidden min-h-11 min-w-11 items-center justify-center rounded-xl text-white/85 hover:bg-white/10 sm:flex"
               aria-label="Account"
             >
               <UserRound size={19} />
@@ -146,7 +158,7 @@ export function Header() {
             <button
               type="button"
               onClick={openCart}
-              className="relative flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-[var(--tangerine-subtle)]"
+              className="relative flex min-h-11 min-w-11 items-center justify-center rounded-xl text-white/85 hover:bg-white/10"
               aria-label={`Open cart with ${count} items`}
             >
               <ShoppingBag size={20} />
@@ -165,11 +177,12 @@ export function Header() {
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="flex min-h-11 min-w-11 items-center justify-center rounded-xl xl:hidden"
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-white/85 hover:bg-white/10 xl:hidden"
               aria-label="Open menu"
             >
               <Menu size={22} />
             </button>
+          </div>
           </div>
         </div>
       </header>

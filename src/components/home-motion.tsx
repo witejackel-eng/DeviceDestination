@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { animate } from "animejs";
+import { animate, stagger } from "animejs";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -22,6 +22,43 @@ export function HomeMotion() {
       delay: 120,
       ease: "inOut(3)",
     });
+
+    const logoAnimations: ReturnType<typeof animate>[] = [];
+    if (!sessionStorage.getItem("dd-logo-seen")) {
+      const scope = "[data-anime-brand-mark]";
+      logoAnimations.push(
+        animate(`${scope} [data-dd-part="d-left"]`, {
+          opacity: { from: 0, to: 1 },
+          scale: { from: 0.8, to: 1 },
+          translateX: { from: -6, to: 0 },
+          duration: 480,
+          ease: "out(3)",
+        }),
+        animate(`${scope} [data-dd-part="d-right"]`, {
+          opacity: { from: 0, to: 1 },
+          scale: { from: 0.8, to: 1 },
+          translateX: { from: 6, to: 0 },
+          delay: 70,
+          duration: 480,
+          ease: "out(3)",
+        }),
+        animate(`${scope} [data-dd-part="lens"]`, {
+          opacity: { from: 0, to: 1 },
+          scale: { from: 0.8, to: 1 },
+          delay: 140,
+          duration: 480,
+          ease: "out(3)",
+        }),
+        animate(`${scope} [data-dd-part="node"]`, {
+          opacity: { from: 0, to: 1 },
+          scale: { from: 0.8, to: 1 },
+          delay: stagger(40, { start: 160 }),
+          duration: 480,
+          ease: "out(3)",
+        }),
+      );
+      sessionStorage.setItem("dd-logo-seen", "1");
+    }
 
     gsap.registerPlugin(ScrollTrigger);
     const media = gsap.matchMedia();
@@ -90,6 +127,7 @@ export function HomeMotion() {
     return () => {
       markAnimation.revert();
       pathAnimation.revert();
+      logoAnimations.forEach((animation) => animation.revert());
       media.revert();
     };
   }, []);

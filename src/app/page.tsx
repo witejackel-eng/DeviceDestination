@@ -15,6 +15,8 @@ import { ProductCard } from "@/components/product-card";
 import { ProductSearch } from "@/components/product-search";
 import { HeroProducts } from "@/components/hero-products";
 import { HomeMotion } from "@/components/home-motion";
+import { PointerField } from "@/components/pointer-field";
+import { CategoryIllustration } from "@/components/category-illustration";
 import { publicPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = publicPageMetadata({
@@ -35,12 +37,6 @@ const categoryOrder = [
 ];
 
 export default function Home() {
-  const heroProducts = [
-    catalogue.find((product) => product.model === "CP-UNC-DA41L3C-D-Q"),
-    catalogue.find((product) => product.model === "CP-UNR-108F1"),
-    catalogue.find((product) => product.model === "AiFace Mercury"),
-    catalogue.find((product) => product.model === "GS108PP"),
-  ].flatMap((product) => (product ? [product] : []));
   const orderedCategories = categoryOrder.flatMap((slug) => {
     const category = categories.find((item) => item.slug === slug);
     return category ? [category] : [];
@@ -133,7 +129,7 @@ export default function Home() {
               GST-inclusive pricing · Exact-model documentation · Secure checkout
             </p>
           </div>
-          <HeroProducts products={heroProducts} />
+          <HeroProducts />
         </div>
       </section>
 
@@ -148,7 +144,6 @@ export default function Home() {
               const products = catalogue.filter(
                 (product) => product.categorySlug === category.slug,
               );
-              const example = products[0];
               return (
                 <Link
                   key={category.slug}
@@ -157,12 +152,9 @@ export default function Home() {
                   className="group overflow-hidden rounded-[22px] border border-[var(--line)] bg-white transition-colors hover:border-[var(--tangerine-border-hover)]"
                 >
                   <div className="relative aspect-[1.55] bg-[var(--canvas-alt)]">
-                    <Image
-                      src={example.images[0]}
-                      alt={`${category.name} example`}
-                      fill
-                      sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 25vw"
-                      className="object-contain p-4 transition-transform duration-500 group-hover:scale-[1.04]"
+                    <CategoryIllustration
+                      slug={category.slug}
+                      className="absolute inset-0 h-full w-full p-8 transition-transform duration-500 group-hover:scale-[1.04]"
                     />
                   </div>
                   <div className="p-5">
@@ -239,10 +231,11 @@ export default function Home() {
       </section>
 
       <section
-        className="overflow-hidden bg-[var(--ink)] py-16 text-white sm:py-20"
+        className="relative overflow-hidden bg-[var(--ink)] py-16 text-white sm:py-20"
         data-gsap-compare
       >
-        <div className="container-standard grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+        <PointerField tone="dark" className="absolute inset-0" />
+        <div className="container-standard relative grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <p className="eyebrow !text-white/55">Compare models</p>
             <h2 className="display-section mt-4">Not sure which model is right?</h2>

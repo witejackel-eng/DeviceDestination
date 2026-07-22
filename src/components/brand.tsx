@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
+import { DDMark } from "@/components/dd-mark";
 
 export function Brand({
   inverted = false,
@@ -18,14 +19,13 @@ export function Brand({
     >
       <span
         aria-hidden="true"
-        data-anime-brand
-        className="brand-mark grid h-10 w-10 shrink-0 place-items-center rounded-[13px] bg-[var(--tangerine)] font-display text-sm font-black tracking-[-0.06em] text-[var(--ink)] transition-transform group-hover:-rotate-3 group-hover:scale-105"
+        className="brand-mark grid h-10 w-10 shrink-0 place-items-center rounded-[13px] bg-[var(--tangerine)] p-1.5 text-[var(--ink)] transition-transform group-hover:-rotate-3 group-hover:scale-105"
       >
-        DD
+        <DDMark tone="dark" className="h-full w-full" />
       </span>
       {!compact && (
         <span
-          className={`font-display text-xl font-extrabold tracking-[-0.06em] ${responsive ? "hidden min-[430px]:inline" : ""} ${inverted ? "text-white" : "text-[var(--ink)]"}`}
+          className={`font-display text-xl font-extrabold tracking-[-0.02em] ${responsive ? "hidden min-[430px]:inline" : ""} ${inverted ? "text-white" : "text-[var(--ink)]"}`}
         >
           Device<span className="text-[var(--tangerine-text)]">Destination</span>
         </span>
