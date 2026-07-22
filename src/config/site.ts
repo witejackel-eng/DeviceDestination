@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "DeviceDestination",
   shortName: "DD",
-  tagline: "Security hardware, selected with care.",
+  tagline: "Shop exact-model security hardware.",
   description:
     "Genuine CCTV, networking, storage, and biometric systems—verified by exact model, priced with GST included, and supported across Delhi NCR.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://device-destination-rose.vercel.app",

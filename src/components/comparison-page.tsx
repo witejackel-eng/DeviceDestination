@@ -80,7 +80,7 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
       </div>
       {!selected.length ? (
         <div className="surface-card mt-10 grid min-h-[360px] place-content-center p-8 text-center">
-          <Plus className="mx-auto text-[var(--tangerine-dark)]" size={32} />
+          <Plus className="mx-auto text-[var(--tangerine-text)]" size={32} />
           <h2 className="mt-5 font-display text-3xl font-semibold">Your comparison is empty.</h2>
           <p className="mt-3 text-[var(--muted)]">
             Add models from the catalogue or use the selector above.
@@ -117,7 +117,7 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
                         className="object-contain p-3"
                       />
                     </div>
-                    <p className="text-xs font-bold text-[var(--tangerine-dark)]">
+                    <p className="text-xs font-bold text-[var(--tangerine-text)]">
                       {product.model}
                     </p>
                     <Link

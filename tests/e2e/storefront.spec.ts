@@ -6,7 +6,7 @@ test("storefront purchase journey and accessibility", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Security");
     await page
-      .getByRole("link", { name: /Shop products/i })
+      .getByRole("link", { name: /Shop all products/i })
       .first()
       .click();
     await expect(page).toHaveURL(/\/products/);

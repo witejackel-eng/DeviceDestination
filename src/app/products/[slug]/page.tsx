@@ -19,6 +19,8 @@ import { DeliveryChecker } from "@/components/delivery-checker";
 import { ProductCard } from "@/components/product-card";
 import { CompareToggle } from "@/components/compare-toggle";
 import { siteConfig } from "@/config/site";
+import { MobileProductBar } from "@/components/mobile-product-bar";
+import { RecentlyViewed, TrackRecentlyViewed } from "@/components/recently-viewed";
 
 type Params = Promise<{ slug: string }>;
 
@@ -96,7 +98,8 @@ export default async function ProductPage({ params }: { params: Params }) {
   };
 
   return (
-    <div className="container-standard py-8 sm:py-12">
+    <div className="container-standard pb-28 pt-8 sm:py-12">
+      <TrackRecentlyViewed productId={product.id} />
       <nav
         aria-label="Breadcrumb"
         className="mb-8 flex flex-wrap gap-2 text-sm text-[var(--muted)]"
@@ -116,7 +119,7 @@ export default async function ProductPage({ params }: { params: Params }) {
           <h1 className="mt-4 font-display text-[clamp(2.8rem,5vw,5.4rem)] font-semibold leading-[0.96] tracking-[-0.06em]">
             {product.title}
           </h1>
-          <p className="mt-4 text-sm font-extrabold uppercase tracking-[0.1em] text-[var(--tangerine-dark)]">
+          <p className="mt-4 text-sm font-extrabold uppercase tracking-[0.1em] text-[var(--tangerine-text)]">
             {product.model}
           </p>
           <p className="mt-6 text-lg leading-8 text-[var(--muted)]">{product.shortDescription}</p>
@@ -285,6 +288,8 @@ export default async function ProductPage({ params }: { params: Params }) {
           </div>
         </section>
       )}
+      <RecentlyViewed excludeId={product.id} />
+      <MobileProductBar productId={product.id} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}

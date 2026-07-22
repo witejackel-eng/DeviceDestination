@@ -216,19 +216,35 @@ export function searchProducts(query: string) {
   const normalized = query.trim().toLowerCase();
   const compact = normaliseSearchTerm(query);
   if (!normalized) return catalogue;
-  return catalogue.filter((product) => {
-    const text = [
-      product.title,
-      product.model,
-      product.brand,
-      product.category,
-      product.shortDescription,
-      ...product.highlights,
-      ...product.useCases,
-      ...Object.entries(product.specs).flatMap(([label, value]) => [label, value]),
-    ]
-      .join(" ")
-      .toLowerCase();
-    return text.includes(normalized) || normaliseSearchTerm(text).includes(compact);
-  });
+  return catalogue
+    .flatMap((product) => {
+      const text = [
+        product.title,
+        product.model,
+        product.brand,
+        product.category,
+        product.shortDescription,
+        ...product.highlights,
+        ...product.useCases,
+        ...Object.entries(product.specs).flatMap(([label, value]) => [label, value]),
+      ]
+        .join(" ")
+        .toLowerCase();
+      const compactModel = normaliseSearchTerm(product.model);
+      const compactText = normaliseSearchTerm(text);
+      if (!text.includes(normalized) && !compactText.includes(compact)) return [];
+      const score =
+        compactModel === compact
+          ? 1_000
+          : compactModel.startsWith(compact)
+            ? 800
+            : compactModel.includes(compact)
+              ? 650
+              : product.title.toLowerCase().includes(normalized)
+                ? 300
+                : 100;
+      return [{ product, score }];
+    })
+    .sort((a, b) => b.score - a.score || a.product.model.localeCompare(b.product.model))
+    .map(({ product }) => product);
 }

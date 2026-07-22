@@ -7,19 +7,23 @@ const groups = [
     title: "Shop",
     links: [
       ["All products", "/products"],
-      ["System builder", "/system-builder"],
-      ["Compare", "/compare"],
+      ["CCTV cameras", "/products?q=camera"],
+      ["NVRs and storage", "/categories/nvr-systems"],
+      ["Biometric devices", "/categories/biometric-devices"],
+      ["Networking", "/categories/poe-switches"],
+      ["Compare models", "/compare"],
       ["Downloads", "/downloads"],
     ],
   },
   {
-    title: "Help",
+    title: "Customer help",
     links: [
-      ["Support", "/support"],
       ["Contact", "/contact"],
+      ["FAQs and support", "/support"],
       ["Shipping", "/shipping-policy"],
       ["Returns", "/refund-policy"],
       ["Warranty", "/warranty-policy"],
+      ["Installation policy", "/installation-policy"],
     ],
   },
   {
@@ -28,7 +32,7 @@ const groups = [
       ["About", "/about"],
       ["Privacy", "/privacy"],
       ["Terms", "/terms"],
-      ["Installation", "/installation-policy"],
+      ["Account", "/account"],
     ],
   },
 ];
@@ -40,7 +44,8 @@ export function Footer() {
         <div>
           <Brand />
           <p className="mt-5 max-w-md text-[var(--muted)]">
-            Genuine security hardware, selected by exact model and explained in plain language.
+            Shop exact-model CCTV, recording, biometric and networking hardware with GST-inclusive
+            prices and model-specific documents.
           </p>
           <address className="mt-7 not-italic text-sm leading-7 text-[var(--muted)]">
             {siteConfig.address.street}, {siteConfig.address.city} {siteConfig.address.postalCode}
@@ -53,6 +58,9 @@ export function Footer() {
               {siteConfig.contact.email}
             </a>
           </address>
+          <p className="mt-6 text-xs font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
+            Secure Razorpay checkout · GST invoice · Third-party installation quoted separately
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
           {groups.map((group) => (

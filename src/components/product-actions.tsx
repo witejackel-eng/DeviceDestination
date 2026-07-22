@@ -2,14 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Minus, Plus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { catalogue } from "@/data/catalog";
 import { getPriceMaxAgeDays } from "@/config/site";
 import { useCartStore } from "@/lib/cart-store";
 import { getPurchaseEligibility } from "@/lib/products";
+import { springs } from "@/lib/motion/constants";
 
 export function ProductActions({ productId }: { productId: string }) {
+  const reduceMotion = useReducedMotion();
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
@@ -44,7 +47,15 @@ export function ProductActions({ productId }: { productId: string }) {
           >
             <Minus size={16} />
           </button>
-          <span className="min-w-9 text-center font-bold">{quantity}</span>
+          <motion.span
+            key={quantity}
+            initial={reduceMotion ? false : { scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={springs.interface}
+            className="min-w-9 text-center font-bold"
+          >
+            {quantity}
+          </motion.span>
           <button
             type="button"
             onClick={() => setQuantity((value) => Math.min(99, value + 1))}
@@ -54,24 +65,26 @@ export function ProductActions({ productId }: { productId: string }) {
             <Plus size={16} />
           </button>
         </div>
-        <button
+        <motion.button
           type="button"
           onClick={() => addItem(productId, quantity)}
           className="button-primary flex-1"
+          whileTap={reduceMotion ? undefined : { scale: 0.97 }}
         >
           <ShoppingBag size={18} /> Add to cart
-        </button>
+        </motion.button>
       </div>
-      <button
+      <motion.button
         type="button"
         onClick={() => {
           addItem(productId, quantity);
           router.push("/checkout");
         }}
         className="button-secondary w-full"
+        whileTap={reduceMotion ? undefined : { scale: 0.98 }}
       >
         Buy now
-      </button>
+      </motion.button>
     </div>
   );
 }

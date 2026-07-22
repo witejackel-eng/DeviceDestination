@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -17,7 +17,7 @@ const siteUrl = siteConfig.url;
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "DeviceDestination — Security hardware, selected with care",
+    default: "DeviceDestination — Shop exact-model security hardware",
     template: "%s | DeviceDestination",
   },
   description: siteConfig.description,
@@ -40,6 +40,10 @@ export const metadata: Metadata = {
     title: "DeviceDestination",
     description: "Security hardware, selected with care.",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FF8A00",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

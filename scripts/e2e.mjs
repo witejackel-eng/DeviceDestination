@@ -107,10 +107,13 @@ async function exerciseViewport(executablePath, viewport, label) {
     );
     if (mobile) {
       await page.getByRole("button", { name: "Open menu" }).click();
-      await assertVisible(page.getByRole("heading", { name: "Menu" }), "mobile menu opens");
+      await assertVisible(
+        page.getByRole("heading", { name: "Shop DeviceDestination" }),
+        "mobile menu opens",
+      );
       await page.getByRole("button", { name: "Close menu" }).click();
     }
-    await page.getByRole("button", { name: "Search products by exact model" }).click();
+    await page.getByRole("button", { name: "Search products by exact model" }).first().click();
     await page.getByLabel("Search exact models").fill("cp unc da41l3c d q");
     await assertVisible(
       page.getByText("CP-UNC-DA41L3C-D-Q").first(),
@@ -126,7 +129,7 @@ async function exerciseViewport(executablePath, viewport, label) {
     await Promise.all([
       page.waitForURL(/\/products/),
       page
-        .getByRole("link", { name: /Shop products/i })
+        .getByRole("link", { name: /Shop all products/i })
         .first()
         .click(),
     ]);
@@ -239,6 +242,8 @@ async function exerciseViewport(executablePath, viewport, label) {
 
     for (const route of ["/", "/products", "/contact"]) {
       await page.goto(`${baseUrl}${route}`);
+      // Audit the settled visual state, not partially transparent route/hero entrance frames.
+      await page.waitForTimeout(850);
       const overflow = await page.evaluate(() => ({
         viewport: window.innerWidth,
         documentWidth: document.documentElement.scrollWidth,
@@ -316,7 +321,21 @@ async function exerciseResponsiveWidths(executablePath, widths) {
     for (const width of widths) {
       browserErrors.length = 0;
       await page.setViewportSize({ width, height: 900 });
-      for (const route of ["/", "/products", "/compare"]) {
+      for (const route of [
+        "/",
+        "/products",
+        "/products/netgear-gs108pp",
+        "/categories/dome-cameras",
+        "/brands/cp-plus",
+        "/compare",
+        "/system-builder",
+        "/cart",
+        "/checkout",
+        "/contact",
+        "/support",
+        "/account",
+        "/downloads",
+      ]) {
         await page.goto(`${baseUrl}${route}`);
         await page.locator("main").waitFor({ state: "visible" });
         const overflow = await page.evaluate(() => ({
@@ -342,8 +361,39 @@ async function exerciseResponsiveWidths(executablePath, widths) {
         );
       }
       assert.deepEqual(browserErrors, [], `${width}px: no render or hydration errors`);
-      console.log(`PASS ${width}px: responsive homepage, catalogue and comparison layout`);
+      console.log(`PASS ${width}px: responsive storefront route matrix`);
     }
+  } finally {
+    await browser.close().catch(() => undefined);
+  }
+}
+
+async function exerciseReducedMotion(executablePath) {
+  const browser = await chromium.launch({
+    executablePath,
+    args: serverlessChromium.args,
+    headless: true,
+  });
+  try {
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 900 },
+      reducedMotion: "reduce",
+    });
+    const page = await context.newPage();
+    const browserErrors = [];
+    page.on("pageerror", (error) => browserErrors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") browserErrors.push(message.text());
+    });
+    await page.goto(`${baseUrl}/`);
+    assert.equal(
+      await page.evaluate(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches),
+      true,
+      "reduced-motion media preference is active",
+    );
+    await assertVisible(page.getByRole("heading", { level: 1 }), "reduced-motion homepage");
+    assert.deepEqual(browserErrors, [], "reduced-motion mode has no render errors");
+    console.log("PASS reduced-motion: content remains visible and error-free");
   } finally {
     await browser.close().catch(() => undefined);
   }
@@ -368,8 +418,11 @@ try {
   const executablePath = await prepareBrowser();
   await exerciseViewport(executablePath, { width: 1440, height: 960 }, "1440px");
   await exerciseViewport(executablePath, { width: 375, height: 844 }, "375px");
-  await exerciseResponsiveWidths(executablePath, [320, 430, 768, 1024]);
-  console.log("E2E PASS: 6 required widths plus full desktop/mobile flow and accessibility checks");
+  await exerciseResponsiveWidths(executablePath, [320, 430, 768, 1024, 1280]);
+  await exerciseReducedMotion(executablePath);
+  console.log(
+    "E2E PASS: 7 required widths, 13 storefront routes, reduced motion, full flows and accessibility",
+  );
 } finally {
   server.kill("SIGTERM");
 }

@@ -27,7 +27,7 @@ export function Brand({
         <span
           className={`font-display text-xl font-extrabold tracking-[-0.06em] ${responsive ? "hidden min-[430px]:inline" : ""} ${inverted ? "text-white" : "text-[var(--ink)]"}`}
         >
-          Device<span className="text-[var(--tangerine-dark)]">Destination</span>
+          Device<span className="text-[var(--tangerine-text)]">Destination</span>
         </span>
       )}
     </Link>

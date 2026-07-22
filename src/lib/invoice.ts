@@ -30,7 +30,7 @@ export async function createInvoicePdf(input: InvoiceInput) {
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const ink = rgb(0.09, 0.08, 0.07);
-  const orange = rgb(1, 0.54, 0);
+  const orange = rgb(255 / 255, 138 / 255, 0 / 255);
   let y = 790;
   page.drawRectangle({ x: 42, y: 770, width: 48, height: 48, color: orange });
   page.drawText("DD", { x: 55, y: 788, size: 15, font: bold, color: ink });
