@@ -28,6 +28,11 @@
   --sage: #dfe9db;
   --sky: #dceaf5;
   --sand: #eee4d5;
+  --blush: #f3c9dc;
+  --technical: #e6e9df;
+  --canvas-rgb: 255 253 248;
+  --line-on-dark: rgb(var(--canvas-rgb) / 0.14);
+  --node-on-dark: rgb(var(--canvas-rgb) / 0.4);
   --success: #24633f;
   --danger: #a92d22;
 }
@@ -48,7 +53,7 @@ body {
   overflow-x: clip;
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-body), "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-body), "Manrope", ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
 }
 
@@ -60,8 +65,8 @@ h1,
 h2,
 h3,
 .font-display {
-  font-family: var(--font-display), "Manrope", ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.045em;
+  font-family: var(--font-display), "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.01em;
 }
 
 a,
@@ -121,15 +126,15 @@ button {
 
 .display-hero {
   font-size: clamp(3.75rem, 9vw, 9.25rem);
-  line-height: 0.83;
-  font-weight: 620;
-  letter-spacing: -0.075em;
+  line-height: 0.87;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .display-section {
   font-size: clamp(2.7rem, 6vw, 5.7rem);
-  line-height: 0.95;
-  font-weight: 610;
+  line-height: 0.98;
+  font-weight: 800;
 }
 
 .button-primary,
@@ -214,6 +219,51 @@ button {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+.header-capsule {
+  height: 76px;
+  padding-inline: 20px;
+  border-radius: 9999px;
+  background: var(--ink);
+  box-shadow: 0 18px 46px rgba(23, 20, 17, 0.28);
+  transition:
+    height 300ms ease,
+    box-shadow 300ms ease;
+}
+
+.header-capsule--compact {
+  height: 60px;
+}
+
+.pointer-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pointer-field-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: perspective(700px) rotateX(var(--pf-tilt-y, 0deg)) rotateY(var(--pf-tilt-x, 0deg));
+  transition: transform 400ms ease;
+}
+
+.pointer-field-glow {
+  position: absolute;
+  left: var(--pf-x, 50%);
+  top: var(--pf-y, 50%);
+  width: 46%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, var(--tangerine-subtle), transparent 72%);
+  transition:
+    left 550ms ease,
+    top 550ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,16 +1,27 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, Manrope } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Barlow_Condensed, Manrope } from "next/font/google";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CartDrawer } from "@/components/cart-drawer";
 import { CompareTray } from "@/components/compare-tray";
+import { ConsentGatedAnalytics } from "@/components/consent-gated-analytics";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
+import { CookiePreferencesModal } from "@/components/cookie-preferences-modal";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
 
-const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap" });
-const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-body", display: "swap" });
+const barlowCondensed = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+  variable: "--font-display",
+  display: "swap",
+});
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-body",
+  display: "swap",
+});
 
 const siteUrl = siteConfig.url;
 
@@ -65,7 +76,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   };
 
   return (
-    <html lang="en-IN" className={`${manrope.variable} ${dmSans.variable}`}>
+    <html lang="en-IN" className={`${barlowCondensed.variable} ${manrope.variable}`}>
       <body>
         <a
           href="#main-content"
@@ -78,12 +89,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Footer />
         <CartDrawer />
         <CompareTray />
-        {process.env.VERCEL && (
-          <>
-            <Analytics />
-            <SpeedInsights />
-          </>
-        )}
+        <CookieConsentBanner />
+        <CookiePreferencesModal />
+        {process.env.VERCEL && <ConsentGatedAnalytics />}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }}

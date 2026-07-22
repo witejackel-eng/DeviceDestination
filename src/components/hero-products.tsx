@@ -1,5 +1,5 @@
-import Image from "next/image";
-import type { Product } from "@/lib/products";
+import { HeroDeviceArt, type HeroDevice } from "@/components/hero-illustration";
+import { PointerField } from "@/components/pointer-field";
 
 const positions = [
   "col-span-2 row-span-4",
@@ -10,12 +10,15 @@ const positions = [
 
 const tiles = ["var(--peach)", "var(--sage)", "var(--sky)", "var(--sand)"];
 
-export function HeroProducts({ products }: { products: Product[] }) {
+const devices: HeroDevice[] = ["dome", "nvr", "biometric", "poe"];
+
+export function HeroProducts() {
   return (
     <div
       className="relative grid h-[360px] grid-cols-4 grid-rows-4 gap-2.5 sm:h-[480px] lg:h-[590px] lg:gap-3"
-      aria-label="Cameras, recording, biometric and networking products"
+      aria-label="Illustrated CCTV, recording, biometric and networking hardware"
     >
+      <PointerField className="absolute inset-0 -z-10 rounded-[24px]" />
       <svg
         viewBox="0 0 600 600"
         aria-hidden="true"
@@ -32,26 +35,14 @@ export function HeroProducts({ products }: { products: Product[] }) {
           opacity="0.7"
         />
       </svg>
-      {products.slice(0, 4).map((product, index) => (
+      {devices.map((device, index) => (
         <div
-          key={product.id}
+          key={device}
           data-hero-product
           className={`relative overflow-hidden rounded-[18px] border border-[var(--line)] shadow-[0_18px_50px_rgb(23_20_17/0.08)] ${positions[index]}`}
           style={{ background: tiles[index] }}
         >
-          <Image
-            src={product.images[0]}
-            alt={`${product.brand} ${product.model}`}
-            fill
-            priority={index === 0}
-            sizes="(max-width: 1024px) 42vw, 25vw"
-            className="object-contain p-3 sm:p-5"
-          />
-          {index < 4 && (
-            <span className="absolute bottom-2 left-2 max-w-[85%] truncate rounded-full bg-white/92 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.07em] sm:bottom-3 sm:left-3 sm:text-[10px]">
-              {product.model}
-            </span>
-          )}
+          <HeroDeviceArt device={device} />
         </div>
       ))}
     </div>

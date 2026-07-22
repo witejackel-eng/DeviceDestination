@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { Brand } from "@/components/brand";
+import { DDMark } from "@/components/dd-mark";
+import { FooterCtaBanner } from "@/components/footer-cta-banner";
+import { CookieSettingsLink } from "@/components/cookie-settings-link";
 import { siteConfig } from "@/config/site";
 
 const groups = [
@@ -31,6 +34,7 @@ const groups = [
       ["About", "/about"],
       ["Privacy", "/privacy"],
       ["Terms", "/terms"],
+      ["Cookie policy", "/cookie-policy"],
       ["Account", "/account"],
     ],
   },
@@ -40,7 +44,8 @@ export function Footer() {
   return (
     <footer className="border-t border-[var(--line)] bg-[var(--canvas-alt)]">
       <div className="container-standard py-12 sm:py-14">
-        <div className="flex flex-col gap-4 border-b border-[var(--line)] pb-9 sm:flex-row sm:items-center sm:justify-between">
+        <FooterCtaBanner />
+        <div className="mt-9 flex flex-col gap-4 border-b border-[var(--line)] pb-9 sm:flex-row sm:items-center sm:justify-between">
           <Brand />
           <p className="max-w-lg text-sm text-[var(--muted)] sm:text-right">
             Exact-model security hardware with clear pricing and documentation.
@@ -88,10 +93,19 @@ export function Footer() {
             </address>
           </div>
         </div>
+        <div className="mt-12 flex items-center gap-4 border-t border-[var(--line)] pt-10">
+          <DDMark tone="dark" className="h-14 w-14 shrink-0 text-[var(--tangerine)] sm:h-20 sm:w-20" />
+          <p className="font-display text-4xl font-extrabold leading-[0.85] tracking-[-0.01em] sm:text-6xl">
+            Device
+            <br />
+            Destination
+          </p>
+        </div>
       </div>
-      <div className="container-standard flex flex-col gap-2 border-t border-[var(--line)] py-5 text-xs text-[var(--muted)] sm:flex-row sm:justify-between">
+      <div className="container-standard flex flex-col gap-3 border-t border-[var(--line)] py-5 text-xs text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
         <p>© {new Date().getFullYear()} DeviceDestination. All rights reserved.</p>
         <p>Installation is quoted separately through qualified third-party installers.</p>
+        <CookieSettingsLink className="text-left underline hover:text-[var(--ink)] sm:text-right" />
       </div>
     </footer>
   );
