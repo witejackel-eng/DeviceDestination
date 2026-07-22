@@ -2,27 +2,18 @@ import Image from "next/image";
 import type { Product } from "@/lib/products";
 
 const positions = [
+  "col-span-2 row-span-4",
   "col-span-2 row-span-2",
-  "col-span-2 row-span-1",
   "col-span-1 row-span-2",
-  "col-span-1 row-span-1",
-  "col-span-2 row-span-1",
-  "col-span-1 row-span-1",
+  "col-span-1 row-span-2",
 ];
 
-const tiles = [
-  "var(--peach)",
-  "var(--sage)",
-  "var(--sky)",
-  "var(--sand)",
-  "var(--tangerine-soft)",
-  "#e8ede0",
-];
+const tiles = ["var(--peach)", "var(--sage)", "var(--sky)", "var(--sand)"];
 
 export function HeroProducts({ products }: { products: Product[] }) {
   return (
     <div
-      className="relative grid h-[430px] grid-cols-4 grid-rows-4 gap-2.5 sm:h-[540px] lg:h-[650px] lg:gap-3"
+      className="relative grid h-[360px] grid-cols-4 grid-rows-4 gap-2.5 sm:h-[480px] lg:h-[590px] lg:gap-3"
       aria-label="Cameras, recording, biometric and networking products"
     >
       <svg
@@ -41,7 +32,7 @@ export function HeroProducts({ products }: { products: Product[] }) {
           opacity="0.7"
         />
       </svg>
-      {products.slice(0, 6).map((product, index) => (
+      {products.slice(0, 4).map((product, index) => (
         <div
           key={product.id}
           data-hero-product
@@ -52,7 +43,7 @@ export function HeroProducts({ products }: { products: Product[] }) {
             src={product.images[0]}
             alt={`${product.brand} ${product.model}`}
             fill
-            priority={index < 2}
+            priority={index === 0}
             sizes="(max-width: 1024px) 42vw, 25vw"
             className="object-contain p-3 sm:p-5"
           />

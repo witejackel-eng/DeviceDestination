@@ -33,7 +33,7 @@ async function waitForServer() {
 try {
   await waitForServer();
   const checks = [
-    ["/", "Security,"],
+    ["/", "Security hardware."],
     ["/products?q=CP-UNR-108F1", "CP-UNR-108F1"],
     ["/products/cp-unr-108f1", "Inclusive of all taxes"],
     ["/contact", "Send a product enquiry"],

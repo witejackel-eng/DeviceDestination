@@ -11,7 +11,7 @@ import { getPriceMaxAgeDays } from "@/config/site";
 import { formatPrice, getPurchaseEligibility } from "@/lib/products";
 import { durations, easings } from "@/lib/motion/constants";
 
-type SearchMode = "header" | "mobile" | "inline" | "hero";
+type SearchMode = "header" | "mobile" | "hero";
 
 function Highlight({ text, query }: { text: string; query: string }) {
   const term = query.trim();
@@ -55,9 +55,7 @@ export function ProductSearch({ mode = "header" }: { mode?: SearchMode }) {
       ? "flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-[var(--tangerine-subtle)] md:hidden"
       : mode === "hero"
         ? "flex min-h-16 w-full items-center gap-3 rounded-2xl border border-[var(--tangerine-border)] bg-white px-5 text-left shadow-[0_18px_44px_var(--tangerine-shadow)] transition-colors hover:border-[var(--tangerine-border-hover)]"
-        : mode === "inline"
-          ? "flex min-h-12 w-full items-center gap-3 rounded-xl border border-[var(--line)] bg-white px-4 text-left text-sm text-[var(--muted)] md:hidden"
-          : "hidden h-11 min-w-0 max-w-[310px] flex-1 items-center gap-2 rounded-xl border border-[var(--line)] bg-white px-3 text-left text-sm text-[var(--muted)] lg:flex";
+        : "hidden h-11 min-w-0 max-w-[230px] flex-1 items-center gap-2 rounded-xl border border-[var(--line)] bg-white px-3 text-left text-sm text-[var(--muted)] lg:flex";
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>

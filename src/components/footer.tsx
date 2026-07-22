@@ -9,21 +9,20 @@ const groups = [
       ["All products", "/products"],
       ["CCTV cameras", "/products?q=camera"],
       ["NVRs and storage", "/categories/nvr-systems"],
-      ["Biometric devices", "/categories/biometric-devices"],
+      ["Biometrics", "/categories/biometric-devices"],
       ["Networking", "/categories/poe-switches"],
-      ["Compare models", "/compare"],
-      ["Downloads", "/downloads"],
+      ["Compare", "/compare"],
     ],
   },
   {
     title: "Customer help",
     links: [
       ["Contact", "/contact"],
-      ["FAQs and support", "/support"],
       ["Shipping", "/shipping-policy"],
       ["Returns", "/refund-policy"],
       ["Warranty", "/warranty-policy"],
       ["Installation policy", "/installation-policy"],
+      ["Downloads", "/downloads"],
     ],
   },
   {
@@ -35,34 +34,19 @@ const groups = [
       ["Account", "/account"],
     ],
   },
-];
+] as const;
 
 export function Footer() {
   return (
     <footer className="border-t border-[var(--line)] bg-[var(--canvas-alt)]">
-      <div className="container-standard grid gap-14 py-16 lg:grid-cols-[1.2fr_1fr]">
-        <div>
+      <div className="container-standard py-12 sm:py-14">
+        <div className="flex flex-col gap-4 border-b border-[var(--line)] pb-9 sm:flex-row sm:items-center sm:justify-between">
           <Brand />
-          <p className="mt-5 max-w-md text-[var(--muted)]">
-            Shop exact-model CCTV, recording, biometric and networking hardware with GST-inclusive
-            prices and model-specific documents.
-          </p>
-          <address className="mt-7 not-italic text-sm leading-7 text-[var(--muted)]">
-            {siteConfig.address.street}, {siteConfig.address.city} {siteConfig.address.postalCode}
-            <br />
-            <a href={`tel:${siteConfig.contact.phoneE164}`} className="hover:text-[var(--ink)]">
-              {siteConfig.contact.phoneDisplay}
-            </a>{" "}
-            ·{" "}
-            <a href={`mailto:${siteConfig.contact.email}`} className="hover:text-[var(--ink)]">
-              {siteConfig.contact.email}
-            </a>
-          </address>
-          <p className="mt-6 text-xs font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
-            Secure Razorpay checkout · GST invoice · Third-party installation quoted separately
+          <p className="max-w-lg text-sm text-[var(--muted)] sm:text-right">
+            Exact-model security hardware with clear pricing and documentation.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
+        <div className="mt-9 grid grid-cols-2 gap-9 sm:grid-cols-4">
           {groups.map((group) => (
             <div key={group.title}>
               <p className="eyebrow mb-5">{group.title}</p>
@@ -77,11 +61,37 @@ export function Footer() {
               </ul>
             </div>
           ))}
+          <div>
+            <p className="eyebrow mb-5">Contact</p>
+            <address className="grid gap-3 text-sm not-italic text-[var(--muted)]">
+              <span>
+                {siteConfig.address.street}, {siteConfig.address.city}{" "}
+                {siteConfig.address.postalCode}
+              </span>
+              <a href={`tel:${siteConfig.contact.phoneE164}`} className="hover:text-[var(--ink)]">
+                {siteConfig.contact.phoneDisplay}
+              </a>
+              <a
+                href={`mailto:${siteConfig.contact.email}`}
+                className="break-all hover:text-[var(--ink)]"
+              >
+                {siteConfig.contact.email}
+              </a>
+              <a
+                href={`https://wa.me/${siteConfig.contact.whatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-[var(--tangerine-text)] hover:text-[var(--ink)]"
+              >
+                WhatsApp product help
+              </a>
+            </address>
+          </div>
         </div>
       </div>
       <div className="container-standard flex flex-col gap-2 border-t border-[var(--line)] py-5 text-xs text-[var(--muted)] sm:flex-row sm:justify-between">
         <p>© {new Date().getFullYear()} DeviceDestination. All rights reserved.</p>
-        <p>Product installation is provided through qualified third-party installers.</p>
+        <p>Installation is quoted separately through qualified third-party installers.</p>
       </div>
     </footer>
   );

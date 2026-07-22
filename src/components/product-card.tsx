@@ -14,7 +14,7 @@ import {
 import { getPriceMaxAgeDays } from "@/config/site";
 import { springs } from "@/lib/motion/constants";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, compact = false }: { product: Product; compact?: boolean }) {
   const reduceMotion = useReducedMotion();
   const eligibility = getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() });
   const compareAt = product.mrpInclGstPaise ?? product.compareAtPriceInclGstPaise;
@@ -31,20 +31,20 @@ export function ProductCard({ product }: { product: Product }) {
     >
       <Link
         href={`/products/${product.slug}`}
-        className="relative block aspect-[1.12] overflow-hidden bg-[var(--canvas-alt)]"
+        className={`relative block overflow-hidden bg-[var(--canvas-alt)] ${compact ? "aspect-[1.35]" : "aspect-[1.12]"}`}
       >
         <Image
           src={product.images[0]}
           alt={`${product.brand} ${product.model} product`}
           fill
           sizes="(max-width: 768px) 80vw, (max-width: 1200px) 40vw, 24vw"
-          className="object-contain p-8 transition-transform duration-500 group-hover:scale-[1.04]"
+          className={`object-contain transition-transform duration-500 group-hover:scale-[1.04] ${compact ? "p-6" : "p-8"}`}
         />
         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em]">
           {product.stockStatus === "in_stock" ? "Available" : "Check lead time"}
         </span>
       </Link>
-      <div className="flex flex-1 flex-col p-5">
+      <div className={`flex flex-1 flex-col ${compact ? "p-4" : "p-5"}`}>
         <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
           {product.brand}
         </p>
@@ -53,16 +53,16 @@ export function ProductCard({ product }: { product: Product }) {
         </p>
         <Link
           href={`/products/${product.slug}`}
-          className="mt-2 font-display text-xl font-semibold leading-[1.1] tracking-[-0.035em] hover:underline"
+          className={`mt-2 font-display font-semibold leading-[1.1] tracking-[-0.035em] hover:underline ${compact ? "text-lg" : "text-xl"}`}
         >
           {product.title}
         </Link>
         <ul className="mt-3 grid gap-1 text-sm leading-6 text-[var(--muted)]">
-          {product.highlights.slice(0, 2).map((highlight) => (
+          {product.highlights.slice(0, compact ? 1 : 2).map((highlight) => (
             <li key={highlight}>• {highlight}</li>
           ))}
         </ul>
-        <div className="mt-auto pt-6">
+        <div className={`mt-auto ${compact ? "pt-4" : "pt-6"}`}>
           {compareAt && product.compareAtLabel && (
             <p className="text-xs text-[var(--muted)]">
               <span className="price-old">
@@ -71,7 +71,7 @@ export function ProductCard({ product }: { product: Product }) {
               {discount ? ` · ${discount}% off` : ""}
             </p>
           )}
-          <p className="font-display text-3xl font-bold">
+          <p className={`font-display font-bold ${compact ? "text-2xl" : "text-3xl"}`}>
             {eligibility.eligible
               ? formatPrice(product.sellingPriceInclGstPaise)
               : "Request latest price"}

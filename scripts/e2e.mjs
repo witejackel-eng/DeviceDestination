@@ -88,6 +88,33 @@ async function exerciseViewport(executablePath, viewport, label) {
 
     await page.goto(`${baseUrl}/`);
     await assertVisible(page.getByRole("heading", { level: 1 }), `${label}: homepage heading`);
+    assert.equal(await page.locator("main > section").count(), 6, `${label}: six homepage regions`);
+    assert.equal(
+      await page.locator('main button[aria-label="Search products by exact model"]').count(),
+      1,
+      `${label}: one primary homepage search`,
+    );
+    assert.equal(
+      await page.locator("[data-home-collection]").count(),
+      3,
+      `${label}: three curated collections`,
+    );
+    assert.equal(
+      await page.locator("[data-home-brands-trust]").count(),
+      1,
+      `${label}: brands and trust are combined`,
+    );
+    for (const removedHeading of [
+      "A faster starting point.",
+      "Shop a useful shortlist.",
+      "Know the model? Find it in seconds.",
+    ]) {
+      assert.equal(
+        await page.getByText(removedHeading, { exact: true }).count(),
+        0,
+        `${label}: removed repeated region ${removedHeading}`,
+      );
+    }
     if (process.env.CAPTURE_SCREENSHOTS === "1") {
       await page.waitForTimeout(1_200);
       mkdirSync(join(process.cwd(), "docs/screenshots"), { recursive: true });

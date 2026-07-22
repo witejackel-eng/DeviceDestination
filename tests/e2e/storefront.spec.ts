@@ -5,6 +5,12 @@ test("storefront purchase journey and accessibility", async ({ page }) => {
   await test.step("homepage and catalogue navigation", async () => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Security");
+    await expect(page.locator("main > section")).toHaveCount(6);
+    await expect(
+      page.locator('main button[aria-label="Search products by exact model"]'),
+    ).toHaveCount(1);
+    await expect(page.locator("[data-home-collection]")).toHaveCount(3);
+    await expect(page.locator("[data-home-brands-trust]")).toHaveCount(1);
     await page
       .getByRole("link", { name: /Shop all products/i })
       .first()

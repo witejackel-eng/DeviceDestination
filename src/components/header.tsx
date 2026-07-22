@@ -130,18 +130,18 @@ export function Header() {
           <div className="flex items-center gap-0.5">
             <ProductSearch mode="mobile" />
             <Link
-              href="/account"
-              className="hidden min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-[var(--tangerine-subtle)] sm:flex"
-              aria-label="Account"
-            >
-              <UserRound size={19} />
-            </Link>
-            <Link
               href="/compare"
               className="hidden min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-[var(--tangerine-subtle)] sm:flex"
               aria-label="Compare products"
             >
               <Scale size={19} />
+            </Link>
+            <Link
+              href="/account"
+              className="hidden min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-[var(--tangerine-subtle)] sm:flex"
+              aria-label="Account"
+            >
+              <UserRound size={19} />
             </Link>
             <button
               type="button"
@@ -171,9 +171,6 @@ export function Header() {
               <Menu size={22} />
             </button>
           </div>
-        </div>
-        <div className="container-standard pb-3 md:hidden">
-          <ProductSearch mode="inline" />
         </div>
       </header>
 
