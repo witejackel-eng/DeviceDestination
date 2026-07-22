@@ -57,7 +57,7 @@ export default async function ProductPage({ params }: { params: Params }) {
     .filter((item) => item.categorySlug === product.categorySlug && item.id !== product.id)
     .slice(0, 3);
   const whatsapp = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(`Hello, I need help with ${product.model} (${product.title}).`)}`;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.devicedestination.com";
+  const siteUrl = siteConfig.url;
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",

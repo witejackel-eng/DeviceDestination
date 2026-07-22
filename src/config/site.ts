@@ -4,7 +4,7 @@ export const siteConfig = {
   tagline: "Security hardware, selected with care.",
   description:
     "Genuine CCTV, networking, storage, and biometric systems—verified by exact model, priced with GST included, and supported across Delhi NCR.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.devicedestination.com",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://device-destination-rose.vercel.app",
   contact: {
     phoneDisplay: "+91 83685 61919",
     phoneE164: "+918368561919",

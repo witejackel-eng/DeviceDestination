@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { brands, catalogue, categories } from "@/data/catalog";
+import { siteConfig } from "@/config/site";
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.devicedestination.com";
+  const base = siteConfig.url;
   const routes = [
     "",
     "/products",
