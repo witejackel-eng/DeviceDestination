@@ -28,7 +28,7 @@ export function CompareToggle({
       disabled={atLimit || incompatible}
       className={
         compact
-          ? "inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[var(--muted)] disabled:opacity-45"
+          ? "inline-flex items-center gap-1.5 min-h-11 text-xs font-bold text-[var(--muted)] disabled:opacity-45 transition-colors hover:text-[var(--ink)]"
           : "button-secondary w-full"
       }
       aria-pressed={selected}
@@ -40,7 +40,7 @@ export function CompareToggle({
             : undefined
       }
     >
-      {selected ? <Check size={16} /> : <Scale size={16} />}
+      {selected ? <Check size={14} /> : <Scale size={14} />}
       {selected
         ? "Added to compare"
         : atLimit

@@ -41,9 +41,9 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
   };
 
   return (
-    <div className="container-standard section-space !pt-14">
+    <div className="container-standard section-space !pt-14" style={{ background: "var(--surface)" }}>
       <p className="eyebrow">Side-by-side</p>
-      <div className="mt-4 flex flex-wrap items-end justify-between gap-5">
+      <div className="mt-3 flex flex-wrap items-end justify-between gap-5 max-w-2xl">
         <h1 className="display-section">Compare exact models.</h1>
         {selected.length > 0 && (
           <button type="button" onClick={share} className="button-secondary">
@@ -52,11 +52,11 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
           </button>
         )}
       </div>
-      <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">
+      <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--ink-soft)]">
         Choose up to four models. The comparison is stored on this device and encoded in the
         shareable URL.
       </p>
-      <div className="mt-8 flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--canvas-alt)] p-4">
+      <div className="mt-8 flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--line)] p-4" style={{ background: "var(--canvas-warm)" }}>
         <label htmlFor="compare-add" className="text-sm font-bold">
           Add a model
         </label>
@@ -79,7 +79,7 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
         <span className="text-xs text-[var(--muted)]">{selected.length}/4 selected</span>
       </div>
       {!selected.length ? (
-        <div className="surface-card mt-10 grid min-h-[360px] place-content-center p-8 text-center">
+        <div className="surface-card mt-10 grid min-h-[360px] place-content-center p-8 text-center" style={{ background: "var(--surface)" }}>
           <Plus className="mx-auto text-[var(--tangerine-text)]" size={32} />
           <h2 className="mt-5 font-display text-3xl font-semibold">Your comparison is empty.</h2>
           <p className="mt-3 text-[var(--muted)]">
@@ -90,11 +90,11 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
           </Link>
         </div>
       ) : (
-        <div className="mt-8 overflow-x-auto rounded-[22px] border border-[var(--line)] bg-white">
+        <div className="mt-8 overflow-x-auto rounded-[22px] border border-[var(--line)]" style={{ background: "var(--surface)" }}>
           <table className="w-full min-w-[760px] border-collapse text-left">
             <thead>
               <tr>
-                <th className="w-[210px] bg-[var(--canvas-alt)] p-5">Product</th>
+                <th className="w-[210px] bg-[var(--canvas)] p-4 text-sm font-bold">Product</th>
                 {selected.map((product) => (
                   <th
                     key={product.id}
@@ -108,7 +108,7 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
                     >
                       <X size={15} />
                     </button>
-                    <div className="relative mb-4 aspect-[1.3] rounded-2xl bg-[var(--canvas-alt)]">
+                    <div className="relative mb-4 aspect-[1.3] rounded-2xl" style={{ background: "var(--canvas-warm)" }}>
                       <Image
                         src={product.images[0]}
                         alt=""
@@ -139,7 +139,7 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
             </thead>
             <tbody>
               <tr className="border-t border-[var(--line)]">
-                <th className="bg-[var(--canvas-alt)] p-5 text-sm">Availability</th>
+                <th className="bg-[var(--canvas)] p-4 text-sm font-bold">Availability</th>
                 {selected.map((product) => (
                   <td key={product.id} className="border-l border-[var(--line)] p-5 text-sm">
                     {product.stockStatus.replaceAll("_", " ")}
@@ -147,7 +147,7 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
                 ))}
               </tr>
               <tr className="border-t border-[var(--line)]">
-                <th className="bg-[var(--canvas-alt)] p-5 text-sm">Warranty</th>
+                <th className="bg-[var(--canvas)] p-4 text-sm font-bold">Warranty</th>
                 {selected.map((product) => (
                   <td key={product.id} className="border-l border-[var(--line)] p-5 text-sm">
                     {product.warrantySummary}
@@ -156,7 +156,7 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
               </tr>
               {specLabels.map((label) => (
                 <tr key={label} className="border-t border-[var(--line)]">
-                  <th className="bg-[var(--canvas-alt)] p-5 text-sm">{label}</th>
+                  <th className="bg-[var(--canvas)] p-4 text-sm font-bold">{label}</th>
                   {selected.map((product) => (
                     <td
                       key={product.id}

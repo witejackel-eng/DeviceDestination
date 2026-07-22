@@ -3,10 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ChevronDown, Menu, Scale, ShoppingBag, UserRound, X } from "lucide-react";
+import { ArrowRight, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { catalogue } from "@/data/catalog";
 import { useCartStore } from "@/lib/cart-store";
 import { Brand } from "@/components/brand";
@@ -15,51 +15,68 @@ import { getPriceMaxAgeDays, siteConfig } from "@/config/site";
 import { formatPrice, getPurchaseEligibility } from "@/lib/products";
 import { durations, easings, springs } from "@/lib/motion/constants";
 
+/* ── Navigation structure ─────────────────────────────────── */
+
 const primaryNav = [
+  { href: "/products", label: "Shop" },
   { href: "/products?q=camera", label: "Cameras" },
   { href: "/categories/biometric-devices", label: "Biometrics" },
   { href: "/brands", label: "Brands" },
   { href: "/about", label: "About" },
 ] as const;
 
-const shopColumns = [
-  {
-    title: "Shop",
-    links: [
-      ["All products", "/products"],
-      ["Popular models", "/products?sort=popular"],
-      ["Compare products", "/compare"],
-      ["Build a CCTV kit", "/system-builder"],
-      ["Downloads", "/downloads"],
-    ],
-  },
-  {
-    title: "Categories",
-    links: [
-      ["CCTV cameras", "/products?q=camera"],
-      ["NVRs and storage", "/categories/nvr-systems"],
-      ["Biometric devices", "/categories/biometric-devices"],
-      ["PoE and networking", "/categories/poe-switches"],
-      ["Dome cameras", "/categories/dome-cameras"],
-      ["Bullet cameras", "/categories/bullet-cameras"],
-    ],
-  },
-] as const;
+const shopCategories = [
+  { label: "CCTV cameras", href: "/products?q=camera", color: "var(--coral-soft)" },
+  { label: "Dome cameras", href: "/categories/dome-cameras", color: "var(--powder-blue-soft)" },
+  { label: "Bullet cameras", href: "/categories/bullet-cameras", color: "var(--butter-soft)" },
+  { label: "NVR systems", href: "/categories/nvr-systems", color: "var(--lilac-soft)" },
+  { label: "Biometric devices", href: "/categories/biometric-devices", color: "var(--mint-soft)" },
+  { label: "PoE and networking", href: "/categories/poe-switches", color: "var(--technical-grey)" },
+];
 
-const mobileNav = [
-  { href: "/products", label: "Shop all products" },
-  { href: "/products?q=camera", label: "CCTV cameras" },
-  { href: "/categories/nvr-systems", label: "NVRs & storage" },
-  { href: "/categories/biometric-devices", label: "Biometrics" },
-  { href: "/categories/poe-switches", label: "Networking" },
-  { href: "/brands", label: "Brands" },
-  { href: "/compare", label: "Compare models" },
-  { href: "/system-builder", label: "Build a CCTV kit" },
-  { href: "/about", label: "About" },
-  { href: "/account", label: "Account" },
-  { href: "/support", label: "Customer help" },
-  { href: "/contact", label: "Contact" },
-] as const;
+const shopLinks = [
+  { label: "All products", href: "/products" },
+  { label: "Popular models", href: "/products?sort=popular" },
+  { label: "Compare products", href: "/compare" },
+];
+
+const stripLinks = [
+  { label: "Build a CCTV system", href: "/system-builder" },
+  { label: "Downloads", href: "/downloads" },
+  { label: "Customer support", href: "/support" },
+];
+
+/* Mobile nav sections */
+const mobileNavSections = [
+  {
+    heading: "Shop",
+    links: [
+      { href: "/products", label: "All products" },
+      { href: "/products?q=camera", label: "CCTV cameras" },
+      { href: "/categories/nvr-systems", label: "NVRs & storage" },
+      { href: "/categories/biometric-devices", label: "Biometrics" },
+      { href: "/categories/poe-switches", label: "Networking" },
+    ],
+  },
+  {
+    heading: "Tools",
+    links: [
+      { href: "/compare", label: "Compare models" },
+      { href: "/system-builder", label: "Build a CCTV kit" },
+      { href: "/downloads", label: "Downloads" },
+      { href: "/brands", label: "Brands" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { href: "/about", label: "About" },
+      { href: "/account", label: "Account" },
+      { href: "/support", label: "Customer help" },
+      { href: "/contact", label: "Contact" },
+    ],
+  },
+];
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -80,28 +97,30 @@ export function Header() {
     ? getPurchaseEligibility(featured, { maxAgeDays: getPriceMaxAgeDays() }).eligible
     : false;
 
+  /* ── Scroll handler for compact header ──────────────────── */
   useEffect(() => {
-    const onScroll = () => setCompact(window.scrollY > 24);
+    const onScroll = () => setCompact(window.scrollY > 32);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close the Shop menu on route change (adjusted during render, not in an effect),
-  // as well as on Escape or an outside click.
+  /* ── Close shop menu on route change ────────────────────── */
   const [lastPathname, setLastPathname] = useState(pathname);
   if (lastPathname !== pathname) {
     setLastPathname(pathname);
     setShopOpen(false);
   }
 
+  /* ── Shop menu: Escape + outside click ──────────────────── */
+  const closeShop = useCallback(() => setShopOpen(false), []);
   useEffect(() => {
     if (!shopOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setShopOpen(false);
+      if (event.key === "Escape") closeShop();
     };
     const onPointerDown = (event: PointerEvent) => {
-      if (!shopRef.current?.contains(event.target as Node)) setShopOpen(false);
+      if (!shopRef.current?.contains(event.target as Node)) closeShop();
     };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("pointerdown", onPointerDown);
@@ -109,23 +128,50 @@ export function Header() {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("pointerdown", onPointerDown);
     };
+  }, [shopOpen, closeShop]);
+
+  /* ── Focus trap for mega menu (basic) ──────────────────── */
+  useEffect(() => {
+    if (!shopOpen) return;
+    const shopPanel = shopRef.current;
+    if (!shopPanel) return;
+    const focusable = shopPanel.querySelectorAll<HTMLElement>(
+      'a[href], button, [tabindex]:not([tabindex="-1"])',
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!first || !last) return;
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key === "Tab") {
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    first.focus();
+    shopPanel.addEventListener("keydown", handleTab);
+    return () => shopPanel.removeEventListener("keydown", handleTab);
   }, [shopOpen]);
 
   return (
     <>
-      <div className="border-b border-[var(--line)] bg-[var(--canvas-alt)] py-2 text-center text-[11px] font-semibold tracking-[0.04em] text-[var(--muted)] sm:text-xs">
-        GST-inclusive prices · Exact-model documents · Secure checkout · {siteConfig.serviceArea}{" "}
-        support
-      </div>
-      <header className="sticky top-3 z-50 sm:top-4">
+      {/* ── HEADER SHELL ───────────────────────────────────── */}
+      <header className="sticky top-5 z-50 sm:top-6">
         <div className="header-shell">
           <div
             data-header-capsule
-            className={`header-capsule flex items-center justify-between gap-3 ${compact ? "header-capsule--compact" : ""}`}
+            className={`header-capsule flex items-center justify-between gap-4 ${compact ? "header-capsule--compact" : ""}`}
           >
             <Brand responsive compactMark />
 
-            <nav className="hidden items-center gap-5 lg:flex" aria-label="Primary navigation">
+            {/* ── Desktop navigation ─────────────────────────── */}
+            <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
+              {/* Shop dropdown trigger */}
               <div className="relative" ref={shopRef}>
                 <button
                   type="button"
@@ -135,105 +181,162 @@ export function Header() {
                   aria-expanded={shopOpen}
                   aria-haspopup="true"
                 >
-                  Shop{" "}
-                  <ChevronDown
-                    size={13}
-                    className={shopOpen ? "rotate-180 transition-transform" : "transition-transform"}
-                  />
+                  Shop
                 </button>
+
+                {/* ── MEGA MENU ─────────────────────────────────── */}
                 <AnimatePresence>
                   {shopOpen && (
                     <motion.div
-                      initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 4 }}
-                      transition={{ duration: durations.fast, ease: easings.enter }}
-                      className="absolute left-0 top-full mt-3 w-[720px] rounded-[20px] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-2xl"
+                      role="dialog"
+                      aria-label="Shop menu"
+                      initial={reduceMotion ? false : { opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                      transition={{ duration: durations.normal, ease: easings.enter }}
+                      className="mega-menu"
                     >
-                      <div className="grid grid-cols-[1fr_1fr_1.05fr] gap-7">
-                        {shopColumns.map((column) => (
-                          <div key={column.title}>
-                            <p className="eyebrow">{column.title}</p>
-                            <div className="mt-3 grid gap-0.5">
-                              {column.links.map(([label, href]) => (
-                                <Link
-                                  key={href}
-                                  href={href}
-                                  onClick={() => setShopOpen(false)}
-                                  className="rounded-lg px-2.5 py-2 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--tangerine-soft)] hover:text-[var(--ink)]"
-                                >
-                                  {label}
-                                </Link>
-                              ))}
-                            </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3">
+                        {/* Panel 1 — Categories (coral background) */}
+                        <div
+                          className="mega-menu-panel"
+                          style={{ background: "var(--coral-soft)" }}
+                        >
+                          <h3 className="text-[var(--ink)]">Browse hardware</h3>
+                          <p className="text-[var(--ink-soft)]">
+                            Find the exact camera, recorder or device you need.
+                          </p>
+                          <div className="grid gap-0.5">
+                            {shopCategories.slice(0, 3).map((cat) => (
+                              <Link
+                                key={cat.href}
+                                href={cat.href}
+                                onClick={closeShop}
+                                className="mega-menu-link"
+                              >
+                                {cat.label}
+                                <ArrowRight size={13} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </Link>
+                            ))}
                           </div>
-                        ))}
-                        {featured && (
-                          <div>
-                            <p className="eyebrow">Featured</p>
+                        </div>
+
+                        {/* Panel 2 — More categories (butter background) */}
+                        <div
+                          className="mega-menu-panel"
+                          style={{ background: "var(--butter-soft)" }}
+                        >
+                          <h3 className="text-[var(--ink)]">Recording & access</h3>
+                          <p className="text-[var(--ink-soft)]">
+                            NVR systems, biometric devices and networking.
+                          </p>
+                          <div className="grid gap-0.5">
+                            {shopCategories.slice(3).map((cat) => (
+                              <Link
+                                key={cat.href}
+                                href={cat.href}
+                                onClick={closeShop}
+                                className="mega-menu-link"
+                              >
+                                {cat.label}
+                                <ArrowRight size={13} />
+                              </Link>
+                            ))}
+                            {shopLinks.map((link) => (
+                              <Link
+                                key={link.href}
+                                href={link.href}
+                                onClick={closeShop}
+                                className="mega-menu-link"
+                              >
+                                {link.label}
+                                <ArrowRight size={13} />
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Panel 3 — Featured product (powder blue) */}
+                        <div
+                          className="mega-menu-panel"
+                          style={{ background: "var(--powder-blue-soft)" }}
+                        >
+                          <h3 className="text-[var(--ink)]">Featured product</h3>
+                          <p className="text-[var(--ink-soft)]">
+                            A popular in-stock model ready to ship.
+                          </p>
+                          {featured && (
                             <Link
                               href={`/products/${featured.slug}`}
-                              onClick={() => setShopOpen(false)}
-                              className="mt-3 block rounded-[14px] border border-[var(--line)] p-3 transition-colors hover:border-[var(--tangerine-border-hover)]"
+                              onClick={closeShop}
+                              className="mt-2 block rounded-[18px] border border-[var(--line)] bg-white/60 p-3 transition-colors hover:border-[var(--tangerine-border-hover)] hover:bg-white"
                             >
-                              <span className="relative block aspect-[1.4] overflow-hidden rounded-lg bg-[var(--canvas-alt)]">
+                              <span className="relative block aspect-[1.35] overflow-hidden rounded-2xl bg-[var(--canvas)]">
                                 <Image
                                   src={featured.images[0]}
                                   alt=""
                                   fill
-                                  sizes="220px"
-                                  className="object-contain p-3"
+                                  sizes="240px"
+                                  className="object-contain p-4"
                                 />
                               </span>
-                              <span className="mt-3 block text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--tangerine-text)]">
+                              <span className="mt-2.5 block text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--tangerine-text)]">
                                 {featured.model}
                               </span>
-                              <span className="mt-1 block truncate font-display text-lg font-semibold">
+                              <span className="mt-1 block font-display text-base font-bold leading-tight">
                                 {featured.title}
                               </span>
-                              <span className="mt-1 block text-sm font-bold">
+                              <span className="mt-1.5 block text-sm font-bold">
                                 {featuredEligible
                                   ? formatPrice(featured.sellingPriceInclGstPaise)
                                   : "Request price"}
                               </span>
-                              <span className="mt-2 block text-xs font-bold text-[var(--muted)]">
-                                View product →
-                              </span>
                             </Link>
-                          </div>
-                        )}
+                          )}
+                        </div>
+                      </div>
+
+                      {/* ── Quick links strip ─────────────────────── */}
+                      <div className="mega-menu-strip">
+                        {stripLinks.map((link) => (
+                          <Link key={link.href} href={link.href} onClick={closeShop}>
+                            {link.label}
+                          </Link>
+                        ))}
+                        <span className="ml-auto text-[var(--muted)]">
+                          {siteConfig.serviceArea} support
+                        </span>
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-              {primaryNav.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="header-link"
-                  data-active={pathname === item.href.split("?")[0] ? "true" : "false"}
-                >
-                  {item.label}
-                </Link>
-              ))}
+
+              {primaryNav
+                .filter((item) => item.label !== "Shop")
+                .map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="header-link"
+                    data-active={
+                      pathname === item.href.split("?")[0] ? "true" : "false"
+                    }
+                  >
+                    {item.label}
+                  </Link>
+                ))}
             </nav>
 
-            <div className="flex items-center gap-0.5">
+            {/* ── Right-side actions ──────────────────────────── */}
+            <div className="flex items-center gap-1">
               <ProductSearch className="inline-flex" />
-              <Link
-                href="/compare"
-                className="header-control hidden sm:inline-flex"
-                aria-label="Compare products"
-              >
-                <Scale size={19} />
-              </Link>
               <Link
                 href="/account"
                 className="header-control hidden sm:inline-flex"
                 aria-label="Account"
               >
-                <UserRound size={19} />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </Link>
               <button
                 type="button"
@@ -241,19 +344,29 @@ export function Header() {
                 className="header-control inline-flex"
                 aria-label={`Open cart with ${count} items`}
               >
-                <ShoppingBag size={19} />
+                <ShoppingBag size={18} />
                 {count > 0 && (
                   <motion.span
                     key={count}
-                    initial={reduceMotion ? false : { scale: 0.65 }}
+                    initial={reduceMotion ? false : { scale: 0.6 }}
                     animate={{ scale: 1 }}
                     transition={springs.interface}
-                    className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--tangerine)] px-1 text-[10px] font-extrabold text-[var(--ink)]"
+                    className="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--tangerine)] px-1 text-[10px] font-extrabold text-[var(--ink)]"
                   >
                     {count}
                   </motion.span>
                 )}
               </button>
+
+              {/* ── CTA circle (shop arrow) ─────────────────────── */}
+              <Link
+                href="/products"
+                className="header-cta-circle hidden lg:inline-flex"
+                aria-label="Browse all products"
+              >
+                <ArrowRight size={18} />
+              </Link>
+
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
@@ -267,29 +380,32 @@ export function Header() {
         </div>
       </header>
 
+      {/* ── MOBILE NAVIGATION ───────────────────────────────── */}
       <Dialog.Root open={mobileOpen} onOpenChange={setMobileOpen}>
         <AnimatePresence>
           {mobileOpen && (
             <Dialog.Portal forceMount>
               <Dialog.Overlay asChild forceMount>
                 <motion.div
-                  className="fixed inset-0 z-[70] bg-black/30"
+                  className="fixed inset-0 z-[70] bg-black/25 backdrop-blur-sm"
                   initial={reduceMotion ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
+                  transition={{ duration: durations.fast }}
                 />
               </Dialog.Overlay>
               <Dialog.Content asChild forceMount>
                 <motion.div
-                  className="fixed inset-y-0 right-0 z-[80] w-[min(94vw,430px)] overflow-y-auto bg-[var(--canvas)] p-6 shadow-2xl"
+                  className="fixed inset-0 z-[80] flex flex-col overflow-y-auto bg-[var(--canvas)]"
                   initial={reduceMotion ? false : { x: "100%" }}
                   animate={{ x: 0 }}
                   exit={{ x: "100%" }}
                   transition={springs.drawer}
                 >
-                  <div className="mb-8 flex items-center justify-between">
+                  {/* Mobile header */}
+                  <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
                     <Dialog.Title className="font-display text-xl font-bold">
-                      Shop DeviceDestination
+                      Menu
                     </Dialog.Title>
                     <Dialog.Close
                       className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--line)]"
@@ -298,18 +414,69 @@ export function Header() {
                       <X size={20} />
                     </Dialog.Close>
                   </div>
-                  <nav className="grid gap-1" aria-label="Mobile navigation">
-                    {mobileNav.map((item) => (
-                      <Dialog.Close asChild key={`${item.href}-${item.label}`}>
-                        <Link
-                          href={item.href}
-                          className="border-b border-[var(--line)] py-4 font-display text-2xl font-semibold"
-                        >
-                          {item.label}
-                        </Link>
-                      </Dialog.Close>
+
+                  {/* Mobile search */}
+                  <div className="px-5 pt-5">
+                    <div className="flex items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5">
+                      <Search size={16} className="text-[var(--muted)]" />
+                      <ProductSearch className="min-w-0 flex-1" />
+                    </div>
+                  </div>
+
+                  {/* Mobile nav sections */}
+                  <nav className="flex-1 px-5 pt-6" aria-label="Mobile navigation">
+                    {mobileNavSections.map((section) => (
+                      <div key={section.heading} className="mb-8">
+                        <p className="eyebrow mb-3">{section.heading}</p>
+                        <div className="grid gap-0.5">
+                          {section.links.map((item) => (
+                            <Dialog.Close asChild key={`${item.href}-${item.label}`}>
+                              <Link
+                                href={item.href}
+                                className="flex items-center justify-between border-b border-[var(--line)] py-3.5 font-display text-xl font-semibold"
+                              >
+                                {item.label}
+                                <ArrowRight size={16} className="text-[var(--muted)]" />
+                              </Link>
+                            </Dialog.Close>
+                          ))}
+                        </div>
+                      </div>
                     ))}
+
+                    {/* Featured category panels */}
+                    <div className="mb-8">
+                      <p className="eyebrow mb-3">Quick browse</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { label: "Cameras", href: "/products?q=camera", bg: "var(--coral-soft)" },
+                          { label: "NVRs", href: "/categories/nvr-systems", bg: "var(--lilac-soft)" },
+                          { label: "Biometrics", href: "/categories/biometric-devices", bg: "var(--mint-soft)" },
+                          { label: "Networking", href: "/categories/poe-switches", bg: "var(--butter-soft)" },
+                        ].map((tile) => (
+                          <Dialog.Close asChild key={tile.href}>
+                            <Link
+                              href={tile.href}
+                              className="flex items-center justify-between rounded-2xl p-4 font-display text-base font-bold"
+                              style={{ background: tile.bg }}
+                            >
+                              {tile.label}
+                              <ArrowRight size={14} />
+                            </Link>
+                          </Dialog.Close>
+                        ))}
+                      </div>
+                    </div>
                   </nav>
+
+                  {/* Mobile footer */}
+                  <div className="border-t border-[var(--line)] px-5 py-5">
+                    <div className="flex items-center gap-3 text-xs text-[var(--muted)]">
+                      <span>Prices include GST</span>
+                      <span>·</span>
+                      <span>{siteConfig.serviceArea} support</span>
+                    </div>
+                  </div>
                 </motion.div>
               </Dialog.Content>
             </Dialog.Portal>

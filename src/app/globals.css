@@ -1,45 +1,89 @@
 @import "tailwindcss";
 
+/* ============================================================
+   INDUSTRIAL POP COMMERCE — DeviceDestination Design System
+   A disciplined semantic colour system for a premium
+   hardware store that combines technical precision with
+   expressive, art-directed visual energy.
+   ============================================================ */
+
 @theme {
-  --color-tangerine: #ff8a00;
-  --color-tangerine-light: #ffa62b;
-  --color-tangerine-lighter: #ffb347;
+  --color-tangerine: #ff7800;
+  --color-tangerine-light: #ff8f2e;
+  --color-tangerine-lighter: #ffa24e;
+  --color-signal-orange: #ff7800;
+  --color-signal-orange-hover: #ed6f00;
 }
 
 :root {
-  --canvas: #f8f5ed;
-  --canvas-alt: #f0ece3;
-  --surface: #fffefa;
-  --ink: #171513;
-  --ink-soft: #3d3935;
-  --muted: #716c65;
-  --line: rgba(23, 21, 19, 0.16);
-  --line-strong: rgba(23, 21, 19, 0.58);
-  --header-surface: #dce5d8;
-  --header-surface-hover: #cfdcca;
-  --tangerine-rgb: 255 138 0;
+  /* ── Core surfaces ──────────────────────────────────────── */
+  --canvas: #f4f0e7;
+  --canvas-warm: #eee8dd;
+  --surface: #fffdf8;
+  --ink: #171512;
+  --ink-soft: #504a43;
+  --muted: #766f66;
+  --line: rgba(23, 21, 18, 0.15);
+  --line-strong: #171512;
+
+  /* ── Header surfaces ───────────────────────────────────── */
+  --header-surface: var(--surface);
+  --header-surface-hover: var(--canvas);
+
+  /* ── Tangerine (primary action colour) ─────────────────── */
+  --tangerine-rgb: 255 120 0;
   --tangerine: var(--color-tangerine);
   --tangerine-hover: var(--color-tangerine-light);
   --tangerine-lighter: var(--color-tangerine-lighter);
-  --tangerine-text: #bd4d00;
-  --tangerine-soft: rgb(var(--tangerine-rgb) / 0.09);
-  --tangerine-subtle: rgb(var(--tangerine-rgb) / 0.05);
-  --tangerine-border: rgb(var(--tangerine-rgb) / 0.22);
-  --tangerine-border-hover: rgb(var(--tangerine-rgb) / 0.52);
-  --tangerine-focus: rgb(var(--tangerine-rgb) / 0.4);
-  --tangerine-shadow: rgb(var(--tangerine-rgb) / 0.24);
-  --peach: #ffd7bd;
-  --sage: #dfe9db;
-  --sky: #dceaf5;
-  --sand: #eee4d5;
-  --blush: #f3c9dc;
-  --technical: #e6e9df;
-  --canvas-rgb: 248 245 237;
+  --tangerine-text: #a85500;
+  --tangerine-soft: rgb(var(--tangerine-rgb) / 0.08);
+  --tangerine-subtle: rgb(var(--tangerine-rgb) / 0.04);
+  --tangerine-border: rgb(var(--tangerine-rgb) / 0.18);
+  --tangerine-border-hover: rgb(var(--tangerine-rgb) / 0.45);
+  --tangerine-focus: rgb(var(--tangerine-rgb) / 0.35);
+  --tangerine-shadow: rgb(var(--tangerine-rgb) / 0.2);
+
+  /* ── Accent colour fields ─────────────────────────────── */
+  --coral: #e95a42;
+  --coral-soft: #f3b09f;
+  --powder-blue: #bfc9f4;
+  --powder-blue-soft: #dfe4fa;
+  --lilac: #c9b9ec;
+  --lilac-soft: #e5dcf7;
+  --butter: #efe277;
+  --butter-soft: #f6efb4;
+  --mint: #d7e6a6;
+  --mint-soft: #e8f0c8;
+  --peach: #efa78d;
+  --technical-grey: #d8d8d0;
+
+  /* ── Legacy aliases (for gradual migration) ────────────── */
+  --sage: var(--mint-soft);
+  --sky: var(--powder-blue-soft);
+  --sand: var(--canvas-warm);
+  --blush: var(--coral-soft);
+  --technical: var(--technical-grey);
+
+  /* ── Dark theme utilities ──────────────────────────────── */
+  --canvas-rgb: 244 240 231;
   --line-on-dark: rgb(var(--canvas-rgb) / 0.14);
   --node-on-dark: rgb(var(--canvas-rgb) / 0.4);
+
+  /* ── Semantic status ──────────────────────────────────── */
   --success: #24633f;
   --danger: #a92d22;
+
+  /* ── Category-based product image backgrounds ───────────── */
+  --cat-dome: var(--powder-blue-soft);
+  --cat-bullet: var(--butter-soft);
+  --cat-color-dome: var(--coral-soft);
+  --cat-color-bullet: var(--peach);
+  --cat-nvr: var(--lilac-soft);
+  --cat-biometric: var(--mint-soft);
+  --cat-networking: var(--technical-grey);
 }
+
+/* ── Reset ────────────────────────────────────────────────── */
 
 * {
   box-sizing: border-box;
@@ -59,18 +103,22 @@ body {
   color: var(--ink);
   font-family: var(--font-body), "Manrope", ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body[data-scroll-lock="true"] {
   overflow: hidden;
 }
 
+/* ── Typography ───────────────────────────────────────────── */
+
 h1,
 h2,
 h3,
 .font-display {
-  font-family: var(--font-display), "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display), "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 a,
@@ -102,44 +150,58 @@ button {
 }
 
 ::selection {
-  background: var(--peach);
+  background: var(--butter-soft);
   color: var(--ink);
 }
 
+/* ── Layout containers ─────────────────────────────────────── */
+
 .container-standard {
-  width: min(100% - 32px, 1480px);
+  width: min(100% - 40px, 1560px);
   margin-inline: auto;
 }
 
 .container-reading {
-  width: min(100% - 32px, 820px);
+  width: min(100% - 40px, 820px);
   margin-inline: auto;
 }
 
 .section-space {
-  padding-block: clamp(76px, 10vw, 152px);
+  padding-block: clamp(72px, 10vw, 144px);
 }
 
+/* ── Typography scale ────────────────────────────────────── */
+
 .eyebrow {
-  font-size: 0.74rem;
-  font-weight: 750;
-  letter-spacing: 0.14em;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
 .display-hero {
-  font-size: clamp(3.75rem, 9vw, 9.25rem);
-  line-height: 0.87;
+  font-size: clamp(4rem, 10vw, 10rem);
+  line-height: 0.88;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .display-section {
-  font-size: clamp(2.7rem, 6vw, 5.7rem);
-  line-height: 0.98;
+  font-size: clamp(3rem, 6.5vw, 6.5rem);
+  line-height: 0.94;
   font-weight: 800;
+  letter-spacing: -0.025em;
 }
+
+.display-product-listing {
+  font-size: clamp(3.5rem, 7vw, 7rem);
+  line-height: 0.92;
+  font-weight: 800;
+  letter-spacing: -0.028em;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
 
 .button-primary,
 .button-secondary,
@@ -148,10 +210,11 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55rem;
-  border-radius: 12px;
-  padding: 0.8rem 1.15rem;
-  font-weight: 720;
+  gap: 0.5rem;
+  border-radius: 14px;
+  padding: 0.75rem 1.25rem;
+  font-weight: 700;
+  font-size: 0.875rem;
   transition:
     transform 180ms ease,
     background-color 180ms ease,
@@ -160,9 +223,9 @@ button {
 }
 
 .button-primary {
-  border: 1px solid var(--tangerine);
+  border: 1.5px solid var(--tangerine);
   background: var(--tangerine);
-  color: #221108;
+  color: #1a0e00;
 }
 
 .button-primary:hover {
@@ -182,12 +245,8 @@ button {
   transform: none;
 }
 
-.brand-mark {
-  box-shadow: 0 7px 20px var(--tangerine-shadow);
-}
-
 .button-secondary {
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: var(--surface);
   color: var(--ink);
 }
@@ -204,18 +263,28 @@ button {
   color: var(--ink);
 }
 
-.surface-card {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 20px;
-  box-shadow: 0 18px 46px rgba(55, 41, 27, 0.055);
+.brand-mark {
+  box-shadow: 0 4px 16px var(--tangerine-shadow);
 }
+
+/* ── Surface card ────────────────────────────────────────── */
+
+.surface-card {
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  border-radius: 22px;
+  box-shadow: none;
+}
+
+/* ── Price ───────────────────────────────────────────────── */
 
 .price-old {
   color: var(--muted);
   text-decoration: line-through;
   text-decoration-thickness: 1px;
 }
+
+/* ── Scrollbar utility ──────────────────────────────────── */
 
 .no-scrollbar {
   scrollbar-width: none;
@@ -225,45 +294,50 @@ button {
   display: none;
 }
 
+/* ============================================================
+   HEADER — Premium floating navigation shell
+   ============================================================ */
+
 .header-shell {
-  width: min(100% - 24px, 1040px);
+  width: min(100% - 40px, 1560px);
   margin-inline: auto;
 }
 
 .header-capsule {
-  height: 54px;
-  padding-inline: 16px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: var(--header-surface);
+  height: 88px;
+  padding-inline: 20px;
+  border-radius: 28px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
   color: var(--ink);
-  box-shadow: 0 10px 30px rgba(23, 21, 19, 0.1);
+  box-shadow: 0 4px 24px rgba(23, 21, 18, 0.07);
   transition:
-    height 260ms ease,
-    box-shadow 260ms ease;
+    height 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding-block 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .header-capsule--compact {
-  height: 48px;
-  box-shadow: 0 12px 34px rgba(23, 21, 19, 0.16);
+  height: 68px;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(23, 21, 18, 0.1);
 }
 
-/* Header controls: 44px hit area, compact visual box.
-   Deliberately sets no `display` so Tailwind's hidden/sm:inline-flex
-   visibility utilities keep working on these elements. */
 .header-control {
   position: relative;
   min-height: 44px;
   min-width: 44px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: 12px;
   color: var(--ink);
   transition: background-color 160ms ease;
 }
 
 .header-control:hover {
-  background: var(--header-surface-hover);
+  background: var(--canvas-warm);
 }
 
 .header-link {
@@ -271,9 +345,9 @@ button {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.3rem;
   font-size: 0.8125rem;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
   color: var(--ink-soft);
   transition: color 160ms ease;
@@ -288,11 +362,294 @@ button {
   content: "";
   position: absolute;
   inset-inline: 0;
-  bottom: 9px;
-  height: 2px;
+  bottom: 10px;
+  height: 2.5px;
   border-radius: 2px;
   background: var(--tangerine);
 }
+
+/* ── CTA circle (far-right header action) ─────────────────── */
+
+.header-cta-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 9999px;
+  background: var(--tangerine);
+  color: #1a0e00;
+  border: none;
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms ease;
+}
+
+.header-cta-circle:hover {
+  background: var(--tangerine-hover);
+  transform: scale(1.06);
+}
+
+.header-cta-circle:active {
+  transform: scale(0.96);
+}
+
+/* ============================================================
+   MEGA MENU — Art-directed colour panels
+   ============================================================ */
+
+.mega-menu {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 12px;
+  width: min(calc(100% - 40px), 1400px);
+  border-radius: 24px;
+  border: 1.5px solid var(--line);
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(23, 21, 18, 0.12);
+  z-index: 60;
+}
+
+.mega-menu-panel {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.mega-menu-panel h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.mega-menu-panel p {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  margin-bottom: 1rem;
+  max-width: 260px;
+  line-height: 1.6;
+}
+
+.mega-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.mega-menu-link:hover {
+  background: rgba(23, 21, 18, 0.06);
+  color: var(--ink);
+}
+
+.mega-menu-strip {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 2rem;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 0.8125rem;
+}
+
+.mega-menu-strip a {
+  color: var(--muted);
+  font-weight: 600;
+  transition: color 160ms ease;
+  white-space: nowrap;
+}
+
+.mega-menu-strip a:hover {
+  color: var(--ink);
+}
+
+/* ============================================================
+   PRODUCT CARD — Compact premium card
+   ============================================================ */
+
+.product-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 200ms ease;
+}
+
+.product-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--line-strong);
+}
+
+.product-card-image {
+  position: relative;
+  aspect-ratio: 1 / 1.15;
+  overflow: hidden;
+}
+
+.product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12%;
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.product-card:hover .product-card-image img {
+  transform: scale(1.03);
+}
+
+.product-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 0.875rem 0.875rem;
+}
+
+.product-card-brand {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.product-card-title {
+  margin-top: 2px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-card-footer {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.product-card-price {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.product-card-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  border-radius: 9999px;
+  background: var(--tangerine);
+  color: #1a0e00;
+  border: none;
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms ease;
+}
+
+.product-card-action:hover {
+  background: var(--tangerine-hover);
+  transform: scale(1.08);
+}
+
+.product-card-action:active {
+  transform: scale(0.94);
+}
+
+.product-card-model {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  backdrop-filter: blur(4px);
+}
+
+/* Category colour backgrounds for product images */
+.product-card-image--cat-dome-cameras { background: var(--cat-dome); }
+.product-card-image--cat-bullet-cameras { background: var(--cat-bullet); }
+.product-card-image--cat-color-dome-cameras { background: var(--cat-color-dome); }
+.product-card-image--cat-color-bullet-cameras { background: var(--cat-color-bullet); }
+.product-card-image--cat-nvr-systems { background: var(--cat-nvr); }
+.product-card-image--cat-biometric-devices { background: var(--cat-biometric); }
+.product-card-image--cat-poe-switches { background: var(--cat-networking); }
+
+/* ============================================================
+   CATALOGUE TOOLBAR — Compact filter bar
+   ============================================================ */
+
+.catalogue-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+  white-space: nowrap;
+}
+
+.filter-pill:hover {
+  border-color: var(--tangerine-border);
+  color: var(--ink);
+}
+
+.filter-pill--active {
+  border-color: var(--tangerine);
+  background: var(--tangerine-soft);
+  color: var(--ink);
+}
+
+/* ============================================================
+   POINTER FIELD (retained for hero interactive element)
+   ============================================================ */
 
 .pointer-field {
   position: absolute;
@@ -323,6 +680,10 @@ button {
     left 550ms ease,
     top 550ms ease;
 }
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
   *,

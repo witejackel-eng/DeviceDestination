@@ -7,30 +7,30 @@ export function CollectionPage({
   title,
   description,
   products,
+  accentBg,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   products: Product[];
+  accentBg?: string;
 }) {
   return (
-    <div className="container-standard section-space !pt-14">
-      <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-        <div>
+    <div style={accentBg ? { background: accentBg } : { background: "var(--canvas)" }}>
+      <div className="container-standard section-space !pt-14">
+        <div className="max-w-2xl mb-10">
           <p className="eyebrow">{eyebrow}</p>
-          <h1 className="display-section mt-4">{title}</h1>
-        </div>
-        <div className="self-end">
-          <p className="max-w-2xl text-lg leading-8 text-[var(--muted)]">{description}</p>
-          <Link href="/products" className="button-secondary mt-6">
+          <h1 className="display-section mt-3">{title}</h1>
+          <p className="mt-4 text-base leading-7 text-[var(--ink-soft)]">{description}</p>
+          <Link href="/products" className="button-secondary mt-5">
             Browse all products
           </Link>
         </div>
-      </div>
-      <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
       </div>
     </div>
   );

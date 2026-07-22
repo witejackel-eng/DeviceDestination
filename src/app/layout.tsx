@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow_Condensed, Manrope } from "next/font/google";
+import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CartDrawer } from "@/components/cart-drawer";
@@ -10,12 +10,13 @@ import { CookiePreferencesModal } from "@/components/cookie-preferences-modal";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
 
-const barlowCondensed = Barlow_Condensed({
+const bricolageGrotesque = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-display",
   display: "swap",
 });
+
 const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
@@ -54,7 +55,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FF8A00",
+  themeColor: "#FF7800",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -76,11 +77,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   };
 
   return (
-    <html lang="en-IN" className={`${barlowCondensed.variable} ${manrope.variable}`}>
+    <html lang="en-IN" className={`${bricolageGrotesque.variable} ${manrope.variable}`}>
       <body>
         <a
           href="#main-content"
-          className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-lg bg-[var(--ink)] px-4 py-3 text-white focus:translate-y-0"
+          className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-xl bg-[var(--ink)] px-4 py-3 text-sm font-semibold text-white focus:translate-y-0 transition-transform"
         >
           Skip to content
         </a>

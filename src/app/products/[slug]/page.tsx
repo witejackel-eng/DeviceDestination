@@ -57,7 +57,7 @@ export default async function ProductPage({ params }: { params: Params }) {
   const eligibility = getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() });
   const related = catalogue
     .filter((item) => item.categorySlug === product.categorySlug && item.id !== product.id)
-    .slice(0, 3);
+    .slice(0, 4);
   const whatsapp = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(`Hello, I need help with ${product.model} (${product.title}).`)}`;
   const siteUrl = siteConfig.url;
   const productSchema = {
@@ -98,52 +98,56 @@ export default async function ProductPage({ params }: { params: Params }) {
   };
 
   return (
-    <div className="container-standard pb-28 pt-8 sm:py-12">
+    <div className="container-standard pb-28 pt-6 sm:pt-10">
       <TrackRecentlyViewed productId={product.id} />
       <nav
         aria-label="Breadcrumb"
-        className="mb-8 flex flex-wrap gap-2 text-sm text-[var(--muted)]"
+        className="mb-6 flex flex-wrap gap-2 text-sm text-[var(--muted)]"
       >
-        <Link href="/">Home</Link>
+        <Link href="/" className="hover:text-[var(--ink)] transition-colors">Home</Link>
         <span>/</span>
-        <Link href="/products">Products</Link>
+        <Link href="/products" className="hover:text-[var(--ink)] transition-colors">Products</Link>
         <span>/</span>
-        <span aria-current="page">{product.model}</span>
+        <span aria-current="page" className="text-[var(--ink)]">{product.model}</span>
       </nav>
+
+      {/* ── Product hero: gallery + info ─────────────────────── */}
       <div className="grid gap-10 lg:grid-cols-[1.04fr_0.96fr] lg:gap-16">
         <ProductGallery images={product.images} alt={`${product.brand} ${product.model}`} />
-        <div className="lg:pt-3">
+        <div className="lg:pt-2">
           <p className="eyebrow">
             {product.brand} · {product.category}
           </p>
-          <h1 className="mt-4 font-display text-[clamp(2.8rem,5vw,5.4rem)] font-semibold leading-[0.96] tracking-[-0.06em]">
+          <h1 className="mt-3 font-display text-[clamp(2.5rem,5vw,5rem)] font-bold leading-[0.94] tracking-[-0.03em]">
             {product.title}
           </h1>
-          <p className="mt-4 text-sm font-extrabold uppercase tracking-[0.1em] text-[var(--tangerine-text)]">
+          <p className="mt-3 text-sm font-bold uppercase tracking-[0.1em]" style={{ color: "var(--tangerine-text)" }}>
             {product.model}
           </p>
-          <p className="mt-6 text-lg leading-8 text-[var(--muted)]">{product.shortDescription}</p>
-          <div className="mt-7 border-y border-[var(--line)] py-6">
+          <p className="mt-5 text-base leading-7 text-[var(--ink-soft)]">{product.shortDescription}</p>
+
+          {/* Price block */}
+          <div className="mt-6 border-y border-[var(--line)] py-5">
             {compareAt && product.compareAtLabel && (
-              <p className="text-sm text-[var(--muted)]">
+              <p className="text-xs text-[var(--muted)]">
                 <span className="price-old">
                   {product.compareAtLabel} {formatPrice(compareAt)}
                 </span>
                 {discount ? ` · ${discount}% off` : ""}
               </p>
             )}
-            <p className="font-display text-4xl font-bold">
+            <p className="font-display text-3xl font-bold mt-1">
               {eligibility.eligible
                 ? formatPrice(product.sellingPriceInclGstPaise)
                 : "Request latest price"}
             </p>
-            <p className="mt-1 text-sm text-[var(--muted)]">
+            <p className="mt-1 text-xs text-[var(--muted)]">
               {eligibility.eligible
                 ? "Inclusive of all taxes · GST invoice provided"
                 : "Current price and availability must be confirmed before checkout"}
             </p>
             {product.priceVerifiedAt && eligibility.eligible && (
-              <p className="mt-2 text-xs text-[var(--muted)]">
+              <p className="mt-1.5 text-[11px] text-[var(--muted)]">
                 Price verified{" "}
                 {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(
                   new Date(product.priceVerifiedAt),
@@ -151,54 +155,54 @@ export default async function ProductPage({ params }: { params: Params }) {
               </p>
             )}
           </div>
-          <div className="mt-7">
+
+          {/* Actions */}
+          <div className="mt-6">
             <ProductActions productId={product.id} />
           </div>
           <div className="mt-3">
             <CompareToggle productId={product.id} />
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <Link href="/quote" className="button-secondary text-center">
-              <Wrench size={17} /> Installation help
+          <div className="mt-4 grid grid-cols-2 gap-2.5">
+            <Link href="/quote" className="button-secondary text-center text-sm">
+              <Wrench size={15} /> Installation help
             </Link>
             <a
               href={whatsapp}
               target="_blank"
               rel="noopener noreferrer"
-              className="button-secondary text-center"
+              className="button-secondary text-center text-sm"
             >
-              <MessageCircle size={17} /> WhatsApp
+              <MessageCircle size={15} /> WhatsApp
             </a>
           </div>
           <DeliveryChecker />
-          <div className="mt-7 grid gap-3 rounded-2xl bg-[var(--canvas-alt)] p-5 text-sm">
-            <p className="flex items-center gap-3">
-              <ShieldCheck size={18} className="text-[var(--success)]" /> {product.warrantySummary}
+
+          {/* Trust badges */}
+          <div className="mt-6 grid gap-2.5 rounded-2xl border border-[var(--line)] p-4">
+            <p className="flex items-center gap-2.5 text-sm">
+              <ShieldCheck size={16} style={{ color: "var(--success)" }} />
+              <span className="font-semibold">{product.warrantySummary}</span>
             </p>
-            <p className="flex items-center gap-3">
-              <FileCheck2 size={18} /> GST invoice with exact model
+            <p className="flex items-center gap-2.5 text-sm text-[var(--ink-soft)]">
+              <FileCheck2 size={16} className="text-[var(--muted)]" />
+              GST invoice with exact model
             </p>
-            <p className="flex items-center gap-3">
-              <Truck size={18} /> Delivery timing confirmed before dispatch
+            <p className="flex items-center gap-2.5 text-sm text-[var(--ink-soft)]">
+              <Truck size={16} className="text-[var(--muted)]" />
+              Delivery timing confirmed before dispatch
             </p>
           </div>
         </div>
       </div>
 
-      <section className="section-space !pb-8">
-        <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr]">
-          <div>
-            <p className="eyebrow">Product information</p>
-            <h2 className="display-section mt-4">Details you can scan.</h2>
-            <a
-              href={product.officialSourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="button-secondary mt-7"
-            >
-              Official product page <ExternalLink size={16} />
-            </a>
-          </div>
+      {/* ── Product information ─────────────────────────────── */}
+      <section className="section-space !pb-10">
+        <div className="max-w-2xl mb-8">
+          <p className="eyebrow">Product information</p>
+          <h2 className="display-section mt-3">Details you can scan.</h2>
+        </div>
+        <div className="container-reading">
           <div className="grid gap-3">
             {[
               ["Overview", product.longDescription],
@@ -215,79 +219,93 @@ export default async function ProductPage({ params }: { params: Params }) {
             ].map(([title, body]) => (
               <details
                 key={title}
-                className="group rounded-2xl border border-[var(--line)] bg-white p-5"
+                className="group rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5"
                 open={title === "Overview"}
               >
-                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between font-display text-xl font-semibold">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between font-display text-lg font-bold">
                   <span>{title}</span>
-                  <span className="text-2xl transition-transform group-open:rotate-45">+</span>
+                  <span className="text-xl transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <p className="pb-2 pt-3 leading-7 text-[var(--muted)]">{body}</p>
+                <p className="pb-2 pt-3 leading-7 text-[var(--ink-soft)] text-sm">{body}</p>
               </details>
             ))}
           </div>
+          <a
+            href={product.officialSourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="button-secondary mt-6"
+          >
+            Official product page <ExternalLink size={15} />
+          </a>
         </div>
       </section>
 
-      <section className="section-space !pt-14">
-        <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
-          <div>
+      {/* ── Specifications ──────────────────────────────────── */}
+      <section className="section-space !pt-10" style={{ background: "var(--surface)" }}>
+        <div className="container-standard">
+          <div className="max-w-2xl mb-8">
             <p className="eyebrow">Technical specifications</p>
-            <h2 className="display-section mt-4">
+            <h2 className="display-section mt-3">
               Exact model.
-              <br />
-              Clear facts.
             </h2>
           </div>
-          <dl className="overflow-hidden rounded-[20px] border border-[var(--line)] bg-white">
+          <dl className="overflow-hidden rounded-[22px] border border-[var(--line)]">
             {Object.entries(product.specs).map(([label, value]) => (
               <div
                 key={label}
-                className="grid border-b border-[var(--line)] last:border-b-0 sm:grid-cols-[0.42fr_0.58fr]"
+                className="grid border-b border-[var(--line)] last:border-b-0 sm:grid-cols-[0.38fr_0.62fr]"
               >
-                <dt className="bg-[var(--canvas-alt)] px-5 py-4 text-sm font-bold">{label}</dt>
-                <dd className="px-5 py-4 text-sm leading-6 text-[var(--muted)]">{value}</dd>
+                <dt className="px-5 py-3.5 text-sm font-bold bg-[var(--canvas)]">{label}</dt>
+                <dd className="px-5 py-3.5 text-sm leading-6 text-[var(--ink-soft)] bg-[var(--surface)]">{value}</dd>
               </div>
             ))}
           </dl>
         </div>
       </section>
 
+      {/* ── Downloads ───────────────────────────────────────── */}
       {product.documents.length > 0 && (
-        <section className="section-space !pt-14">
-          <div className="rounded-[26px] bg-[var(--ink)] p-7 text-white sm:p-12">
-            <p className="eyebrow !text-white/55">Exact-model downloads</p>
-            <h2 className="mt-4 font-display text-5xl font-semibold">
-              Keep the technical facts close.
-            </h2>
-            <div className="mt-8 flex flex-wrap gap-3">
-              {product.documents.map((document) => (
-                <a
-                  key={document.url}
-                  href={document.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="button-secondary !border-white/20 !bg-white/10 !text-white"
-                >
-                  <Download size={17} /> {document.title}
-                </a>
+        <section className="section-space !pt-10">
+          <div className="container-standard">
+            <div className="rounded-[24px] p-7 sm:p-10" style={{ background: "var(--ink)" }}>
+              <p className="eyebrow !text-white/50">Exact-model downloads</p>
+              <h2 className="mt-3 font-display text-4xl font-bold text-white sm:text-5xl">
+                Keep the technical facts close.
+              </h2>
+              <div className="mt-6 flex flex-wrap gap-2.5">
+                {product.documents.map((document) => (
+                  <a
+                    key={document.url}
+                    href={document.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/20"
+                  >
+                    <Download size={15} /> {document.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Related products ────────────────────────────────── */}
+      {related.length > 0 && (
+        <section className="section-space !pt-10" style={{ background: "var(--canvas-warm)" }}>
+          <div className="container-standard">
+            <p className="eyebrow">Related exact models</p>
+            <h2 className="display-section mt-3">Worth comparing.</h2>
+            <div className="mt-8 grid gap-4 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+              {related.map((item) => (
+                <ProductCard key={item.id} product={item} />
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {related.length > 0 && (
-        <section className="section-space !pt-12">
-          <p className="eyebrow">Related exact models</p>
-          <h2 className="display-section mt-4">Worth comparing.</h2>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {related.map((item) => (
-              <ProductCard key={item.id} product={item} />
-            ))}
-          </div>
-        </section>
-      )}
       <RecentlyViewed excludeId={product.id} />
       <MobileProductBar productId={product.id} />
       <script
