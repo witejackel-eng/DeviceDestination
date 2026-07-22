@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { EditorialPage } from "@/components/editorial-page";
-export const metadata: Metadata = { title: "Shipping policy" };
+import { publicPageMetadata } from "@/lib/seo";
+export const metadata: Metadata = publicPageMetadata({
+  title: "Shipping policy",
+  description: "DeviceDestination dispatch, delivery, inspection and shipping terms.",
+  path: "/shipping-policy",
+});
 export default function ShippingPage() {
   return (
     <EditorialPage

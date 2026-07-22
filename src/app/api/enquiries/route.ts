@@ -5,6 +5,7 @@ import { enquiries } from "@/db/schema";
 import { sendEnquiryNotifications } from "@/lib/notifications";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { enquirySchema } from "@/lib/validation";
+import { siteConfig } from "@/config/site";
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
@@ -36,8 +37,7 @@ export async function POST(request: NextRequest) {
   if (process.env.NODE_ENV === "production" && !stored && notifications.length === 0) {
     return NextResponse.json(
       {
-        error:
-          "The enquiry service is not active. Call +91 83685 61919 or email manish@insight-solutions.in.",
+        error: `The enquiry service is not active. Call ${siteConfig.contact.phoneDisplay} or email ${siteConfig.contact.email}.`,
       },
       { status: 503 },
     );

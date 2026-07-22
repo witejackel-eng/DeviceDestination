@@ -37,3 +37,17 @@ export function verifyRazorpayWebhookSignature(payload: string, signature: strin
   const b = Buffer.from(signature);
   return a.length === b.length && timingSafeEqual(a, b);
 }
+
+export function validateRazorpayPaymentRecord(input: {
+  expectedOrderId: string;
+  expectedAmountPaise: number;
+  providerOrderId: string | null | undefined;
+  providerAmountPaise: number;
+  providerStatus: string;
+}) {
+  return (
+    input.providerOrderId === input.expectedOrderId &&
+    input.providerAmountPaise === input.expectedAmountPaise &&
+    ["authorized", "captured"].includes(input.providerStatus)
+  );
+}

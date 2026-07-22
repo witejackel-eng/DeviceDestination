@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { SystemBuilder } from "@/components/system-builder";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = publicPageMetadata({
   title: "CCTV system builder",
   description:
     "Build a compatible CCTV starting set by property, camera count, resolution and recording needs.",
-};
+  path: "/system-builder",
+});
 export default function SystemBuilderPage() {
   return (
     <div className="container-standard section-space !pt-14">

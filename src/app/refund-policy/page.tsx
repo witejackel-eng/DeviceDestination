@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { EditorialPage } from "@/components/editorial-page";
-export const metadata: Metadata = { title: "Refund and return policy" };
+import { publicPageMetadata } from "@/lib/seo";
+export const metadata: Metadata = publicPageMetadata({
+  title: "Refund and return policy",
+  description:
+    "Return eligibility, reporting windows and refund conditions for exact-model hardware.",
+  path: "/refund-policy",
+});
 export default function RefundPage() {
   return (
     <EditorialPage

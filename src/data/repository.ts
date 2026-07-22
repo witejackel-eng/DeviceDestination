@@ -48,12 +48,14 @@ export async function listProducts(): Promise<Product[]> {
       .filter((image) => image.productId === product.id)
       .sort((a, b) => a.position - b.position)
       .map((image) => image.url),
+    imageModel: product.model,
     documents: documents
       .filter((document) => document.productId === product.id && document.modelVerified)
       .map((document) => ({
         type: document.type as "datasheet" | "manual" | "installation-guide",
         title: document.title,
         url: document.url,
+        model: product.model,
       })),
     specs: Object.fromEntries(
       specs
@@ -78,6 +80,9 @@ export async function listProducts(): Promise<Product[]> {
     officialSourceUrl: product.officialSourceUrl,
     verifiedAt: product.verifiedAt.toISOString(),
     warrantySummary: product.warrantySummary ?? "OEM warranty terms apply",
+    relatedProductIds: [],
+    builderCompatibleIds: [],
+    builderExclusions: [],
   }));
 }
 

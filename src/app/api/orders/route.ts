@@ -13,6 +13,9 @@ import {
 } from "@/db/schema";
 import { createOrderConfirmationToken } from "@/lib/order-token";
 import { calculateCartTotals, extractIncludedGst } from "@/lib/products";
+import { getPurchaseEligibility } from "@/lib/products";
+import { getPriceMaxAgeDays } from "@/config/site";
+import { logger } from "@/lib/logger";
 import { getRazorpay } from "@/lib/razorpay";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { orderRequestSchema } from "@/lib/validation";
@@ -40,7 +43,10 @@ export async function POST(request: NextRequest) {
   });
   if (
     previewLines.length !== parsed.data.items.length ||
-    previewLines.some((line) => line.product.sellingPriceInclGstPaise === null)
+    previewLines.some(
+      (line) =>
+        !getPurchaseEligibility(line.product, { maxAgeDays: getPriceMaxAgeDays() }).eligible,
+    )
   ) {
     return NextResponse.json(
       { error: "One or more products changed. Refresh the cart and try again." },
@@ -49,6 +55,10 @@ export async function POST(request: NextRequest) {
   }
   const previewTotals = calculateCartTotals(previewLines);
   const orderNumber = `DD-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${nanoid(6).toUpperCase()}`;
+  logger.info(
+    { event: "order_creation_started", orderNumber, itemCount: previewLines.length },
+    "Order creation started",
+  );
 
   if (
     process.env.NODE_ENV !== "production" &&
@@ -113,7 +123,16 @@ export async function POST(request: NextRequest) {
     .where(and(eq(productTable.status, "published"), inArray(productTable.slug, requestedSlugs)));
   const trustedLines = parsed.data.items.flatMap((line) => {
     const product = trustedProducts.find((item) => item.slug === line.productId);
-    if (!product || product.sellingPriceInclGstPaise === null) return [];
+    if (
+      !product ||
+      product.sellingPriceInclGstPaise === null ||
+      product.priceSourceStatus !== "verified" ||
+      product.stockStatus === "quote_only" ||
+      product.stockStatus === "lead_time" ||
+      !product.priceVerifiedAt ||
+      Date.now() - product.priceVerifiedAt.getTime() > getPriceMaxAgeDays() * 86_400_000
+    )
+      return [];
     return [{ product, quantity: line.quantity }];
   });
   if (trustedLines.length !== parsed.data.items.length)
@@ -207,6 +226,10 @@ export async function POST(request: NextRequest) {
     status: "created",
     amountPaise: totals.grandTotalInclGstPaise,
   });
+  logger.info(
+    { event: "order_created", orderNumber, providerOrderId: razorpayOrder.id },
+    "Order created",
+  );
   return NextResponse.json({
     mode: "razorpay",
     keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID,

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { verifyOrderConfirmationToken } from "@/lib/order-token";
+import { getDb, isDatabaseConfigured } from "@/db/client";
+import { eq } from "drizzle-orm";
+import { orders } from "@/db/schema";
 export const metadata: Metadata = {
   title: "Order status",
   robots: { index: false, follow: false },
@@ -18,6 +21,21 @@ export default async function OrderStatusPage({
   const query = await searchParams;
   const token = typeof query.token === "string" ? query.token : "";
   const verified = verifyOrderConfirmationToken(orderNumber, token);
+  const record =
+    verified && isDatabaseConfigured()
+      ? (
+          await getDb()
+            .select({
+              status: orders.status,
+              invoiceNumber: orders.invoiceNumber,
+              emailStatus: orders.emailStatus,
+              whatsappStatus: orders.whatsappStatus,
+            })
+            .from(orders)
+            .where(eq(orders.orderNumber, orderNumber))
+            .limit(1)
+        )[0]
+      : null;
   return (
     <div className="container-reading section-space !pt-14">
       <p className="eyebrow">Order status</p>
@@ -25,11 +43,22 @@ export default async function OrderStatusPage({
       <div className="surface-card mt-8 p-8">
         {verified ? (
           <>
-            <p className="font-display text-3xl font-semibold">Confirmation recorded</p>
-            <p className="mt-4 leading-7 text-[var(--muted)]">
-              For live orders, fulfilment and payment status are read from the production database
-              after activation. Quote this reference when contacting support.
+            <p className="font-display text-3xl font-semibold">
+              {record ? `Order ${record.status.replaceAll("_", " ")}` : "Confirmation recorded"}
             </p>
+            <p className="mt-4 leading-7 text-[var(--muted)]">
+              {record
+                ? `Email: ${record.emailStatus}. WhatsApp: ${record.whatsappStatus}.`
+                : "The secure reference is valid. Live fulfilment details appear after production storage is activated."}
+            </p>
+            {record?.invoiceNumber && (
+              <a
+                href={`/api/orders/${orderNumber}/invoice?token=${encodeURIComponent(token)}`}
+                className="button-primary mt-6"
+              >
+                Download tax invoice
+              </a>
+            )}
           </>
         ) : (
           <>

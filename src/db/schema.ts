@@ -305,11 +305,17 @@ export const orders = pgTable(
     includedGstPaise: integer("included_gst_paise").notNull(),
     installationRequested: boolean("installation_requested").default(false).notNull(),
     idempotencyKey: text("idempotency_key").notNull(),
+    invoiceNumber: text("invoice_number"),
+    invoiceGeneratedAt: timestamp("invoice_generated_at", { withTimezone: true }),
+    emailStatus: text("email_status").default("pending").notNull(),
+    whatsappStatus: text("whatsapp_status").default("pending").notNull(),
+    notificationUpdatedAt: timestamp("notification_updated_at", { withTimezone: true }),
     ...timestamps,
   },
   (table) => [
     uniqueIndex("orders_number_idx").on(table.orderNumber),
     uniqueIndex("orders_idempotency_idx").on(table.idempotencyKey),
+    uniqueIndex("orders_invoice_number_idx").on(table.invoiceNumber),
   ],
 );
 

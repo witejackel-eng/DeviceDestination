@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Search, SlidersHorizontal } from "lucide-react";
-import { catalogue, brands, categories } from "@/data/catalog";
+import { catalogue, brands, categories, searchProducts } from "@/data/catalog";
 import { ProductCard } from "@/components/product-card";
 
 export const metadata: Metadata = {
@@ -20,11 +20,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   const brand = typeof params.brand === "string" ? params.brand : "";
   const sort = typeof params.sort === "string" ? params.sort : "relevance";
 
+  const queryMatches = new Set(searchProducts(q).map((product) => product.id));
   let products = catalogue.filter((product) => {
-    const haystack =
-      `${product.title} ${product.model} ${product.brand} ${product.category}`.toLowerCase();
     return (
-      (!q || haystack.includes(q.toLowerCase())) &&
+      (!q || queryMatches.has(product.id)) &&
       (!category || product.categorySlug === category) &&
       (!brand || product.brandSlug === brand)
     );

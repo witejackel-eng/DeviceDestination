@@ -2,6 +2,9 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { catalogue } from "@/data/catalog";
+import { getPriceMaxAgeDays } from "@/config/site";
+import { getPurchaseEligibility } from "@/lib/products";
 
 export type CartLine = { productId: string; quantity: number };
 
@@ -23,6 +26,12 @@ export const useCartStore = create<CartState>()(
       isOpen: false,
       addItem: (productId, quantity = 1) =>
         set((state) => {
+          const product = catalogue.find((item) => item.id === productId);
+          if (
+            !product ||
+            !getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() }).eligible
+          )
+            return state;
           const existing = state.items.find((item) => item.productId === productId);
           return {
             isOpen: true,

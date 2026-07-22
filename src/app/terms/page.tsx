@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { EditorialPage } from "@/components/editorial-page";
-export const metadata: Metadata = { title: "Terms and conditions" };
+import { publicPageMetadata } from "@/lib/seo";
+export const metadata: Metadata = publicPageMetadata({
+  title: "Terms and conditions",
+  description: "Product identity, pricing, payment, installation and order terms.",
+  path: "/terms",
+});
 export default function TermsPage() {
   return (
     <EditorialPage

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { catalogue } from "@/data/catalog";
-import { formatPrice } from "@/lib/products";
+import { formatPrice, getPurchaseEligibility } from "@/lib/products";
+import { getPriceMaxAgeDays } from "@/config/site";
 import { useCartStore } from "@/lib/cart-store";
 
 type Answers = {
@@ -41,14 +42,21 @@ export function SystemBuilder() {
       catalogue.find((product) => {
         const model = product.model;
         const correctResolution = wants4 ? model.includes("41L3") : model.includes("21L3");
-        const correctNight = wantsColour ? model.includes("LQ") : model.endsWith("Q");
+        const correctNight = wantsColour ? model.includes("LQ") : !model.includes("LQ");
         const correctShape = answers.outdoor
           ? product.category.includes("Bullet")
           : product.category.includes("Dome");
-        return correctResolution && correctNight && correctShape;
+        return (
+          correctResolution &&
+          correctNight &&
+          correctShape &&
+          getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() }).eligible
+        );
       }) ?? catalogue[0];
     const nvr = catalogue.find(
-      (product) => product.model === (answers.cameras <= 8 ? "CP-UNR-108F1" : "CP-UNR-4K2161-V2"),
+      (product) =>
+        product.model === (answers.cameras <= 8 ? "CP-UNR-108F1" : "CP-UNR-4K2161-V2") &&
+        getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() }).eligible,
     );
     const hardwareTotal =
       (camera.sellingPriceInclGstPaise ?? 0) * answers.cameras +

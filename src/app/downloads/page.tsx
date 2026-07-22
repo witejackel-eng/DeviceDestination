@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Download } from "lucide-react";
 import { catalogue } from "@/data/catalog";
-export const metadata: Metadata = {
+import { publicPageMetadata } from "@/lib/seo";
+export const metadata: Metadata = publicPageMetadata({
   title: "Product downloads",
   description: "Exact-model datasheets and manuals for DeviceDestination products.",
-};
+  path: "/downloads",
+});
 export default function DownloadsPage() {
   const available = catalogue.filter((product) => product.documents.length > 0);
   return (

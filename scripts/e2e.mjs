@@ -78,6 +78,11 @@ async function exerciseViewport(executablePath, viewport, label) {
   try {
     const context = await browser.newContext({ viewport });
     const page = await context.newPage();
+    const browserErrors = [];
+    page.on("pageerror", (error) => browserErrors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") browserErrors.push(message.text());
+    });
 
     await page.goto(`${baseUrl}/`);
     await assertVisible(page.getByRole("heading", { level: 1 }), `${label}: homepage heading`);
@@ -103,6 +108,19 @@ async function exerciseViewport(executablePath, viewport, label) {
       await assertVisible(page.getByRole("heading", { name: "Menu" }), "mobile menu opens");
       await page.getByRole("button", { name: "Close menu" }).click();
     }
+    await page.getByRole("button", { name: "Search products by exact model" }).click();
+    await page.getByLabel("Search exact models").fill("cp unc da41l3c d q");
+    await assertVisible(
+      page.getByText("CP-UNC-DA41L3C-D-Q").first(),
+      `${label}: search overlay normalizes model punctuation`,
+    );
+    await page.getByLabel("Search exact models").press("ArrowDown");
+    assert.equal(
+      await page.evaluate(() => document.activeElement?.tagName),
+      "A",
+      `${label}: search results support arrow-key focus`,
+    );
+    await page.getByRole("button", { name: "Close search" }).click();
     await Promise.all([
       page.waitForURL(/\/products/),
       page
@@ -151,7 +169,26 @@ async function exerciseViewport(executablePath, viewport, label) {
     );
     console.log(`PASS ${label}: persistent cart and checkout`);
 
-    await page.goto(`${baseUrl}/products/cp-unc-da41l3c-q`);
+    await page.goto(`${baseUrl}/products`);
+    await page.getByRole("button", { name: "Add to compare" }).first().click();
+    await assertVisible(
+      page.getByRole("complementary", { name: "Product comparison tray" }),
+      `${label}: comparison tray`,
+    );
+    await Promise.all([
+      page.waitForURL(/\/compare\?ids=/),
+      page
+        .getByRole("link", { name: /Compare/ })
+        .last()
+        .click(),
+    ]);
+    await assertVisible(
+      page.getByRole("heading", { name: "Compare exact models." }),
+      `${label}: shareable comparison`,
+    );
+    console.log(`PASS ${label}: persistent comparison tray`);
+
+    await page.goto(`${baseUrl}/products/cp-unc-da41l3c-d-q`);
     const datasheet = page.getByRole("link", { name: /Datasheet/ });
     await assertVisible(datasheet, `${label}: exact datasheet link`);
     const documentUrl = await datasheet.getAttribute("href");
@@ -161,6 +198,14 @@ async function exerciseViewport(executablePath, viewport, label) {
       page.getByText("Inclusive of all taxes", { exact: true }),
       `${label}: GST copy`,
     );
+    const brokenImages = await page
+      .locator("img")
+      .evaluateAll((images) =>
+        images
+          .filter((image) => !image.complete || image.naturalWidth === 0)
+          .map((image) => image.getAttribute("src")),
+      );
+    assert.deepEqual(brokenImages, [], `${label}: product page has no broken images`);
     console.log(`PASS ${label}: product documents`);
 
     await page.route("**/api/enquiries", async (route) => {
@@ -182,6 +227,27 @@ async function exerciseViewport(executablePath, viewport, label) {
 
     for (const route of ["/", "/products", "/contact"]) {
       await page.goto(`${baseUrl}${route}`);
+      const overflow = await page.evaluate(() => ({
+        viewport: window.innerWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        offenders: Array.from(document.querySelectorAll("body *"))
+          .map((element) => {
+            const rect = element.getBoundingClientRect();
+            return {
+              tag: element.tagName,
+              className: element.className,
+              left: rect.left,
+              right: rect.right,
+              width: rect.width,
+            };
+          })
+          .filter((element) => element.right > window.innerWidth + 1 || element.left < -1)
+          .slice(0, 8),
+      }));
+      assert.ok(
+        overflow.documentWidth <= overflow.viewport,
+        `${label}: ${route} overflows horizontally: ${JSON.stringify(overflow)}`,
+      );
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
         .analyze();
@@ -194,6 +260,21 @@ async function exerciseViewport(executablePath, viewport, label) {
         `${label}: ${route} accessibility: ${serious.map((item) => item.id).join(", ")}`,
       );
     }
+
+    await page.goto(`${baseUrl}/`);
+    const internalPaths = await page
+      .locator('a[href^="/"]')
+      .evaluateAll((links) =>
+        Array.from(new Set(links.map((link) => link.getAttribute("href")).filter(Boolean))),
+      );
+    for (const path of internalPaths) {
+      const response = await context.request.get(`${baseUrl}${path}`);
+      assert.ok(
+        response.status() < 400,
+        `${label}: internal link ${path} returned ${response.status()}`,
+      );
+    }
+    assert.deepEqual(browserErrors, [], `${label}: no console errors or hydration failures`);
 
     console.log(`PASS ${label}: navigation, search, cart, checkout, documents, contact and Axe`);
   } finally {

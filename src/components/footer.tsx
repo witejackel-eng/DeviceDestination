@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Brand } from "@/components/brand";
+import { siteConfig } from "@/config/site";
 
 const groups = [
   {
@@ -36,21 +38,19 @@ export function Footer() {
     <footer className="border-t border-[var(--line)] bg-[var(--canvas-alt)]">
       <div className="container-standard grid gap-14 py-16 lg:grid-cols-[1.2fr_1fr]">
         <div>
-          <p className="font-display text-4xl font-semibold tracking-[-0.055em]">
-            DeviceDestination
-          </p>
+          <Brand />
           <p className="mt-5 max-w-md text-[var(--muted)]">
             Genuine security hardware, selected by exact model and explained in plain language.
           </p>
           <address className="mt-7 not-italic text-sm leading-7 text-[var(--muted)]">
-            Plot No. 94, 3rd Floor, Block B, Sector 13, Dwarka, New Delhi 110075
+            {siteConfig.address.street}, {siteConfig.address.city} {siteConfig.address.postalCode}
             <br />
-            <a href="tel:+918368561919" className="hover:text-[var(--ink)]">
-              +91 83685 61919
+            <a href={`tel:${siteConfig.contact.phoneE164}`} className="hover:text-[var(--ink)]">
+              {siteConfig.contact.phoneDisplay}
             </a>{" "}
             ·{" "}
-            <a href="mailto:manish@insight-solutions.in" className="hover:text-[var(--ink)]">
-              manish@insight-solutions.in
+            <a href={`mailto:${siteConfig.contact.email}`} className="hover:text-[var(--ink)]">
+              {siteConfig.contact.email}
             </a>
           </address>
         </div>

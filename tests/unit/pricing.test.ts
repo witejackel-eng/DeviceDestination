@@ -5,6 +5,8 @@ import {
   extractIncludedGst,
   formatPrice,
   normalizeModel,
+  normaliseSearchTerm,
+  getPurchaseEligibility,
 } from "@/lib/products";
 import { catalogue } from "@/data/catalog";
 
@@ -25,6 +27,17 @@ describe("GST-safe pricing", () => {
 describe("model handling", () => {
   it("normalizes whitespace and case", () =>
     expect(normalizeModel(" aiFace  mars ")).toBe("AIFACE-MARS"));
+  it("normalizes punctuation for model search", () =>
+    expect(normaliseSearchTerm("CP UNC-DA41L3C D Q")).toBe("cpuncda41l3cdq"));
+  it("requires a fresh verified price for direct purchase", () => {
+    const product = { ...catalogue[0], priceVerifiedAt: "2026-07-01T00:00:00.000Z" };
+    expect(
+      getPurchaseEligibility(product, { now: new Date("2026-07-22"), maxAgeDays: 30 }).eligible,
+    ).toBe(true);
+    expect(
+      getPurchaseEligibility(product, { now: new Date("2026-09-22"), maxAgeDays: 30 }),
+    ).toEqual({ eligible: false, reason: "stale_price" });
+  });
   it("contains no duplicate exact models or slugs", () => {
     expect(new Set(catalogue.map((product) => normalizeModel(product.model))).size).toBe(
       catalogue.length,

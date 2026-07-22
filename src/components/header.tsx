@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import { Menu, ShoppingBag, UserRound, X } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
+import { Brand } from "@/components/brand";
+import { ProductSearch } from "@/components/product-search";
+import { siteConfig } from "@/config/site";
 
 const nav = [
   { href: "/products", label: "Products" },
@@ -22,17 +25,12 @@ export function Header() {
   return (
     <>
       <div className="border-b border-[var(--line)] bg-[var(--canvas-alt)] py-2 text-center text-[11px] font-semibold tracking-[0.06em] text-[var(--muted)] sm:text-xs">
-        GST invoice · OEM warranty where applicable · Delhi NCR support · Call +91 83685 61919
+        Exact-model invoice · OEM warranty where applicable · {siteConfig.serviceArea} support ·
+        Call {siteConfig.contact.phoneDisplay}
       </div>
       <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[rgba(255,253,248,0.94)] backdrop-blur-xl">
         <div className="container-standard flex h-[72px] items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="font-display text-xl font-bold tracking-[-0.055em]"
-            aria-label="DeviceDestination home"
-          >
-            Device<span className="text-[var(--tangerine-dark)]">Destination</span>
-          </Link>
+          <Brand responsive />
 
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary navigation">
             {nav.map((item) => (
@@ -46,23 +44,10 @@ export function Header() {
             ))}
           </nav>
 
-          <form
-            action="/products"
-            className="hidden min-w-0 max-w-[340px] flex-1 items-center rounded-xl border border-[var(--line)] bg-white px-3 md:flex"
-          >
-            <Search size={17} aria-hidden="true" className="shrink-0 text-[var(--muted)]" />
-            <label htmlFor="header-search" className="sr-only">
-              Search by product or model
-            </label>
-            <input
-              id="header-search"
-              name="q"
-              placeholder="Search model number"
-              className="h-11 min-w-0 flex-1 bg-transparent px-2 text-sm outline-none"
-            />
-          </form>
+          <ProductSearch />
 
           <div className="flex items-center gap-1">
+            <ProductSearch mobile />
             <Link
               href="/account"
               className="hidden min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-[var(--canvas-alt)] sm:flex"
@@ -108,21 +93,10 @@ export function Header() {
                 <X size={20} />
               </Dialog.Close>
             </div>
-            <form
-              action="/products"
-              className="mb-8 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"
-            >
-              <Search size={18} aria-hidden="true" />
-              <label htmlFor="mobile-search" className="sr-only">
-                Search by product or model
-              </label>
-              <input
-                id="mobile-search"
-                name="q"
-                placeholder="Search model number"
-                className="h-12 min-w-0 flex-1 bg-transparent px-2 outline-none"
-              />
-            </form>
+            <div className="mb-8 rounded-2xl border border-[var(--line)] bg-[var(--tangerine-soft)] p-4 text-sm text-[var(--muted)]">
+              Use the search button in the header to find an exact model. Dashes and spaces are
+              optional.
+            </div>
             <nav className="grid gap-1" aria-label="Mobile navigation">
               {nav.concat([{ href: "/account", label: "Account" }]).map((item) => (
                 <Dialog.Close asChild key={item.href}>

@@ -3,12 +3,35 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Minus, Plus, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { catalogue } from "@/data/catalog";
+import { getPriceMaxAgeDays } from "@/config/site";
 import { useCartStore } from "@/lib/cart-store";
+import { getPurchaseEligibility } from "@/lib/products";
 
 export function ProductActions({ productId }: { productId: string }) {
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
+  const product = catalogue.find((item) => item.id === productId);
+  const eligibility = product
+    ? getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() })
+    : { eligible: false as const, reason: "missing_price" as const };
+  if (!eligibility.eligible)
+    return (
+      <div className="rounded-2xl border border-[var(--line)] bg-[var(--tangerine-soft)] p-5">
+        <p className="font-display text-xl font-semibold">Price confirmation required</p>
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+          This model cannot enter checkout until its current price and availability are confirmed.
+        </p>
+        <Link
+          href={`/quote?product=${encodeURIComponent(product?.model ?? productId)}`}
+          className="button-primary mt-4 w-full"
+        >
+          Request latest price
+        </Link>
+      </div>
+    );
   return (
     <div className="grid gap-3">
       <div className="flex gap-3">

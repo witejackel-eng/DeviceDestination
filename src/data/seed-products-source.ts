@@ -12,11 +12,11 @@ export const products = [
     shortDescription:
       "Professional 4MP IR Network Dome Camera with 30m Smart IR, PoE, and IP67 weatherproof housing for indoor and outdoor surveillance.",
     images: [
-      "/images/products/CP-UNC-DA41L3C-Q 1st.png",
-      "/images/products/CP-UNC-DA41L3C-Q 2nd.png",
-      "/images/products/CP-UNC-DA41L3C-Q 3rd.png",
-      "/images/products/CP-UNC-DA41L3C-Q 4th.png",
-      "/images/products/CP-UNC-DA41L3C-Q 5th.png",
+      "/images/products/CP-UNC-DA41L3C-D-Q 1st.png",
+      "/images/products/CP-UNC-DA41L3C-D-Q 2nd.png",
+      "/images/products/CP-UNC-DA41L3C-D-Q 3rd.png",
+      "/images/products/CP-UNC-DA41L3C-D-Q 4th.png",
+      "/images/products/CP-UNC-DA41L3C-D-Q 5th.png",
     ],
     datasheet: "/docs/CP-UNC-DA41L3C-D-Q.pdf",
     manual: "/docs/CP-UNC-DA41L3C-D-Q user manual.pdf",

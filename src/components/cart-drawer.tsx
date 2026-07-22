@@ -6,13 +6,17 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Minus, Plus, Trash2, X } from "lucide-react";
 import { catalogue } from "@/data/catalog";
 import { calculateCartTotals, formatPrice } from "@/lib/products";
+import { getPurchaseEligibility } from "@/lib/products";
+import { getPriceMaxAgeDays } from "@/config/site";
 import { useCartStore } from "@/lib/cart-store";
 
 export function CartDrawer() {
   const { items, isOpen, close, setQuantity, removeItem } = useCartStore();
   const resolved = items.flatMap((line) => {
     const product = catalogue.find((item) => item.id === line.productId);
-    return product ? [{ product, quantity: line.quantity }] : [];
+    return product && getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() }).eligible
+      ? [{ product, quantity: line.quantity }]
+      : [];
   });
   const totals = calculateCartTotals(resolved);
 

@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { EnquiryForm } from "@/components/enquiry-form";
-export const metadata: Metadata = {
+import { publicPageMetadata } from "@/lib/seo";
+export const metadata: Metadata = publicPageMetadata({
   title: "Request a quote",
   description: "Request project, bulk or installation pricing for exact security hardware models.",
-};
-export default function QuotePage() {
+  path: "/quote",
+});
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+export default async function QuotePage({ searchParams }: { searchParams: SearchParams }) {
+  const query = await searchParams;
+  const product = typeof query.product === "string" ? query.product.slice(0, 120) : "";
   return (
     <div className="container-standard section-space !pt-14">
       <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
@@ -16,7 +21,14 @@ export default function QuotePage() {
             site-specific pricing. Installation is assessed separately.
           </p>
         </div>
-        <EnquiryForm type="quote" title="Describe the requirement" buttonLabel="Request quote" />
+        <EnquiryForm
+          type="quote"
+          title={product ? `Confirm ${product}` : "Describe the requirement"}
+          buttonLabel={product ? "Request latest price" : "Request quote"}
+          initialMessage={
+            product ? `Please confirm the current price and availability for ${product}.` : ""
+          }
+        />
       </div>
     </div>
   );

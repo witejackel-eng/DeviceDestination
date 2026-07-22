@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { EditorialPage } from "@/components/editorial-page";
-export const metadata: Metadata = { title: "Privacy policy" };
+import { publicPageMetadata } from "@/lib/seo";
+import { siteConfig } from "@/config/site";
+export const metadata: Metadata = publicPageMetadata({
+  title: "Privacy policy",
+  description: "How DeviceDestination handles account, enquiry, order and payment information.",
+  path: "/privacy",
+});
 export default function PrivacyPage() {
   return (
     <EditorialPage
@@ -40,7 +46,7 @@ export default function PrivacyPage() {
           body: (
             <p>
               You may request access, correction or deletion where retention is not legally required
-              by emailing manish@insight-solutions.in.
+              by emailing {siteConfig.contact.email}.
             </p>
           ),
         },

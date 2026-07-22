@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BadgeCheck, FileText, IndianRupee, MapPin } from "lucide-react";
-export const metadata: Metadata = {
-  title: "About",
-  description: "How DeviceDestination selects and explains security hardware.",
-};
+import { publicPageMetadata } from "@/lib/seo";
+export const metadata: Metadata = publicPageMetadata({
+  title: "About DeviceDestination",
+  description: "How DeviceDestination selects and explains security hardware by exact model.",
+  path: "/about",
+});
 export default function AboutPage() {
   const values = [
     [BadgeCheck, "Exact over approximate", "A near-match model is not the same product."],

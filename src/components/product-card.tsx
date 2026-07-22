@@ -1,9 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AddToCart } from "@/components/add-to-cart";
-import { calculateDiscountPercent, formatPrice, type Product } from "@/lib/products";
+import { CompareToggle } from "@/components/compare-toggle";
+import {
+  calculateDiscountPercent,
+  formatPrice,
+  getPurchaseEligibility,
+  type Product,
+} from "@/lib/products";
+import { getPriceMaxAgeDays } from "@/config/site";
 
 export function ProductCard({ product }: { product: Product }) {
+  const eligibility = getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() });
   const compareAt = product.mrpInclGstPaise ?? product.compareAtPriceInclGstPaise;
   const discount =
     product.sellingPriceInclGstPaise === null
@@ -49,9 +57,15 @@ export function ProductCard({ product }: { product: Product }) {
             </p>
           )}
           <p className="font-display text-2xl font-bold">
-            {formatPrice(product.sellingPriceInclGstPaise)}
+            {eligibility.eligible
+              ? formatPrice(product.sellingPriceInclGstPaise)
+              : "Request latest price"}
           </p>
-          <p className="text-[11px] text-[var(--muted)]">Inclusive of all taxes</p>
+          <p className="text-[11px] text-[var(--muted)]">
+            {eligibility.eligible
+              ? "Inclusive of all taxes"
+              : "Current price and availability confirmed before order"}
+          </p>
           <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
             <AddToCart productId={product.id} className="button-primary w-full" />
             <Link
@@ -62,12 +76,9 @@ export function ProductCard({ product }: { product: Product }) {
               Details
             </Link>
           </div>
-          <Link
-            href={`/compare?ids=${product.id}`}
-            className="mt-2 inline-flex min-h-11 items-center text-sm font-bold text-[var(--muted)] hover:text-[var(--ink)]"
-          >
-            + Add to comparison
-          </Link>
+          <div className="mt-2">
+            <CompareToggle productId={product.id} compact />
+          </div>
         </div>
       </div>
     </article>

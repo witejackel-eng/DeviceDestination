@@ -11,11 +11,14 @@ import {
   Wrench,
 } from "lucide-react";
 import { catalogue, getProduct } from "@/data/catalog";
-import { formatPrice, calculateDiscountPercent } from "@/lib/products";
+import { formatPrice, calculateDiscountPercent, getPurchaseEligibility } from "@/lib/products";
+import { getPriceMaxAgeDays } from "@/config/site";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductActions } from "@/components/product-actions";
 import { DeliveryChecker } from "@/components/delivery-checker";
 import { ProductCard } from "@/components/product-card";
+import { CompareToggle } from "@/components/compare-toggle";
+import { siteConfig } from "@/config/site";
 
 type Params = Promise<{ slug: string }>;
 
@@ -49,10 +52,11 @@ export default async function ProductPage({ params }: { params: Params }) {
     product.sellingPriceInclGstPaise === null
       ? null
       : calculateDiscountPercent(product.sellingPriceInclGstPaise, compareAt);
+  const eligibility = getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() });
   const related = catalogue
     .filter((item) => item.categorySlug === product.categorySlug && item.id !== product.id)
     .slice(0, 3);
-  const whatsapp = `https://wa.me/918368561919?text=${encodeURIComponent(`Hello, I need help with ${product.model} (${product.title}).`)}`;
+  const whatsapp = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(`Hello, I need help with ${product.model} (${product.title}).`)}`;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.devicedestination.com";
   const productSchema = {
     "@context": "https://schema.org",
@@ -63,13 +67,16 @@ export default async function ProductPage({ params }: { params: Params }) {
     image: product.images.map((url) => new URL(url, siteUrl).toString()),
     description: product.shortDescription,
     offers:
-      product.sellingPriceInclGstPaise === null
+      !eligibility.eligible || product.sellingPriceInclGstPaise === null
         ? undefined
         : {
             "@type": "Offer",
             priceCurrency: "INR",
             price: (product.sellingPriceInclGstPaise / 100).toFixed(2),
-            availability: "https://schema.org/InStock",
+            availability:
+              product.stockStatus === "in_stock"
+                ? "https://schema.org/InStock"
+                : "https://schema.org/LimitedAvailability",
             url: `${siteUrl}/products/${product.slug}`,
           },
   };
@@ -123,17 +130,29 @@ export default async function ProductPage({ params }: { params: Params }) {
               </p>
             )}
             <p className="font-display text-4xl font-bold">
-              {formatPrice(product.sellingPriceInclGstPaise)}
+              {eligibility.eligible
+                ? formatPrice(product.sellingPriceInclGstPaise)
+                : "Request latest price"}
             </p>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              Inclusive of all taxes · GST invoice provided
+              {eligibility.eligible
+                ? "Inclusive of all taxes · GST invoice provided"
+                : "Current price and availability must be confirmed before checkout"}
             </p>
-            {product.priceSourceStatus === "needs-review" && (
-              <p className="mt-2 text-xs text-[var(--muted)]">Price reconfirmed before dispatch.</p>
+            {product.priceVerifiedAt && eligibility.eligible && (
+              <p className="mt-2 text-xs text-[var(--muted)]">
+                Price verified{" "}
+                {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(
+                  new Date(product.priceVerifiedAt),
+                )}
+              </p>
             )}
           </div>
           <div className="mt-7">
             <ProductActions productId={product.id} />
+          </div>
+          <div className="mt-3">
+            <CompareToggle productId={product.id} />
           </div>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Link href="/quote" className="button-secondary text-center">

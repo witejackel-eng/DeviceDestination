@@ -5,12 +5,14 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CartDrawer } from "@/components/cart-drawer";
+import { CompareTray } from "@/components/compare-tray";
+import { siteConfig } from "@/config/site";
 import "./globals.css";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-body", display: "swap" });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.devicedestination.com";
+const siteUrl = siteConfig.url;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -18,9 +20,13 @@ export const metadata: Metadata = {
     default: "DeviceDestination — Security hardware, selected with care",
     template: "%s | DeviceDestination",
   },
-  description:
-    "Genuine CCTV, networking, storage, and biometric systems—verified by model, priced transparently, and supported across Delhi NCR.",
-  alternates: { canonical: "/" },
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: "/icon.svg",
+  },
   openGraph: {
     title: "DeviceDestination",
     description: "Security hardware, selected with care.",
@@ -40,17 +46,17 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const organization = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "DeviceDestination",
+    name: siteConfig.name,
     url: siteUrl,
-    email: "manish@insight-solutions.in",
-    telephone: "+918368561919",
+    email: siteConfig.contact.email,
+    telephone: siteConfig.contact.phoneE164,
     address: {
       "@type": "PostalAddress",
-      streetAddress: "Plot No. 94, 3rd Floor, Block B, Sector 13, Dwarka",
-      addressLocality: "New Delhi",
-      addressRegion: "Delhi",
-      postalCode: "110075",
-      addressCountry: "IN",
+      streetAddress: siteConfig.address.street,
+      addressLocality: siteConfig.address.city,
+      addressRegion: siteConfig.address.region,
+      postalCode: siteConfig.address.postalCode,
+      addressCountry: siteConfig.address.country,
     },
   };
 
@@ -67,6 +73,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main id="main-content">{children}</main>
         <Footer />
         <CartDrawer />
+        <CompareTray />
         {process.env.VERCEL && (
           <>
             <Analytics />

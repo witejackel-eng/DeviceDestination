@@ -1,9 +1,18 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import Image from "next/image";
 import { ArrowRight, BadgeCheck, FileText, IndianRupee, ShieldCheck, Wrench } from "lucide-react";
 import { catalogue, categories } from "@/data/catalog";
 import { ProductCard } from "@/components/product-card";
 import { HeroProducts } from "@/components/hero-products";
+import { publicPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = publicPageMetadata({
+  title: "Security hardware, selected with care",
+  description:
+    "Shop exact-model CCTV, NVR and biometric hardware with GST-inclusive pricing and Delhi NCR support.",
+  path: "/",
+});
 
 const requirements = [
   [
@@ -72,7 +81,14 @@ export default function Home() {
       <section className="overflow-hidden border-b border-[var(--line)]">
         <div className="container-standard grid min-h-[calc(100svh-105px)] items-center gap-10 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:py-10">
           <div className="relative z-10">
-            <p className="eyebrow">Genuine products · exact models · clear prices</p>
+            <div className="inline-flex items-center overflow-hidden rounded-full border border-[var(--line)] bg-[var(--ink)] text-white">
+              <span className="bg-[var(--tangerine)] px-3 py-2 text-xs font-black tracking-[-0.04em] text-[var(--ink)]">
+                DD
+              </span>
+              <span className="px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/75">
+                Exact-model security
+              </span>
+            </div>
             <h1 className="display-hero mt-5">
               Security,
               <br />

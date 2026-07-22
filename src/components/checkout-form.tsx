@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { catalogue } from "@/data/catalog";
 import { useCartStore } from "@/lib/cart-store";
 import { calculateCartTotals, formatPrice } from "@/lib/products";
+import { getPurchaseEligibility } from "@/lib/products";
+import { getPriceMaxAgeDays } from "@/config/site";
 import { checkoutSchema, type CheckoutInput } from "@/lib/validation";
 
 declare global {
@@ -50,7 +52,9 @@ export function CheckoutForm() {
   const [submitting, setSubmitting] = useState(false);
   const resolved = items.flatMap((line) => {
     const product = catalogue.find((item) => item.id === line.productId);
-    return product ? [{ product, quantity: line.quantity }] : [];
+    return product && getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() }).eligible
+      ? [{ product, quantity: line.quantity }]
+      : [];
   });
   const totals = calculateCartTotals(resolved);
   const {

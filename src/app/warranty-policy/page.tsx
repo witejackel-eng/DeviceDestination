@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { EditorialPage } from "@/components/editorial-page";
-export const metadata: Metadata = { title: "Warranty policy" };
+import { publicPageMetadata } from "@/lib/seo";
+export const metadata: Metadata = publicPageMetadata({
+  title: "Warranty policy",
+  description: "Model-specific OEM warranty eligibility and support requirements.",
+  path: "/warranty-policy",
+});
 export default function WarrantyPage() {
   return (
     <EditorialPage

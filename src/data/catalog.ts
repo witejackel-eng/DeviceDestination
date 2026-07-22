@@ -1,9 +1,16 @@
 import { products as sourceProducts } from "./seed-products-source";
-import { normalizeModel, slugify, type Product, type ProductDocument } from "@/lib/products";
+import {
+  normaliseSearchTerm,
+  normalizeModel,
+  slugify,
+  type Product,
+  type ProductDocument,
+} from "@/lib/products";
 
 const verifiedAt = "2026-07-22T00:00:00.000Z";
 
 const modelCorrections: Record<string, { model: string; slug: string }> = {
+  "CP-UNC-DA41L3C-D-Q": { model: "CP-UNC-DA41L3C-D-Q", slug: "cp-unc-da41l3c-d-q" },
   "CP-UNC-108F1": { model: "CP-UNR-108F1", slug: "cp-unr-108f1" },
   "CP-UNC-4K2161": { model: "CP-UNR-4K2161-V2", slug: "cp-unr-4k2161-v2" },
 };
@@ -30,7 +37,7 @@ const officialSources: Record<string, string> = {
   "AIFACE-MARS-+-HID": "https://esslsecurity.com/face/aiface-mars-hid",
 };
 
-const documents: Record<string, ProductDocument[]> = {
+const documents: Record<string, Omit<ProductDocument, "model">[]> = {
   "CP-UNC-DA41L3C-D-Q": [
     { type: "datasheet", title: "Datasheet", url: "/docs/datasheets/CP-UNC-DA41L3C-D-Q.pdf" },
     {
@@ -124,6 +131,9 @@ export const catalogue: Product[] = sourceProducts.map((source) => {
   const canonicalSlug = correction?.slug ?? source.id;
   const warrantySummary = source.specs.Warranty ?? "OEM warranty terms apply";
 
+  const productDocuments = (documents[key] ?? []).map((document) => ({ ...document, model }));
+  const priceRequiresConfirmation = key === "SF100";
+
   return {
     id: canonicalSlug,
     slug: canonicalSlug,
@@ -137,7 +147,8 @@ export const catalogue: Product[] = sourceProducts.map((source) => {
     shortDescription: source.shortDescription,
     longDescription: `${source.shortDescription} Review the official specifications and compatibility notes before ordering for a project.`,
     images: source.images,
-    documents: documents[key] ?? [],
+    imageModel: model,
+    documents: productDocuments,
     specs: Object.fromEntries(
       Object.entries(source.specs).filter(
         (entry): entry is [string, string] => typeof entry[1] === "string",
@@ -154,11 +165,18 @@ export const catalogue: Product[] = sourceProducts.map((source) => {
     compareAtLabel: null,
     gstRateBasisPoints: 1800,
     gstIncluded: true,
-    priceVerifiedAt: null,
-    priceSourceStatus: "needs-review",
+    priceVerifiedAt: priceRequiresConfirmation ? null : verifiedAt,
+    priceSourceStatus: priceRequiresConfirmation ? "request-price" : "verified",
     officialSourceUrl: officialSources[key] ?? "https://esslsecurity.com/",
     verifiedAt,
     warrantySummary,
+    relatedProductIds: [],
+    builderCompatibleIds: categorySlug.includes("camera")
+      ? ["cp-unr-108f1", "cp-unr-4k2161-v2"]
+      : [],
+    builderExclusions: categorySlug.includes("camera")
+      ? ["HDD, PoE switching, cabling and installation require separate sizing"]
+      : [],
   } satisfies Product;
 });
 
@@ -183,11 +201,18 @@ export function getProduct(slug: string) {
 
 export function searchProducts(query: string) {
   const normalized = query.trim().toLowerCase();
+  const compact = normaliseSearchTerm(query);
   if (!normalized) return catalogue;
-  return catalogue.filter((product) =>
-    [product.title, product.model, product.brand, product.category]
+  return catalogue.filter((product) => {
+    const text = [
+      product.title,
+      product.model,
+      product.brand,
+      product.category,
+      ...product.highlights,
+    ]
       .join(" ")
-      .toLowerCase()
-      .includes(normalized),
-  );
+      .toLowerCase();
+    return text.includes(normalized) || normaliseSearchTerm(text).includes(compact);
+  });
 }

@@ -2,6 +2,7 @@ export type ProductDocument = {
   type: "datasheet" | "manual" | "installation-guide";
   title: string;
   url: string;
+  model: string;
 };
 
 export type Product = {
@@ -17,6 +18,7 @@ export type Product = {
   shortDescription: string;
   longDescription: string;
   images: string[];
+  imageModel: string;
   documents: ProductDocument[];
   specs: Record<string, string>;
   highlights: string[];
@@ -29,10 +31,13 @@ export type Product = {
   gstRateBasisPoints: number;
   gstIncluded: true;
   priceVerifiedAt: string | null;
-  priceSourceStatus: "verified" | "needs-review";
+  priceSourceStatus: "verified" | "needs-review" | "request-price";
   officialSourceUrl: string;
   verifiedAt: string;
   warrantySummary: string;
+  relatedProductIds: string[];
+  builderCompatibleIds: string[];
+  builderExclusions: string[];
 };
 
 export function normalizeModel(model: string) {
@@ -41,6 +46,41 @@ export function normalizeModel(model: string) {
     .toUpperCase()
     .replace(/[\s_]+/g, "-")
     .replace(/-+/g, "-");
+}
+
+export function normaliseSearchTerm(value: string) {
+  return value
+    .normalize("NFKD")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+export type PurchaseEligibility =
+  | { eligible: true; reason: null }
+  | {
+      eligible: false;
+      reason: "request_price" | "out_of_stock" | "missing_price" | "stale_price";
+    };
+
+export function getPurchaseEligibility(
+  product: Pick<
+    Product,
+    "stockStatus" | "sellingPriceInclGstPaise" | "priceSourceStatus" | "priceVerifiedAt"
+  >,
+  options: { now?: Date; maxAgeDays?: number } = {},
+): PurchaseEligibility {
+  if (product.stockStatus === "quote_only" || product.priceSourceStatus !== "verified")
+    return { eligible: false, reason: "request_price" };
+  if (product.stockStatus === "lead_time") return { eligible: false, reason: "out_of_stock" };
+  if (product.sellingPriceInclGstPaise === null)
+    return { eligible: false, reason: "missing_price" };
+  if (!product.priceVerifiedAt) return { eligible: false, reason: "stale_price" };
+  const now = options.now ?? new Date();
+  const maxAgeDays = options.maxAgeDays ?? 30;
+  const ageMs = now.getTime() - new Date(product.priceVerifiedAt).getTime();
+  if (!Number.isFinite(ageMs) || ageMs > maxAgeDays * 86_400_000)
+    return { eligible: false, reason: "stale_price" };
+  return { eligible: true, reason: null };
 }
 
 export function slugify(value: string) {

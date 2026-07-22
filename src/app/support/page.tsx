@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FileText, LifeBuoy, PackageCheck, Wrench } from "lucide-react";
-export const metadata: Metadata = {
+import { publicPageMetadata } from "@/lib/seo";
+import { siteConfig } from "@/config/site";
+export const metadata: Metadata = publicPageMetadata({
   title: "Support",
   description: "Product documents, compatibility, order and warranty support.",
-};
+  path: "/support",
+});
 export default function SupportPage() {
   const cards = [
     [FileText, "Find a document", "Exact-model datasheets and manuals.", "/downloads"],
@@ -35,14 +38,15 @@ export default function SupportPage() {
       <div className="mt-16 rounded-[26px] bg-[var(--tangerine-soft)] p-8 sm:p-12">
         <h2 className="font-display text-4xl font-semibold">Urgent product question?</h2>
         <p className="mt-4 text-lg text-[var(--muted)]">
-          Call +91 83685 61919 during business hours or send the model number on WhatsApp.
+          Call {siteConfig.contact.phoneDisplay} during business hours or send the model number on
+          WhatsApp.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <a href="tel:+918368561919" className="button-primary">
+          <a href={`tel:${siteConfig.contact.phoneE164}`} className="button-primary">
             Call support
           </a>
           <a
-            href="https://wa.me/918368561919"
+            href={`https://wa.me/${siteConfig.contact.whatsapp}`}
             target="_blank"
             rel="noopener noreferrer"
             className="button-secondary"

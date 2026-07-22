@@ -9,10 +9,12 @@ export function EnquiryForm({
   type,
   title,
   buttonLabel,
+  initialMessage = "",
 }: {
   type: EnquiryInput["type"];
   title: string;
   buttonLabel: string;
+  initialMessage?: string;
 }) {
   const [result, setResult] = useState<{ reference: string; mode: string } | null>(null);
   const [serverError, setServerError] = useState("");
@@ -23,7 +25,7 @@ export function EnquiryForm({
     formState: { errors, isSubmitting },
   } = useForm<EnquiryInput>({
     resolver: zodResolver(enquirySchema),
-    defaultValues: { type, website: "" },
+    defaultValues: { type, website: "", message: initialMessage },
   });
   const input = "h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3";
   const onSubmit = handleSubmit(async (values) => {
@@ -39,7 +41,7 @@ export function EnquiryForm({
       return;
     }
     setResult({ reference: data.reference, mode: data.mode ?? "live" });
-    reset({ type, website: "" });
+    reset({ type, website: "", message: initialMessage });
   });
   if (result)
     return (

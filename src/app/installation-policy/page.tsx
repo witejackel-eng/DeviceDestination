@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { EditorialPage } from "@/components/editorial-page";
-export const metadata: Metadata = { title: "Installation policy" };
+import { publicPageMetadata } from "@/lib/seo";
+export const metadata: Metadata = publicPageMetadata({
+  title: "Installation policy",
+  description:
+    "Separate hardware and third-party installation scope, pricing and responsibilities.",
+  path: "/installation-policy",
+});
 export default function InstallationPage() {
   return (
     <EditorialPage
