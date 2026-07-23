@@ -109,6 +109,7 @@ body {
 
 body[data-scroll-lock="true"] {
   overflow: hidden;
+  /* Scrollbar width is set dynamically by lockScroll() to prevent page jump */
 }
 
 /* ── Typography ───────────────────────────────────────────── */
@@ -690,6 +691,98 @@ button {
   background: radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15), transparent);
   pointer-events: none;
   z-index: 1;
+}
+
+/* ============================================================
+   FLOATING MODAL PANELS — Menu and Cart
+   ============================================================ */
+
+/* Floating menu panel — responsive positioning */
+.floating-menu-panel {
+  position: fixed;
+  z-index: 210;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  /* Mobile: inset floating panel */
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  max-height: calc(100dvh - 16px);
+  border-radius: 24px;
+  border: 1.5px solid var(--border);
+  box-shadow: 0 28px 80px rgba(17, 18, 20, 0.22);
+}
+
+@media (min-width: 640px) {
+  .floating-menu-panel {
+    /* Tablet/desktop: two-panel composition with viewport margins */
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: auto;
+    max-height: calc(100dvh - 40px);
+    max-width: 980px;
+    margin: 0 auto;
+    border-radius: 28px;
+  }
+}
+
+/* Floating cart panel — inset from viewport edges */
+.floating-cart-panel {
+  position: fixed;
+  z-index: 210;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  top: 20px;
+  right: 20px;
+  bottom: 20px;
+  width: min(520px, calc(100vw - 48px));
+  max-height: calc(100dvh - 40px);
+  border-radius: 28px;
+  border: 1.5px solid var(--border);
+  box-shadow: 0 28px 80px rgba(17, 18, 20, 0.22);
+}
+
+@media (max-width: 640px) {
+  .floating-cart-panel {
+    top: 8px;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: calc(100dvh - 16px);
+    border-radius: 24px;
+  }
+}
+
+@media (max-width: 340px) {
+  .floating-cart-panel {
+    top: 4px;
+    right: 4px;
+    bottom: 4px;
+    left: 4px;
+    max-height: calc(100dvh - 8px);
+    border-radius: 18px;
+  }
+}
+
+/* External close control — orange pill */
+.modal-close-pill {
+  position: fixed;
+  z-index: 220;
+  top: 20px;
+  right: 20px;
+}
+
+@media (max-width: 640px) {
+  .modal-close-pill {
+    display: none;
+  }
 }
 
 /* ============================================================
