@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
-const input = "h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3";
+const input = "h-12 w-full rounded-xl border border-[var(--border)] bg-white px-3";
 
 export function LoginForm() {
   const router = useRouter();
@@ -95,7 +95,7 @@ export function SignupForm() {
       }}
     >
       <h1 className="font-display text-4xl font-semibold">Create account</h1>
-      <p className="text-sm leading-6 text-[var(--muted)]">
+      <p className="text-sm leading-6 text-[var(--text-muted)]">
         Accounts are optional. Guest checkout remains available.
       </p>
       <label className="grid gap-2 text-sm font-bold">

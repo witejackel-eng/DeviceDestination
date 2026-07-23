@@ -16,7 +16,7 @@ export default function AccountAddressesPage() {
             ? "Sign in to manage addresses."
             : "Saved addresses activate with production authentication."}
         </p>
-        <p className="mt-4 text-[var(--muted)]">
+        <p className="mt-4 text-[var(--text-muted)]">
           Guest checkout accepts a delivery address without creating an account.
         </p>
         <Link href="/checkout" className="button-primary mt-6">

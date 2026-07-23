@@ -19,7 +19,7 @@ export default function SupportPage() {
     <div className="container-standard section-space !pt-14">
       <p className="eyebrow">Useful help</p>
       <h1 className="display-section mt-4">Support without a maze.</h1>
-      <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">
+      <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--text-muted)]">
         Start with the exact model number and your invoice or enquiry reference. That is usually
         enough to route the question correctly.
       </p>
@@ -30,14 +30,14 @@ export default function SupportPage() {
             <Link key={title as string} href={href as string} className="surface-card p-6">
               <I size={24} />
               <h2 className="mt-10 font-display text-2xl font-semibold">{title as string}</h2>
-              <p className="mt-3 leading-7 text-[var(--muted)]">{copy as string}</p>
+              <p className="mt-3 leading-7 text-[var(--text-muted)]">{copy as string}</p>
             </Link>
           );
         })}
       </div>
-      <div className="mt-16 rounded-[26px] bg-[var(--tangerine-soft)] p-8 sm:p-12">
+      <div className="mt-16 rounded-[26px] bg-[var(--accent-soft)] p-8 sm:p-12">
         <h2 className="font-display text-4xl font-semibold">Urgent product question?</h2>
-        <p className="mt-4 text-lg text-[var(--muted)]">
+        <p className="mt-4 text-lg text-[var(--text-muted)]">
           Call {siteConfig.contact.phoneDisplay} during business hours or send the model number on
           WhatsApp.
         </p>

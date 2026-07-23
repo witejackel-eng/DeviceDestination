@@ -16,7 +16,7 @@ export default function SystemBuilderPage() {
           <p className="eyebrow">Guided selection</p>
           <h1 className="display-section mt-4">Build a compatible starting set.</h1>
         </div>
-        <p className="max-w-2xl self-end text-lg leading-8 text-[var(--muted)]">
+        <p className="max-w-2xl self-end text-lg leading-8 text-[var(--text-muted)]">
           This builder prevents obvious channel and camera mismatches. Storage, PoE and cabling
           still require site-specific sizing.
         </p>

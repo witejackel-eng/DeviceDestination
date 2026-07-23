@@ -16,7 +16,7 @@ export default function AccountOrdersPage() {
             ? "Sign in to view orders."
             : "Order history activates with production authentication."}
         </p>
-        <p className="mt-4 text-[var(--muted)]">
+        <p className="mt-4 text-[var(--text-muted)]">
           Guest orders remain accessible through the secure confirmation link.
         </p>
         <Link href={isAuthConfigured() ? "/login" : "/products"} className="button-primary mt-6">

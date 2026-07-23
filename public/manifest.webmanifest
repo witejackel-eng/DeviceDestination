@@ -4,7 +4,7 @@
   "description": "Security hardware, selected with care.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fffdf8",
-  "theme_color": "#FF8A00",
+  "background_color": "#F7F7F5",
+  "theme_color": "#FF6A00",
   "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
 }

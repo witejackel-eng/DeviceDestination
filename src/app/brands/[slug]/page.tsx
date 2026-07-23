@@ -29,7 +29,7 @@ export default async function BrandPage({ params }: { params: Params }) {
       title={brand.name}
       description={`Exact-model ${brand.name} hardware with clear specifications, available documentation and GST-inclusive pricing.`}
       products={products}
-      accentBg="var(--canvas)"
+      accentBg="var(--background)"
     />
   );
 }

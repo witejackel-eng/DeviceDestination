@@ -24,13 +24,13 @@ export function CookieConsentBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 40, opacity: 0 }}
           transition={springs.drawer}
-          className="fixed inset-x-3 bottom-[calc(64px+0.75rem)] z-40 rounded-2xl border border-[var(--line)] bg-[var(--canvas)] p-5 shadow-2xl sm:p-6 md:inset-x-auto md:bottom-4 md:left-4 md:right-auto md:max-w-md md:rounded-[24px]"
+          className="fixed inset-x-3 bottom-[calc(64px+0.75rem)] z-40 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-2xl sm:p-6 md:inset-x-auto md:bottom-4 md:left-4 md:right-auto md:max-w-md md:rounded-[24px]"
         >
           <p className="font-display text-xl font-bold">A few cookies, nothing sneaky.</p>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+          <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
             We use strictly necessary storage to run your cart, compare list and recently viewed
             products, plus optional analytics to see what&apos;s working. Read the{" "}
-            <Link href="/cookie-policy" className="underline hover:text-[var(--ink)]">
+            <Link href="/cookie-policy" className="underline hover:text-[var(--text-primary)]">
               cookie policy
             </Link>
             .

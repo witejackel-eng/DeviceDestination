@@ -16,7 +16,7 @@ export default async function QuotePage({ searchParams }: { searchParams: Search
         <div>
           <p className="eyebrow">Project and bulk buying</p>
           <h1 className="display-section mt-4">A quote for the complete requirement.</h1>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted)]">
+          <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--text-muted)]">
             Useful for storage sizing, PoE, cabling, multi-site quantities or hardware that requires
             site-specific pricing. Installation is assessed separately.
           </p>

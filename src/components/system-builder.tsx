@@ -70,7 +70,7 @@ export function SystemBuilder() {
     addItem(recommendation.camera.id, answers.cameras);
     if (recommendation.nvr) addItem(recommendation.nvr.id);
   };
-  const fieldClass = "h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3";
+  const fieldClass = "h-12 w-full rounded-xl border border-[var(--border)] bg-white px-3";
 
   return (
     <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
@@ -179,12 +179,12 @@ export function SystemBuilder() {
             type="checkbox"
             checked={answers.installation}
             onChange={(event) => set("installation", event.target.checked)}
-            className="h-5 w-5 accent-[var(--tangerine)]"
+            className="h-5 w-5 accent-[var(--accent)]"
           />{" "}
           Request third-party installation help
         </label>
       </form>
-      <section className="rounded-[26px] bg-[var(--ink)] p-6 text-white sm:p-9" aria-live="polite">
+      <section className="rounded-[26px] bg-[var(--text-primary)] p-6 text-white sm:p-9" aria-live="polite">
         <p className="eyebrow !text-white/55">Compatible starting set</p>
         <h2 className="mt-4 font-display text-4xl font-semibold">
           Built for {answers.cameras} cameras.
@@ -225,19 +225,19 @@ export function SystemBuilder() {
         </div>
         <div className="mt-5 grid gap-2 rounded-2xl border border-white/10 p-5 text-sm text-white/70">
           <p className="flex gap-2">
-            <CheckCircle2 size={17} className="text-[var(--tangerine)]" /> Channel count fits the
+            <CheckCircle2 size={17} className="text-[var(--accent)]" /> Channel count fits the
             recommended recorder.
           </p>
           <p className="flex gap-2">
-            <CheckCircle2 size={17} className="text-[var(--tangerine)]" /> {answers.night}{" "}
+            <CheckCircle2 size={17} className="text-[var(--accent)]" /> {answers.night}{" "}
             night-view preference applied.
           </p>
           <p className="flex gap-2">
-            <CheckCircle2 size={17} className="text-[var(--tangerine)]" /> Storage for{" "}
+            <CheckCircle2 size={17} className="text-[var(--accent)]" /> Storage for{" "}
             {answers.days} days requires scene/activity sizing before purchase.
           </p>
           <p className="flex gap-2">
-            <CheckCircle2 size={17} className="text-[var(--tangerine)]" /> PoE switching, HDD and
+            <CheckCircle2 size={17} className="text-[var(--accent)]" /> PoE switching, HDD and
             cabling are quoted after route and distance checks.
           </p>
         </div>

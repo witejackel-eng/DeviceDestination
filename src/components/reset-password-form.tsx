@@ -32,7 +32,7 @@ export function ResetPasswordForm() {
           minLength={10}
           required
           autoComplete="new-password"
-          className="h-12 rounded-xl border border-[var(--line)] px-3"
+          className="h-12 rounded-xl border border-[var(--border)] px-3"
         />
       </label>
       {message && <p className="text-[var(--success)]">{message}</p>}

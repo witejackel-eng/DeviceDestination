@@ -14,7 +14,7 @@ export default function BrandsPage() {
     <div className="container-standard section-space !pt-14">
       <p className="eyebrow">Shop by brand</p>
       <h1 className="display-section mt-4">Find the exact manufacturer.</h1>
-      <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">
+      <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--text-muted)]">
         Every brand page contains only real catalogue products, exact model numbers and available
         technical documents.
       </p>
@@ -25,9 +25,9 @@ export default function BrandsPage() {
             <Link
               key={brand.slug}
               href={`/brands/${brand.slug}`}
-              className="group rounded-[24px] border border-[var(--line)] bg-white p-7 transition-colors hover:border-[var(--tangerine-border-hover)]"
+              className="group rounded-[24px] border border-[var(--border)] bg-white p-7 transition-colors hover:border-[var(--accent-border-hover)]"
             >
-              <p className="text-sm text-[var(--muted)]">
+              <p className="text-sm text-[var(--text-muted)]">
                 {count} {count === 1 ? "product" : "products"}
               </p>
               <h2 className="mt-12 font-display text-4xl font-bold">{brand.name}</h2>

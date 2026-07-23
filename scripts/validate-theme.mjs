@@ -23,13 +23,15 @@ walk(join(root, "src"));
 walk(join(root, "public"));
 
 const globals = readFileSync(join(root, "src/app/globals.css"), "utf8").toLowerCase();
-for (const color of ["#ff8a00", "#ffa62b", "#ffb347"])
+for (const color of ["#ff6a00", "#e85f00", "#fff0e6"])
   assert.ok(globals.includes(color), `Missing canonical theme colour ${color}`);
 
 const disallowed = [
   /#f97316/gi,
   /#ff7a1a/gi,
-  /#ff6b00/gi,
+  /#ff8a00/gi,
+  /#ffb347/gi,
+  /#ffa62b/gi,
   /#ff9900/gi,
   /rgba?\(255\s*,\s*165\s*,\s*0/gi,
   /rgba?\(255\s*,\s*122\s*,\s*26/gi,

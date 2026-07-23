@@ -14,21 +14,21 @@ export default function DownloadsPage() {
     <div className="container-standard section-space !pt-14">
       <p className="eyebrow">Technical library</p>
       <h1 className="display-section mt-4">Documents by exact model.</h1>
-      <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">
+      <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--text-muted)]">
         Buttons appear only where the local file is matched to the published product model.
       </p>
-      <div className="mt-10 divide-y divide-[var(--line)] border-y border-[var(--line)]">
+      <div className="mt-10 divide-y divide-[var(--border)] border-y border-[var(--border)]">
         {available.map((product) => (
           <div key={product.id} className="grid gap-5 py-6 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
-              <p className="text-xs font-bold text-[var(--muted)]">{product.brand}</p>
+              <p className="text-xs font-bold text-[var(--text-muted)]">{product.brand}</p>
               <Link
                 href={`/products/${product.slug}`}
                 className="mt-1 block font-display text-2xl font-semibold hover:underline"
               >
                 {product.model}
               </Link>
-              <p className="mt-2 text-sm text-[var(--muted)]">{product.title}</p>
+              <p className="mt-2 text-sm text-[var(--text-muted)]">{product.title}</p>
             </div>
             <div className="flex flex-wrap items-center gap-3 lg:justify-end">
               {product.documents.map((document) => (

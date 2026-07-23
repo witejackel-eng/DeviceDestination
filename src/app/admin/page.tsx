@@ -23,7 +23,7 @@ export default function AdminPage() {
         {areas.map(([title, href, copy]) => (
           <Link key={href} href={href} className="surface-card p-6">
             <h2 className="font-display text-3xl font-semibold">{title}</h2>
-            <p className="mt-3 text-[var(--muted)]">{copy}</p>
+            <p className="mt-3 text-[var(--text-muted)]">{copy}</p>
           </Link>
         ))}
       </div>

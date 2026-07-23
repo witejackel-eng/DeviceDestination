@@ -70,8 +70,8 @@ export function PointerField({ tone = "light", className }: PointerFieldProps) {
     };
   }, []);
 
-  const lineColor = tone === "dark" ? "var(--line-on-dark)" : "var(--line)";
-  const nodeColor = tone === "dark" ? "var(--node-on-dark)" : "var(--tangerine-border)";
+  const lineColor = tone === "dark" ? "var(--line-on-dark)" : "var(--border)";
+  const nodeColor = tone === "dark" ? "var(--dark-muted)" : "var(--accent-border)";
   const verticalLines = Array.from({ length: COLUMNS + 1 }, (_, index) => (index / COLUMNS) * 100);
   const horizontalLines = Array.from({ length: ROWS + 1 }, (_, index) => (index / ROWS) * 100);
 
