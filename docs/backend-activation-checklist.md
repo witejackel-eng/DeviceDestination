@@ -10,10 +10,14 @@ These items are implemented, type-checked, unit-tested, and built successfully. 
 
 ### Database and schema
 
-- [x] Drizzle schema extended with: `product_price_history`, `inventory_reservations`, `inventory_adjustments`, `jobs`, `quotes`, `quote_items`, `quote_status_history`, `shipping_zones`, `shipping_pincode_rules`, `refunds`, `payment_reconciliation_results`, `order_status_events`, `settings`.
+- [x] Drizzle schema extended with: `product_price_history`, `inventory_reservations`, `inventory_adjustments`, `jobs`, `quotes`, `quote_items`, `quote_status_history`, `shipping_zones`, `shipping_pincode_rules`, `refunds`, `payment_reconciliation_results`, `order_status_events`, `settings`, `payment_webhook_events`, `checkout_attempts`, `system_runs`.
 - [x] Forward-only migration `drizzle/0001_ancient_sabretooth.sql` generated.
+- [x] Forward-only migration `drizzle/0002_large_toad_men.sql` generated (webhook events, checkout attempts, system runs, reservation status expansion, payment processing timestamps, job deduplication, inventory exception status).
 - [x] Indexes added for: orders by status and created date, payments by provider IDs, inventory reservations by status and expiry, jobs by status and run-after, enquiries by status and created date, quotes by status and expiry, audit logs by entity and timestamp, product-price history by product and timestamp.
-- [x] `order_status` enum extended with `refund_pending`.
+- [x] `order_status` enum extended with `refund_pending` and `inventory_exception`.
+- [x] `reservation_status` enum extended with `pending`, `consuming`, `releasing`, `failed`.
+- [x] `webhook_event_processing_status` enum created (`received`, `processing`, `completed`, `failed`, `ignored`).
+- [x] `checkout_attempt_status` enum created (`initialized`, `local_order_created`, `inventory_reserved`, `provider_order_creating`, `provider_order_created`, `payment_recorded`, `ready_for_checkout`, `failed`, `cancelled`).
 - [x] `enquiry_status`, `quote_status`, `job_status`, `refund_status`, `reservation_status`, `price_source_status`, `shipping_serviceability`, `reconciliation_outcome`, `inventory_adjustment_type` enums created.
 
 ### Admin operations
@@ -40,7 +44,10 @@ These items are implemented, type-checked, unit-tested, and built successfully. 
 - [x] Inventory reservation service (`src/lib/inventory.ts`) — atomic, no oversell, no negative stock, idempotent consume/release.
 - [x] Shipping engine (`src/lib/shipping.ts`) — `getShippingQuote`, conservative defaults, manual-confirmation fallback.
 - [x] Refund foundation (`src/lib/refunds.ts`) — idempotent, never exceeds captured amount, safe unconfigured state.
-- [x] Durable job runner (`src/lib/jobs.ts`) + dispatcher (`src/lib/job-dispatcher.ts`) — atomic claim, exponential backoff, max-attempts.
+- [x] Durable job runner (`src/lib/jobs.ts`) + dispatcher (`src/lib/job-dispatcher.ts`) — atomic claim, exponential backoff, max-attempts, job deduplication via `dedupeKey`.
+- [x] Checkout orchestrator (`src/lib/checkout-orchestrator.ts`) — saga pattern with idempotency keys, compensation on failure, placeholder payment before Razorpay call.
+- [x] Payment processing (`src/lib/payment-processing.ts`) — 11-step idempotent pipeline, webhook event deduplication, missing-step recovery via timestamps.
+- [x] System runs tracking — `system_runs` table records each cron run for operational visibility.
 - [x] Payment reconciliation (`src/lib/reconciliation.ts`) — provider comparison, safe auto-promote, never auto-downgrade.
 - [x] Settings layer (`src/lib/settings.ts`) — typed validators, conservative defaults.
 - [x] Customer account backend (`src/lib/account.ts`) — order history, addresses, profile, guest-order linking.
@@ -64,14 +71,14 @@ These items are implemented, type-checked, unit-tested, and built successfully. 
 
 ### Checkout integration
 
-- [x] `/api/orders` now: validates pincode server-side, computes shipping, stores serviceability result on order, reserves inventory atomically before Razorpay order creation, compensates on failure.
-- [x] Razorpay webhook now: consumes reservations on capture, releases on failure, enqueues invoice-generation and notification jobs (no inline notification calls).
+- [x] Checkout orchestration (`orchestrateCheckout`) now: validates pincode server-side, computes shipping, stores serviceability result on order, reserves inventory atomically before Razorpay order creation, compensates on failure via saga pattern, uses `checkout_attempts` table for idempotency.
+- [x] Razorpay webhook now: verifies signature before processing, records events durably in `payment_webhook_events`, delegates to `finalizeCapturedPayment` for 11-step idempotent processing, consumes reservations on capture, releases on failure, enqueues deduplicated invoice-generation and notification jobs.
 - [x] Razorpay order creation failure releases reservations and cancels the pending order.
 
 ### CI and config
 
 - [x] `.github/workflows/ci.yml` — lint, typecheck, unit tests, products validation, theme validation, build, migration consistency check, npm audit summary. Refuses committed `.env` files. Scans for obvious secret patterns. E2E job runs Playwright.
-- [x] `vercel.json` — Vercel Cron triggers `/api/internal/jobs/run` every 5 minutes.
+- [x] `vercel.json` — Vercel Cron triggers `/api/internal/jobs/run` daily at 02:00 UTC. For production-grade 15-minute reservation expiry, an external scheduler must hit this endpoint every 5–10 minutes.
 
 ### Tests added
 
@@ -83,15 +90,28 @@ These items are implemented, type-checked, unit-tested, and built successfully. 
 - [x] `tests/unit/settings.test.ts` — 11 tests covering defaults and validators.
 - [x] `tests/unit/audit.test.ts` — 3 tests covering redaction and safe failure.
 - [x] `tests/unit/jobs.test.ts` — 3 tests covering required job types.
+- [x] `tests/integration/inventory.test.ts` — 12 tests covering reservation, consumption, release, concurrency, expiry, and compensation.
+- [x] `tests/integration/webhook.test.ts` — 11 tests covering webhook deduplication, idempotent processing, amount mismatch, inventory exception.
+- [x] `tests/integration/checkout.test.ts` — 8 tests covering idempotency, compensation, price overrides.
+- [x] `tests/integration/auth.test.ts` — 6 tests covering authorization, access control.
+- [x] `tests/integration/migration.test.ts` — 4 tests covering migration consistency, indexes, enums.
+- [x] `tests/helpers/failure-injection.ts` — 7 failure points for dependency-injected test-only failure simulation.
+- [x] `tests/helpers/setup.ts` — integration test helpers with seed functions, cleanup, and environment configuration.
 
 ### Documentation
 
-- [x] `docs/architecture.md` updated.
+- [x] `docs/architecture.md` updated (added webhook events, checkout saga, system runs, job deduplication, payment timestamps, inventory exception).
+- [x] `docs/payment-processing.md` — 11-step pipeline, webhook idempotency, missing-step recovery.
+- [x] `docs/webhook-recovery.md` — event recording, status flow, duplicate handling, stuck event reclaim, reconciliation.
+- [x] `docs/checkout-saga.md` — checkout phases, idempotency key behavior, compensation on failure, placeholder payment.
+- [x] `docs/backend-failure-recovery.md` — idempotent steps, timestamps, failure injection, recovery paths, inventory exception.
+- [x] `docs/ci-integration-tests.md` — CI workflow, PostgreSQL service container, synthetic secrets, test categories.
+- [x] `docs/inventory-operations.md` updated (pending→active flow, atomic status claims, compensation, opportunistic cleanup, reconciliation).
+- [x] `docs/job-runner.md` updated (deduplication, system runs, cron schedule change).
+- [x] `docs/security.md` updated (webhook verification, event recording, no secret logging, failure injection safety).
+- [x] `docs/refund-operations.md` updated (idempotency references).
 - [x] `docs/backend-activation-checklist.md` (this file).
-- [x] `docs/inventory-operations.md`.
 - [x] `docs/shipping-configuration.md`.
-- [x] `docs/refund-operations.md`.
-- [x] `docs/job-runner.md`.
 - [x] `docs/account-operations.md`.
 
 ---
@@ -103,7 +123,11 @@ These items require the owner to log into external service dashboards (Neon, Raz
 ### Database
 
 - [ ] Create the Neon PostgreSQL project (or point `DATABASE_URL` at an existing one).
-- [ ] Run `npm run db:migrate` against production to apply `drizzle/0001_ancient_sabretooth.sql`.
+- [ ] Run `npm run db:migrate` against production to apply `drizzle/0001_ancient_sabretooth.sql` and `drizzle/0002_large_toad_men.sql`.
+- [ ] Verify the `payment_webhook_events` table exists and has the unique index on `provider_event_id`.
+- [ ] Verify the `checkout_attempts` table exists and has the unique index on `idempotency_key`.
+- [ ] Verify the `system_runs` table exists.
+- [ ] Verify the `jobs` table has the `dedupe_key` column and partial unique index.
 - [ ] Run `npm run db:seed` to populate the catalogue if not already done.
 - [ ] Seed default shipping zones: `npm run db:seed -- --shipping` (after migration). Or use the admin UI at `/admin/settings/shipping`.
 
@@ -154,11 +178,15 @@ These items require the owner to log into external service dashboards (Neon, Raz
 
 - [ ] Generate a strong `CRON_SECRET`.
 - [ ] Confirm the `vercel.json` cron entry is active in the Vercel dashboard.
-- [ ] Optionally set up a fallback external cron to hit `/api/internal/jobs/run` every 5 minutes.
+- [ ] **Required for production**: Set up an external scheduler (e.g. cron-job.org, EasyCron, or a self-hosted cron daemon) to hit `https://device-destination-rose.vercel.app/api/internal/jobs/run` every 5–10 minutes with `Authorization: Bearer <CRON_SECRET>`. Vercel Cron now runs daily, which is insufficient for 15-minute reservation expiry. Without an external scheduler, reservations will not expire promptly and inventory_exception orders will not be repaired quickly.
+- [ ] Verify the external scheduler is working by checking `system_runs` table for entries with `trigger_source = 'manual'`.
 
 ### Deployment
 
-- [ ] Merge `backend/production-operations` into `main` after CI passes.
+- [ ] Merge `fix/backend-reliability-hardening` into `main` after CI passes (this replaces the previous `backend/production-operations` branch).
+- [ ] Verify webhook event recording works by sending a test webhook from the Razorpay dashboard and checking `payment_webhook_events` in the database.
+- [ ] Verify payment processing timestamps are populated by completing a test payment and checking `payments.capture_recorded_at`, `order_paid_marked_at`, `inventory_consumed_at`, `processing_completed_at`.
+- [ ] Verify inventory exception handling by testing a scenario where a payment is captured after reservation expiry and checking that the order enters `inventory_exception` status with a descriptive `fulfilment_hold_reason`.
 - [ ] Push `main` to trigger Vercel deployment.
 - [ ] Confirm the deployment succeeds at `https://device-destination-rose.vercel.app`.
 - [ ] Visit `/api/readiness` to confirm all configured channels report `ready`.

@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, lte, sql } from "drizzle-orm";
+import { and, eq, lte, sql } from "drizzle-orm";
 import { getDb, isDatabaseConfigured } from "@/db/client";
 import { jobs } from "@/db/schema";
 import { logger } from "@/lib/logger";
@@ -30,9 +30,40 @@ export class JobError extends Error {
 }
 
 /**
+ * Generate a deduplication key for a job. Uses orderId for order-related
+ * jobs, reservationId for reservation jobs, etc.
+ */
+export function jobDedupeKey(type: JobType, payload: Record<string, unknown>): string {
+  switch (type) {
+    case "generate-invoice":
+      return `generate-invoice:${payload.orderId ?? "unknown"}`;
+    case "send-order-email":
+      return `send-order-email:${payload.orderId ?? "unknown"}`;
+    case "send-order-whatsapp":
+      return `send-order-whatsapp:${payload.orderId ?? "unknown"}`;
+    case "expire-inventory-reservation":
+      return `expire-inventory-reservation:${payload.reservationId ?? payload.orderId ?? "unknown"}`;
+    case "reconcile-payment":
+      return `reconcile-payment:${payload.orderId ?? "unknown"}`;
+    case "send-enquiry-email":
+      return `send-enquiry-email:${payload.enquiryId ?? "unknown"}`;
+    case "send-enquiry-whatsapp":
+      return `send-enquiry-whatsapp:${payload.enquiryId ?? "unknown"}`;
+    case "send-shipment-update":
+      return `send-shipment-update:${payload.orderId ?? "unknown"}`;
+    case "retry-failed-notification":
+      // These are unique per failure event, so we don't deduplicate them.
+      return "";
+    default:
+      return "";
+  }
+}
+
+/**
  * Enqueue a job. Idempotency is the caller's responsibility — for example, an
  * invoice-generation job for a given order should include the order ID in the
- * payload and the caller should check before enqueueing.
+ * payload and the caller should check before enqueueing. For deduplicated
+ * jobs, use {@link enqueueDeduplicatedJob} instead.
  */
 export async function enqueueJob(input: {
   type: JobType;
@@ -58,6 +89,73 @@ export async function enqueueJob(input: {
       status: "pending",
     })
     .returning({ id: jobs.id });
+  return job?.id ?? "";
+}
+
+/**
+ * Enqueue a deduplicated job. If an active (pending/processing/completed)
+ * job with the same dedupeKey already exists, return its ID instead of
+ * creating a duplicate.
+ */
+export async function enqueueDeduplicatedJob(input: {
+  type: JobType;
+  payload: JobPayload;
+  dedupeKey: string;
+  runAfter?: Date;
+  maxAttempts?: number;
+}): Promise<string> {
+  if (!isDatabaseConfigured()) {
+    logger.warn(
+      { event: "job_enqueue_skipped", type: input.type },
+      "Job enqueue skipped — database not configured",
+    );
+    return "";
+  }
+  const db = getDb();
+
+  if (!input.dedupeKey) {
+    // No dedupe key provided — just enqueue normally.
+    return enqueueJob({
+      type: input.type,
+      payload: input.payload,
+      runAfter: input.runAfter,
+      maxAttempts: input.maxAttempts,
+    });
+  }
+
+  // Check if an active job with that dedupeKey exists.
+  const [existing] = await db
+    .select({ id: jobs.id })
+    .from(jobs)
+    .where(
+      and(
+        eq(jobs.dedupeKey, input.dedupeKey),
+        sql`${jobs.status} IN ('pending', 'processing', 'completed')`,
+      ),
+    )
+    .limit(1);
+
+  if (existing) {
+    logger.info(
+      { event: "job_dedupe_existing", dedupeKey: input.dedupeKey, existingJobId: existing.id },
+      "Deduplicated job already exists",
+    );
+    return existing.id;
+  }
+
+  // No existing active job — insert with dedupeKey.
+  const [job] = await db
+    .insert(jobs)
+    .values({
+      type: input.type,
+      payload: input.payload,
+      runAfter: input.runAfter ?? new Date(),
+      maxAttempts: input.maxAttempts ?? 5,
+      status: "pending",
+      dedupeKey: input.dedupeKey,
+    })
+    .returning({ id: jobs.id });
+
   return job?.id ?? "";
 }
 

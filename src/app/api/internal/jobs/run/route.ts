@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runJobBatch } from "@/lib/jobs";
-import { reconcileStalePendingPayments } from "@/lib/reconciliation";
+import { reconcileStalePendingPayments, repairIncompletePostPaymentProcessing } from "@/lib/reconciliation";
 import { expirePendingReservations } from "@/lib/inventory";
 import { isCronConfigured } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { getDb, isDatabaseConfigured } from "@/db/client";
+import { systemRuns } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -11,7 +13,10 @@ export const maxDuration = 60;
 /**
  * Internal cron-protected job runner. Triggered by Vercel Cron (or any
  * authenticated caller with CRON_SECRET). Runs one batch of pending jobs,
- * then sweeps stale reservations and stale pending payments.
+ * then sweeps stale reservations, stale pending payments, and repairs
+ * incomplete post-payment processing.
+ *
+ * After each run, inserts a systemRuns record with the results.
  *
  * Security:
  *  - If CRON_SECRET is set, the request MUST include a matching
@@ -35,16 +40,51 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
+  // Determine trigger source.
+  const triggerSource = vercelCronAuth === secret ? "vercel_cron" : "manual";
+  const startedAt = new Date();
+
   const jobsResult = await runJobBatch({ batchSize: 10 });
   const reservationResult = await expirePendingReservations();
   const reconciliationResult = await reconcileStalePendingPayments(30);
+  const repairResult = await repairIncompletePostPaymentProcessing(50);
+
+  const completedAt = new Date();
+  const durationMs = completedAt.getTime() - startedAt.getTime();
+
+  // ── Insert systemRuns record ────────────────────────────────────────────
+  if (isDatabaseConfigured()) {
+    try {
+      const db = getDb();
+      await db.insert(systemRuns).values({
+        triggerSource,
+        jobsClaimed: jobsResult.claimed,
+        jobsCompleted: jobsResult.completed,
+        jobsFailed: jobsResult.failed,
+        reservationsExpired: reservationResult.expired,
+        paymentsReconciled: reconciliationResult.checked,
+        durationMs,
+        startedAt,
+        completedAt,
+      });
+    } catch (error) {
+      // System runs recording is best-effort — don't fail the cron run.
+      logger.warn(
+        { event: "system_runs_insert_failed", error: error instanceof Error ? error.message : "unknown" },
+        "Failed to record system run",
+      );
+    }
+  }
 
   logger.info(
     {
       event: "cron_run_complete",
+      triggerSource,
+      durationMs,
       jobs: jobsResult,
       reservations: reservationResult.expired,
       reconciliation: reconciliationResult,
+      repair: repairResult,
     },
     "Cron run complete",
   );
@@ -53,7 +93,10 @@ export async function POST(request: NextRequest) {
     jobs: jobsResult,
     reservationsExpired: reservationResult.expired,
     reconciliation: reconciliationResult,
-    timestamp: new Date().toISOString(),
+    repair: repairResult,
+    durationMs,
+    triggerSource,
+    timestamp: completedAt.toISOString(),
   });
 }
 

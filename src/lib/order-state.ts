@@ -13,10 +13,13 @@ export type OrderStatus = (typeof orderStatus.enumValues)[number];
  *   payment_pending → cancelled
  *   paid → processing
  *   paid → refund_pending
+ *   paid → inventory_exception  (when captured payment can't get stock)
  *   processing → shipped
  *   processing → refund_pending
  *   shipped → delivered
  *   shipped → refund_pending  (rare; requires operational review)
+ *   inventory_exception → paid        (when stock becomes available and admin resolves)
+ *   inventory_exception → refund_pending (when admin decides to refund)
  *   refund_pending → refunded
  *   refund_pending → paid     (refund failed; restore paid)
  *   refunded → cancelled      (terminal cleanup only)
@@ -24,13 +27,14 @@ export type OrderStatus = (typeof orderStatus.enumValues)[number];
 const ALLOWED: Record<OrderStatus, OrderStatus[]> = {
   pending: ["payment_pending", "cancelled"],
   payment_pending: ["paid", "cancelled"],
-  paid: ["processing", "refund_pending", "cancelled"],
+  paid: ["processing", "refund_pending", "inventory_exception"],
   processing: ["shipped", "refund_pending"],
   shipped: ["delivered", "refund_pending"],
   delivered: [],
   cancelled: [],
   refund_pending: ["refunded", "paid"],
   refunded: ["cancelled"],
+  inventory_exception: ["paid", "refund_pending"],
 };
 
 export function isAllowedTransition(from: OrderStatus, to: OrderStatus): boolean {
@@ -56,7 +60,7 @@ export function assertTransition(from: OrderStatus, to: OrderStatus): void {
 
 /** Whether the order is in any "paid-equivalent" state (not cancelled/refunded). */
 export function isPaidLike(status: OrderStatus): boolean {
-  return status === "paid" || status === "processing" || status === "shipped" || status === "delivered";
+  return status === "paid" || status === "processing" || status === "shipped" || status === "delivered" || status === "inventory_exception";
 }
 
 /** Whether the order can be cancelled (only unpaid orders). */
@@ -77,6 +81,11 @@ export function canDeliver(status: OrderStatus): boolean {
 /** Whether a refund can be requested. */
 export function canRequestRefund(status: OrderStatus): boolean {
   return isPaidLike(status) && status !== "refund_pending";
+}
+
+/** Whether the order has an inventory issue that needs admin resolution. */
+export function isInventoryException(status: OrderStatus): boolean {
+  return status === "inventory_exception";
 }
 
 /** Human-readable label for the admin UI. */

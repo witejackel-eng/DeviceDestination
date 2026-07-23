@@ -10,6 +10,7 @@ import {
   uuid,
   index,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -33,6 +34,7 @@ export const orderStatus = pgEnum("order_status", [
   "cancelled",
   "refund_pending",
   "refunded",
+  "inventory_exception",
 ]);
 export const paymentStatus = pgEnum("payment_status", [
   "created",
@@ -49,10 +51,34 @@ export const userRole = pgEnum("user_role", [
 ]);
 
 export const reservationStatus = pgEnum("reservation_status", [
+  "pending",
   "active",
   "consumed",
   "released",
   "expired",
+  "cancelled",
+  "consuming",
+  "releasing",
+  "failed",
+]);
+
+export const webhookEventProcessingStatus = pgEnum("webhook_event_processing_status", [
+  "received",
+  "processing",
+  "completed",
+  "failed",
+  "ignored",
+]);
+
+export const checkoutAttemptStatus = pgEnum("checkout_attempt_status", [
+  "initialized",
+  "local_order_created",
+  "inventory_reserved",
+  "provider_order_creating",
+  "provider_order_created",
+  "payment_recorded",
+  "ready_for_checkout",
+  "failed",
   "cancelled",
 ]);
 
@@ -315,7 +341,6 @@ export const inventoryReservations = pgTable(
     index("inventory_reservations_order_idx").on(table.orderId),
     index("inventory_reservations_product_idx").on(table.productId),
     index("inventory_reservations_status_idx").on(table.status, table.expiresAt),
-    uniqueIndex("inventory_reservations_order_product_idx").on(table.orderId, table.productId),
   ],
 );
 
@@ -499,6 +524,7 @@ export const orders = pgTable(
     internalNotes: text("internal_notes"),
     refundTotalPaise: integer("refund_total_paise").default(0).notNull(),
     lastReconciledAt: timestamp("last_reconciled_at", { withTimezone: true }),
+    fulfilmentHoldReason: text("fulfilment_hold_reason"),
     ...timestamps,
   },
   (table) => [
@@ -555,6 +581,13 @@ export const payments = pgTable(
     status: paymentStatus("status").default("created").notNull(),
     amountPaise: integer("amount_paise").notNull(),
     rawEventId: text("raw_event_id"),
+    captureRecordedAt: timestamp("capture_recorded_at", { withTimezone: true }),
+    orderPaidMarkedAt: timestamp("order_paid_marked_at", { withTimezone: true }),
+    inventoryConsumedAt: timestamp("inventory_consumed_at", { withTimezone: true }),
+    invoiceJobQueuedAt: timestamp("invoice_job_queued_at", { withTimezone: true }),
+    emailJobQueuedAt: timestamp("email_job_queued_at", { withTimezone: true }),
+    whatsappJobQueuedAt: timestamp("whatsapp_job_queued_at", { withTimezone: true }),
+    processingCompletedAt: timestamp("processing_completed_at", { withTimezone: true }),
     ...timestamps,
   },
   (table) => [
@@ -771,12 +804,14 @@ export const jobs = pgTable(
     lockedBy: text("locked_by"),
     lastError: text("last_error"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
+    dedupeKey: text("dedupe_key"),
     ...timestamps,
   },
   (table) => [
     index("jobs_status_run_after_idx").on(table.status, table.runAfter),
     index("jobs_type_idx").on(table.type),
     index("jobs_locked_by_idx").on(table.lockedBy),
+    uniqueIndex("jobs_dedupe_key_active_idx").on(table.dedupeKey).where(sql`${table.status} IN ('pending', 'processing', 'completed')`),
   ],
 );
 
@@ -816,3 +851,71 @@ export const adminAuditLogs = pgTable(
 );
 
 // Re-export for callers that want arbitrary-precision arithmetic on prices.
+
+// ─── New reliability tables ───────────────────────────────────────────
+
+export const paymentWebhookEvents = pgTable(
+  "payment_webhook_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    provider: text("provider").default("razorpay").notNull(),
+    providerEventId: text("provider_event_id").notNull(),
+    eventType: text("event_type").notNull(),
+    providerOrderId: text("provider_order_id").notNull(),
+    providerPaymentId: text("provider_payment_id"),
+    amountPaise: integer("amount_paise"),
+    processingStatus: webhookEventProcessingStatus("processing_status").default("received").notNull(),
+    attempts: integer("attempts").default(0).notNull(),
+    lastError: text("last_error"),
+    receivedAt: timestamp("received_at", { withTimezone: true }).defaultNow().notNull(),
+    processingStartedAt: timestamp("processing_started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("payment_webhook_events_provider_event_id_idx").on(table.providerEventId),
+    index("payment_webhook_events_provider_order_id_idx").on(table.providerOrderId),
+    index("payment_webhook_events_provider_payment_id_idx").on(table.providerPaymentId),
+    index("payment_webhook_events_processing_status_idx").on(table.processingStatus),
+    index("payment_webhook_events_received_at_idx").on(table.receivedAt),
+  ],
+);
+
+export const checkoutAttempts = pgTable(
+  "checkout_attempts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    idempotencyKey: text("idempotency_key").notNull(),
+    orderId: uuid("order_id").references(() => orders.id),
+    status: checkoutAttemptStatus("status").default("initialized").notNull(),
+    providerOrderId: text("provider_order_id"),
+    lastCompletedStep: text("last_completed_step"),
+    lastError: text("last_error"),
+    attempts: integer("attempts").default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("checkout_attempts_idempotency_key_idx").on(table.idempotencyKey),
+    index("checkout_attempts_order_id_idx").on(table.orderId),
+    index("checkout_attempts_provider_order_id_idx").on(table.providerOrderId),
+  ],
+);
+
+export const systemRuns = pgTable(
+  "system_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    triggerSource: text("trigger_source").notNull(),
+    jobsClaimed: integer("jobs_claimed").default(0),
+    jobsCompleted: integer("jobs_completed").default(0),
+    jobsFailed: integer("jobs_failed").default(0),
+    reservationsExpired: integer("reservations_expired").default(0),
+    paymentsReconciled: integer("payments_reconciled").default(0),
+    durationMs: integer("duration_ms"),
+    error: text("error"),
+    startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+);

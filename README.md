@@ -114,9 +114,45 @@ Search uses one shared normalizer for the overlay and catalogue, so case, spaces
 
 ## Order, payment and notifications
 
-The server validates checkout input and purchase eligibility, reads trusted database prices, stores an idempotent pending order, and creates the Razorpay order. Callback handling verifies the HMAC signature, fetches the provider payment, and checks order ID, amount and provider status. Only a signed `payment.captured` webhook marks the order paid. Duplicate capture events are safe.
+The checkout orchestrator uses the saga pattern via `checkout_attempts` for idempotency — the same idempotency key returns the existing order, returns "processing" for in-progress attempts, or returns a retryable error for failed attempts. On any step failure (inventory reservation, Razorpay creation, or payment-row update), all previously completed steps are compensated: inventory is released, the order is cancelled, and the payment is marked failed.
 
-After capture, the server creates an invoice number and PDF, then attempts customer/business email and WhatsApp independently. Notification failure never rolls back or changes the paid status; each channel has its own status. A token-protected order page exposes the real stored state and invoice download.
+The webhook handler verifies the Razorpay HMAC signature before trusting any payload, then durably records the event in `payment_webhook_events` for idempotency and recovery. The `finalizeCapturedPayment` function executes an 11-step pipeline where each step is independently idempotent (guarded by timestamps on the `payments` table). If a step fails, the event is recorded as `failed` and can be re-processed later — only the missing steps are executed on retry. Duplicate capture events are safe and return `duplicate_completed` without re-processing.
+
+After capture, the server creates an invoice number and PDF, then attempts customer/business email and WhatsApp independently using deduplicated jobs. Notification failure never rolls back or changes the paid status; each channel has its own status. A token-protected order page exposes the real stored state and invoice download.
+
+## Backend reliability improvements
+
+The backend reliability hardening (`fix/backend-reliability-hardening` branch) introduces:
+
+- **Webhook event deduplication** — every Razorpay webhook event is recorded in `payment_webhook_events` before processing, with a unique index on `provider_event_id` preventing duplicate work.
+- **11-step idempotent payment processing** — each step is guarded by a timestamp on the `payments` table, so retries resume from the last completed step without re-doing finished work.
+- **Checkout saga with idempotency** — `checkout_attempts` table tracks each checkout through its phases, compensating on failure and deduplicating by idempotency key.
+- **Job deduplication** — `enqueueDeduplicatedJob` uses a partial unique index on `dedupe_key` to prevent duplicate invoice, email, and WhatsApp jobs for the same order.
+- **Inventory exception handling** — when a payment is captured after reservation expiry and stock is unavailable, the order enters `inventory_exception` status for admin resolution.
+- **System runs tracking** — each cron run is recorded in `system_runs` for operational visibility.
+- **Integration tests with failure injection** — 7 dependency-injected failure points for test-only simulation of crashes at critical steps.
+
+## Cron schedule
+
+Vercel Cron now triggers `/api/internal/jobs/run` **daily at 02:00 UTC** (changed from every 5 minutes). For production-grade reliability, especially with 15-minute reservation expiry, an **external scheduler** (cron-job.org, EasyCron, or a self-hosted cron) must hit this endpoint every 5–10 minutes with `Authorization: Bearer <CRON_SECRET>`. Without an external scheduler, expired reservations and stuck payment processing will not be resolved promptly.
+
+The cron run performs: job batch processing, inventory reservation expiry, payment reconciliation, and incomplete post-payment processing repair.
+
+## Detailed documentation
+
+The `docs/` directory contains detailed documentation:
+
+- [Architecture](docs/architecture.md) — system overview, data flow, and new reliability components
+- [Payment Processing](docs/payment-processing.md) — 11-step pipeline, webhook idempotency, missing-step recovery
+- [Webhook Recovery](docs/webhook-recovery.md) — event recording, status flow, duplicate handling, reconciliation
+- [Checkout Saga](docs/checkout-saga.md) — phases, idempotency keys, compensation, placeholder payment
+- [Backend Failure Recovery](docs/backend-failure-recovery.md) — idempotent steps, timestamps, failure injection, recovery paths
+- [Inventory Operations](docs/inventory-operations.md) — reservation lifecycle, atomic claims, compensation, cleanup
+- [Job Runner](docs/job-runner.md) — deduplication, system runs, cron endpoint
+- [CI Integration Tests](docs/ci-integration-tests.md) — CI workflow, test categories, local setup
+- [Security](docs/security.md) — webhook verification, event recording, failure injection safety
+- [Refund Operations](docs/refund-operations.md) — idempotent refund system
+- [Backend Activation Checklist](docs/backend-activation-checklist.md) — deployment steps and verification
 
 ## Adding products and reviews
 

@@ -1,53 +1,47 @@
 ---
-Task ID: backend-completion
+Task ID: final
 Agent: main
-Task: Complete every backend, administrative and operational feature of the DeviceDestination repository that can be implemented safely in code without requiring access to the owner's private external accounts.
+Task: Create comprehensive documentation for backend reliability hardening on the `fix/backend-reliability-hardening` branch.
 
-Work Log:
-- Cloned https://github.com/witejackel-eng/DeviceDestination at starting commit 869162406ebea78b1231d828eac52a22234dc9b1
-- Created backup/pre-backend-completion branch (unchanged)
-- Created backend/production-operations implementation branch
-- Inspected existing backend: schema, auth, payments, webhook, admin layout, checkout, rate limiting, validation, tests, env example
-- Extended src/db/schema.ts with: product_price_history, inventory_reservations, inventory_adjustments, jobs, quotes, quote_items, quote_status_history, shipping_zones, shipping_pincode_rules, refunds, payment_reconciliation_results, order_status_events, settings; extended orders, users, products, enquiries tables; added 9 new enums; extended order_status enum with refund_pending
-- Generated forward-only migration drizzle/0001_ancient_sabretooth.sql (280 lines)
-- Installed @vercel/blob
-- Built src/lib/env.ts (typed environment validator with grouped errors and channel helpers)
-- Built src/lib/admin-auth.ts (requireAdmin, resolveAdmin server-side authorization)
-- Built src/lib/audit.ts (recordAudit + redactSecrets, never throws)
-- Built src/lib/order-state.ts (single source of truth for transitions)
-- Built src/lib/inventory.ts (atomic reservation/consume/release/adjust using conditional UPDATEs)
-- Built src/lib/settings.ts (database-backed settings with validators and conservative defaults)
-- Built src/lib/shipping.ts (getShippingQuote with longest-prefix matching and manual-confirmation fallback)
-- Built src/lib/refunds.ts (idempotent refund creation with safe unconfigured state)
-- Built src/lib/jobs.ts + src/lib/job-dispatcher.ts (durable database-backed job runner with atomic claim and exponential backoff)
-- Built src/lib/reconciliation.ts (provider comparison, safe auto-promote, never auto-downgrade)
-- Built src/lib/account.ts (order history, addresses, profile, guest-order linking)
-- Built src/lib/blob.ts (Vercel Blob adapter with file signature validation and deterministic filenames)
-- Built admin server actions for products, orders, inventory, enquiries, quotes, settings/shipping
-- Built admin UI pages: /admin (real operations dashboard), /admin/products (list + new + edit), /admin/orders (list + detail), /admin/pricing, /admin/inventory, /admin/enquiries (list + detail), /admin/quotes (list + new + detail), /admin/audit, /admin/settings, /admin/settings/shipping
-- Built customer account UI: /account, /account/orders, /account/orders/[orderNumber], /account/addresses, /account/profile
-- Built API routes: /api/health, /api/readiness, /api/internal/jobs/run (cron-protected), /api/checkout/serviceability, /api/admin/refunds, /api/admin/reconcile, /api/admin/jobs/[id]/cancel, /api/account/addresses, /api/account/addresses/[id], /api/account/orders/[orderNumber]/claim, /api/account/profile
-- Refactored /api/orders to: validate pincode server-side, compute shipping, store serviceability result, reserve inventory atomically, compensate on failure
-- Refactored /api/webhooks/razorpay to: consume reservations on capture, release on failure, enqueue invoice + notification jobs instead of inline calls
-- Added vercel.json with cron schedule for /api/internal/jobs/run every 5 minutes
-- Added .github/workflows/ci.yml with lint, typecheck, tests, products validation, theme validation, build, migration consistency check, secret scan, .env block, npm audit summary, e2e job
-- Added 8 new unit test files: order-state (22 tests), env (12 tests), shipping (5 tests), blob (10 tests), refunds (5 tests), settings (11 tests), audit (3 tests), jobs (3 tests)
-- Updated docs/architecture.md
-- Created docs/backend-activation-checklist.md, docs/inventory-operations.md, docs/shipping-configuration.md, docs/refund-operations.md, docs/job-runner.md, docs/account-operations.md
+Starting commit: a9e93eaf1e3172206cbc9bf2da3b57efeca799fa
+Backup branch: backup/pre-backend-reliability-repair
+Implementation branch: fix/backend-reliability-hardening
 
-Stage Summary:
-- 13 test files, 104 tests, all passing
-- Lint: 0 errors, 35 warnings (unused imports — non-blocking)
-- Typecheck: passing
-- Build: passing
-- Products validation: passing (30 products)
-- Theme validation: passing (176 files)
-- Migration journal: consistent (2 entries, 2 SQL files)
-- npm audit: 6 moderate transitive vulnerabilities (postcss via next, esbuild-kit via drizzle-kit) — no high or critical
-- Starting commit SHA: 869162406ebea78b1231d828eac52a22234dc9b1
-- Implementation branch: backend/production-operations
-- Backup branch: backup/pre-backend-completion
-- Final commit SHA: d60f5aa1225eb76cb5707ad2affbb953aeaa27ec
-- Deployment URL: https://device-destination-rose.vercel.app (requires owner to merge backend/production-operations to main and trigger Vercel deploy)
-- Both branches successfully pushed to https://github.com/witejackel-eng/DeviceDestination
-- CI workflow file (.github/workflows/ci.yml) was deferred — the provided PAT lacked the 'workflow' scope. The file content is preserved at /home/z/my-project/work/deferred/ci.yml. Owner should add it via GitHub UI or push with a workflow-scoped token.
+## Files changed (major changes)
+
+### New documentation files created
+- `docs/payment-processing.md` — 11-step pipeline, webhook idempotency, missing-step recovery, Razorpay signature verification, inventory exception handling
+- `docs/webhook-recovery.md` — durable event recording, processing status flow, duplicate handling, stuck event reclaim, reconciliation as backup recovery
+- `docs/checkout-saga.md` — checkout-attempt phases, idempotency key behavior, compensation on failure, placeholder payment, cleanup
+- `docs/backend-failure-recovery.md` — independently idempotent processing steps, payment timestamps, failure injection system (7 points), recovery paths, inventory exception handling
+- `docs/ci-integration-tests.md` — CI workflow structure, PostgreSQL service container, synthetic CI secrets, integration test categories, local setup, test helpers
+
+### Updated documentation files
+- `docs/inventory-operations.md` — added reservation status flow (pending→active→consuming→consumed/releasing→released/expired/failed), atomic status claims, insert-first-then-increment pattern, compensation on failure, concurrent reservation protection, opportunistic cleanup, reconciliation of stale reservations
+- `docs/architecture.md` — added sections for payment_webhook_events, checkout_attempts (saga pattern), system_runs, job deduplication, payment processing timestamps, inventory_exception status
+- `docs/job-runner.md` — added dedupeKey column and enqueueDeduplicatedJob documentation, system_runs table, dedupe key format examples, cron schedule change (daily), repairIncompletePostPaymentProcessing call
+- `docs/security.md` — added webhook signature verification before trusting payload, durable event recording, no secret logging, no provider payload dumping, rate limiting on admin endpoints, test-only failure injection safety
+- `docs/refund-operations.md` — added references to idempotent refund system and cross-links to payment-processing and checkout-saga docs
+- `docs/backend-activation-checklist.md` — added steps for 0002 migration, external scheduler requirement, webhook event verification, payment timestamp verification, inventory exception verification
+- `README.md` — added backend reliability improvements section, cron schedule change, external scheduler requirement, detailed documentation directory listing
+
+## Migrations created
+- `drizzle/0002_large_toad_men.sql` — creates `payment_webhook_events`, `checkout_attempts`, `system_runs` tables; extends `reservation_status` with pending/consuming/releasing/failed; extends `order_status` with inventory_exception; adds payment processing timestamps to `payments`; adds `dedupe_key` to `jobs`; adds `fulfilment_hold_reason` to `orders`
+
+## Summary of all changes
+
+This documentation task created 5 new documentation files and updated 7 existing files to comprehensively document the backend reliability hardening improvements on the `fix/backend-reliability-hardening` branch. All documentation covers:
+
+1. **Payment processing** — the 11-step idempotent pipeline in `finalizeCapturedPayment`, how timestamps on the `payments` table enable missing-step recovery, webhook event deduplication via `payment_webhook_events`, and Razorpay signature verification.
+
+2. **Webhook recovery** — how events are durably recorded before processing, the processing status flow (received→processing→completed/failed/ignored), duplicate event handling, stuck event reclaim, and how reconciliation serves as backup recovery.
+
+3. **Checkout saga** — the `checkout_attempts` table and saga pattern with phases from `initialized` through `ready_for_checkout`, idempotency key behavior, compensation on failure, and placeholder payment before Razorpay call.
+
+4. **Backend failure recovery** — independently idempotent processing steps guarded by timestamps, the failure injection system with 7 test-only points, and recovery paths via webhook retry, reconciliation, and admin intervention.
+
+5. **CI integration tests** — the CI workflow with PostgreSQL service containers, synthetic secrets, integration test categories (inventory, webhook, checkout, auth, migration), and local setup instructions.
+
+6. **Inventory operations** — the updated reservation status flow with atomic claims, pending→active creation pattern, compensation on failure, concurrent protection, opportunistic cleanup, and reconciliation.
+
+7. **Architecture, job runner, security** — updated with new tables, deduplication, system runs, webhook verification, and failure injection safety.

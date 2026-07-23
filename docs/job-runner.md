@@ -20,16 +20,51 @@ The `jobs` table:
 - `locked_at`, `locked_by` — set when a worker claims the job.
 - `last_error` — captured on failure.
 - `completed_at` — set on success.
+- `dedupe_key` — optional deduplication key. If set, prevents duplicate active jobs with the same key.
 
 Indexes:
 
 - `(status, run_after)` — for the claim query.
 - `(type)` — for per-type admin views.
 - `(locked_by)` — for stale-lock detection.
+- `(dedupe_key) WHERE status IN ('pending', 'processing', 'completed')` — partial unique index for deduplication.
+
+## Job deduplication
+
+`enqueueDeduplicatedJob({ type, payload, dedupeKey, runAfter?, maxAttempts? })` checks whether an active job (status `pending`, `processing`, or `completed`) with the same `dedupeKey` already exists. If it does, the existing job's ID is returned without creating a duplicate. If not, a new row is inserted with the `dedupeKey`.
+
+The partial unique index `jobs_dedupe_key_active_idx` enforces this at the database level:
+
+```sql
+CREATE UNIQUE INDEX jobs_dedupe_key_active_idx
+ON jobs (dedupe_key)
+WHERE status IN ('pending', 'processing', 'completed');
+```
+
+Failed or cancelled jobs are excluded from the deduplication check, so a new job with the same key can be created after a previous one has permanently failed.
+
+### Dedupe key format examples
+
+| Job type | Dedupe key format | Example |
+|----------|-------------------|---------|
+| `generate-invoice` | `generate-invoice:<orderId>` | `generate-invoice:abc123` |
+| `send-order-email` | `send-order-email:<orderId>` | `send-order-email:abc123` |
+| `send-order-whatsapp` | `send-order-whatsapp:<orderId>` | `send-order-whatsapp:abc123` |
+| `expire-inventory-reservation` | `expire-inventory-reservation:<reservationId>` or `expire-inventory-reservation:<orderId>` | `expire-inventory-reservation:res456` |
+| `reconcile-payment` | `reconcile-payment:<orderId>` | `reconcile-payment:abc123` |
+| `send-enquiry-email` | `send-enquiry-email:<enquiryId>` | `send-enquiry-email:enq789` |
+| `send-enquiry-whatsapp` | `send-enquiry-whatsapp:<enquiryId>` | `send-enquiry-whatsapp:enq789` |
+| `send-shipment-update` | `send-shipment-update:<orderId>` | `send-shipment-update:abc123` |
+| `retry-failed-notification` | *(no dedupe key — each failure event is unique)* | — |
+| Admin alert | `admin-alert:inventory_exception:<orderId>` | `admin-alert:inventory_exception:abc123` |
+
+The `jobDedupeKey` function in `src/lib/jobs.ts` computes the dedupe key from the job type and payload. Callers can also pass a custom `dedupeKey` to `enqueueDeduplicatedJob`.
 
 ## Enqueue
 
-`enqueueJob({ type, payload, runAfter?, maxAttempts? })` inserts a row with `status = 'pending'`. Returns the job ID. Idempotency is the caller's responsibility — for example, the webhook handler enqueues `generate-invoice` only if the order's `invoiceNumber` is null.
+`enqueueJob({ type, payload, runAfter?, maxAttempts? })` inserts a row with `status = 'pending'`. Returns the job ID. For deduplicated jobs, use `enqueueDeduplicatedJob` instead (see below).
+
+`enqueueDeduplicatedJob({ type, payload, dedupeKey, runAfter?, maxAttempts? })` checks for an existing active job with the same `dedupeKey`. If found, returns the existing job ID. If not, inserts a new row with `dedupeKey` set. This is the preferred method for order-related jobs to prevent duplicate invoices, emails, and WhatsApp messages for the same order.
 
 ## Claim
 
@@ -90,9 +125,29 @@ Handlers MUST:
 3. Runs one batch of up to 10 jobs via `runJobBatch`.
 4. Calls `expirePendingReservations` to release stale reservations.
 5. Calls `reconcileStalePendingPayments(30)` to reconcile payments older than 30 minutes.
-6. Returns a summary of the run.
+6. Calls `repairIncompletePostPaymentProcessing(50)` to fill in missing processing steps for paid/inventory_exception orders.
+7. Inserts a `system_runs` record with the run results (best-effort).
+8. Returns a summary of the run.
 
-`vercel.json` configures Vercel Cron to hit this endpoint every 5 minutes.
+`vercel.json` configures Vercel Cron to hit this endpoint daily (`0 2 * * *`). For production-grade reliability (especially for 15-minute reservation expiry), an external scheduler should hit this endpoint more frequently (every 5–10 minutes). See [Backend Activation Checklist](backend-activation-checklist.md) for setup instructions.
+
+## System runs table
+
+The `system_runs` table records each cron run:
+
+- `id` — UUID primary key.
+- `trigger_source` — `vercel_cron` or `manual`.
+- `jobs_claimed` — number of jobs claimed in this run.
+- `jobs_completed` — number of jobs completed.
+- `jobs_failed` — number of jobs that failed.
+- `reservations_expired` — number of expired reservations released.
+- `payments_reconciled` — number of payments reconciled.
+- `duration_ms` — total run duration in milliseconds.
+- `error` — any error message (nullable).
+- `started_at` — when the run started.
+- `completed_at` — when the run completed.
+
+This provides operational visibility into cron run frequency, duration, and effectiveness. Recording is best-effort — a failure to insert does not abort the cron run.
 
 ## Admin UI
 

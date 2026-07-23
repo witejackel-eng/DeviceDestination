@@ -23,10 +23,12 @@ The `orders.refund_total_paise` column is recomputed after every refund mutation
 
 ## Idempotency
 
-Every refund request derives an idempotency key from `(paymentId, amountPaise, actorUserId)`. If a refund with that key already exists:
+Every refund request derives an idempotency key from `(paymentId, amountPaise, actorUserId)` using SHA-256. The unique index on `idempotency_key` enforces deduplication at the database level. If a refund with that key already exists:
 
 - The existing record is returned WITHOUT re-calling the provider.
 - This is true even if the existing refund is `failed` — the admin must change the amount or reason to force a new attempt.
+
+This idempotent refund system follows the same pattern as the webhook event deduplication and checkout attempt idempotency — every mutation uses a unique key to prevent duplicate side effects. See [Payment Processing](payment-processing.md) and [Checkout Saga](checkout-saga.md) for the other idempotency mechanisms.
 
 ## Validation
 

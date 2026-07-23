@@ -15,6 +15,13 @@
       "when": 1784801283913,
       "tag": "0001_ancient_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784814992812,
+      "tag": "0002_large_toad_men",
+      "breakpoints": true
     }
   ]
 }
