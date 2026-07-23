@@ -68,38 +68,16 @@ export function CatalogueToolbar({
   const hasActiveFilters = category || brand || price || availability || resolution || poe || authentication;
   const activeCount = [category, brand, price, availability, resolution, poe, authentication].filter(Boolean).length;
 
+  /* Context-dependent filters that are only in the drawer */
+  const hasDrawerOnlyFilters = cameraContext || biometricContext || poeContext || resolution || poe || authentication;
+  const drawerOnlyActiveCount = [resolution, poe, authentication].filter(Boolean).length;
+
   return (
     <>
-      <div className="catalogue-toolbar">
-        {/* Search indicator */}
-        <div className="filter-pill cursor-default !gap-2">
-          <Search size={14} />
-          {q ? (
-            <span className="max-w-[120px] truncate">{q}</span>
-          ) : (
-            <span className="text-[var(--text-muted)]">Search model…</span>
-          )}
-        </div>
-
-        {/* Sort */}
-        <div className="relative">
-          <select
-            value={sort}
-            onChange={(e) => {
-              window.location.href = buildHref({ sort: e.target.value });
-            }}
-            className="filter-pill appearance-none pr-7"
-          >
-            <option value="relevance">Model</option>
-            <option value="price-low">Price: low to high</option>
-            <option value="price-high">Price: high to low</option>
-            <option value="newest">Recently verified</option>
-          </select>
-          <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]" />
-        </div>
-
-        {/* Desktop: Category pills */}
-        <div className="hidden lg:flex items-center gap-1.5">
+      {/* ── Desktop filter toolbar ─────────────────────────────── */}
+      <div className="hidden lg:flex catalogue-toolbar">
+        {/* Category pills */}
+        <div className="flex items-center gap-1.5">
           <FilterLink href="/products" active={!category} label="All" />
           <div className="w-px h-4 bg-[var(--border)]" />
           <FilterLink
@@ -129,19 +107,96 @@ export function CatalogueToolbar({
           />
         </div>
 
-        {/* Brand pill (desktop) */}
-        {brand && (
-          <FilterLink href={buildHref({ brand: "" })} active={false} label={allBrands.find((b) => b.slug === brand)?.name ?? brand} />
-        )}
+        {/* Brand select */}
+        <ToolbarSelect
+          value={brand}
+          onChange={(v) => { window.location.href = buildHref({ brand: v }); }}
+          options={[
+            { value: "", label: "Brand" },
+            ...allBrands.map((b) => ({ value: b.slug, label: b.name })),
+          ]}
+          active={!!brand}
+        />
 
-        {/* All filters button */}
+        {/* Availability select */}
+        <ToolbarSelect
+          value={availability}
+          onChange={(v) => { window.location.href = buildHref({ availability: v }); }}
+          options={[
+            { value: "", label: "Availability" },
+            { value: "buy-now", label: "Buy now" },
+            { value: "quote", label: "Quote only" },
+          ]}
+          active={!!availability}
+        />
+
+        {/* Price select */}
+        <ToolbarSelect
+          value={price}
+          onChange={(v) => { window.location.href = buildHref({ price: v }); }}
+          options={[
+            { value: "", label: "Price" },
+            { value: "under-5000", label: "Under ₹5K" },
+            { value: "5000-15000", label: "₹5K–₹15K" },
+            { value: "over-15000", label: "Over ₹15K" },
+          ]}
+          active={!!price}
+        />
+
+        {/* Sort select */}
+        <ToolbarSelect
+          value={sort}
+          onChange={(v) => { window.location.href = buildHref({ sort: v }); }}
+          options={[
+            { value: "relevance", label: "Model" },
+            { value: "price-low", label: "Price ↑" },
+            { value: "price-high", label: "Price ↓" },
+            { value: "newest", label: "Newest" },
+          ]}
+          active={sort !== "relevance"}
+        />
+
+        {/* More filters button (context-dependent: Resolution, PoE, Authentication) */}
+        {hasDrawerOnlyFilters && (
+          <button
+            type="button"
+            onClick={() => setFilterDrawerOpen(true)}
+            className={`filter-pill ${drawerOnlyActiveCount > 0 ? "filter-pill--active" : ""}`}
+          >
+            <SlidersHorizontal size={14} />
+            More
+            {drawerOnlyActiveCount > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-[var(--accent-contrast)]">
+                {drawerOnlyActiveCount}
+              </span>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* ── Mobile filter toolbar ─────────────────────────────── */}
+      <div className="flex lg:hidden catalogue-toolbar">
+        {/* Sort */}
+        <ToolbarSelect
+          value={sort}
+          onChange={(v) => { window.location.href = buildHref({ sort: v }); }}
+          options={[
+            { value: "relevance", label: "Model" },
+            { value: "price-low", label: "Price ↑" },
+            { value: "price-high", label: "Price ↓" },
+            { value: "newest", label: "Newest" },
+          ]}
+          active={sort !== "relevance"}
+        />
+
+        {/* Filters button */}
         <button
           type="button"
           onClick={() => setFilterDrawerOpen(true)}
           className={`filter-pill ${hasActiveFilters ? "filter-pill--active" : ""}`}
         >
           <SlidersHorizontal size={14} />
-          All filters
+          Filters
           {activeCount > 0 && (
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-[var(--accent-contrast)]">
               {activeCount}
@@ -225,6 +280,35 @@ function FilterLink({ href, active, label }: { href: string; active: boolean; la
   );
 }
 
+/* ── Toolbar inline select (navigates on change) ──────────── */
+
+function ToolbarSelect({
+  value,
+  onChange,
+  options,
+  active,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  active: boolean;
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`filter-pill appearance-none pr-7 ${active ? "filter-pill--active" : ""}`}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+      <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]" />
+    </div>
+  );
+}
+
 /* ── Filter drawer form ────────────────────────────────────── */
 
 function FilterDrawerForm({
@@ -243,7 +327,7 @@ function FilterDrawerForm({
 
       {/* Category */}
       <FilterField label="Category">
-        <Select name="category" defaultValue={category} options={[
+        <DrawerSelect name="category" defaultValue={category} options={[
           { value: "", label: "All categories" },
           ...allCategories.map((c) => ({ value: c.slug, label: c.name })),
         ]} />
@@ -251,7 +335,7 @@ function FilterDrawerForm({
 
       {/* Brand */}
       <FilterField label="Brand">
-        <Select name="brand" defaultValue={brand} options={[
+        <DrawerSelect name="brand" defaultValue={brand} options={[
           { value: "", label: "All brands" },
           ...allBrands.map((b) => ({ value: b.slug, label: b.name })),
         ]} />
@@ -260,7 +344,7 @@ function FilterDrawerForm({
       {/* Resolution */}
       {cameraContext && (
         <FilterField label="Resolution">
-          <Select name="resolution" defaultValue={resolution} options={[
+          <DrawerSelect name="resolution" defaultValue={resolution} options={[
             { value: "", label: "All resolutions" },
             { value: "2mp", label: "2 MP" },
             { value: "4mp", label: "4 MP" },
@@ -272,7 +356,7 @@ function FilterDrawerForm({
       {/* PoE */}
       {poeContext && (
         <FilterField label="Power over Ethernet">
-          <Select name="poe" defaultValue={poe} options={[
+          <DrawerSelect name="poe" defaultValue={poe} options={[
             { value: "", label: "Any power method" },
             { value: "yes", label: "PoE supported" },
             { value: "no", label: "Without PoE" },
@@ -283,7 +367,7 @@ function FilterDrawerForm({
       {/* Authentication */}
       {biometricContext && (
         <FilterField label="Authentication">
-          <Select name="authentication" defaultValue={authentication} options={[
+          <DrawerSelect name="authentication" defaultValue={authentication} options={[
             { value: "", label: "All methods" },
             { value: "face", label: "Face recognition" },
             { value: "fingerprint", label: "Fingerprint" },
@@ -293,7 +377,7 @@ function FilterDrawerForm({
 
       {/* Availability */}
       <FilterField label="Availability">
-        <Select name="availability" defaultValue={availability} options={[
+        <DrawerSelect name="availability" defaultValue={availability} options={[
           { value: "", label: "All availability" },
           { value: "buy-now", label: "Available to buy" },
           { value: "quote", label: "Request price / lead time" },
@@ -302,7 +386,7 @@ function FilterDrawerForm({
 
       {/* Price */}
       <FilterField label="Price">
-        <Select name="price" defaultValue={price} options={[
+        <DrawerSelect name="price" defaultValue={price} options={[
           { value: "", label: "Any price" },
           { value: "under-5000", label: "Under ₹5,000" },
           { value: "5000-15000", label: "₹5,000–₹15,000" },
@@ -312,7 +396,7 @@ function FilterDrawerForm({
 
       {/* Sort */}
       <FilterField label="Sort">
-        <Select name="sort" defaultValue={sort} options={[
+        <DrawerSelect name="sort" defaultValue={sort} options={[
           { value: "relevance", label: "Model" },
           { value: "price-low", label: "Price: low to high" },
           { value: "price-high", label: "Price: high to low" },
@@ -338,7 +422,7 @@ function FilterField({ label, children }: { label: string; children: React.React
   );
 }
 
-function Select({ name, defaultValue, options }: { name: string; defaultValue: string; options: { value: string; label: string }[] }) {
+function DrawerSelect({ name, defaultValue, options }: { name: string; defaultValue: string; options: { value: string; label: string }[] }) {
   return (
     <select
       id={name}

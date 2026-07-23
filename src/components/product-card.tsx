@@ -6,25 +6,17 @@ import { motion, useReducedMotion } from "motion/react";
 import { Scale, Check } from "lucide-react";
 import { AddToCart } from "@/components/add-to-cart";
 import { useCompareStore } from "@/lib/compare-store";
-import { comparisonGroup } from "@/lib/products";
-import { catalogue } from "@/data/catalog";
-import {
-  calculateDiscountPercent,
-  formatPrice,
-  getPurchaseEligibility,
-  type Product,
-} from "@/lib/products";
+import { comparisonGroup, formatPrice, getPurchaseEligibility, type Product } from "@/lib/products";
+import { getSpecChips } from "@/lib/spec-chips";
 import { getPriceMaxAgeDays } from "@/config/site";
+import { catalogue } from "@/data/catalog";
 import { springs } from "@/lib/motion/constants";
 
 export function ProductCard({ product }: { product: Product }) {
   const reduceMotion = useReducedMotion();
   const eligibility = getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() });
   const compareAt = product.mrpInclGstPaise ?? product.compareAtPriceInclGstPaise;
-  const discount =
-    product.sellingPriceInclGstPaise === null
-      ? null
-      : calculateDiscountPercent(product.sellingPriceInclGstPaise, compareAt);
+  const chips = getSpecChips(product);
 
   /* Compare state */
   const compareIds = useCompareStore((state) => state.ids);
@@ -90,23 +82,41 @@ export function ProductCard({ product }: { product: Product }) {
         {/* Exact model (Geist Mono) */}
         <p className="product-card-model">{product.model}</p>
 
-        {/* Availability */}
+        {/* Specification chips — derived from trusted specs */}
+        {chips.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {chips.map((chip) => (
+              <span
+                key={chip.label}
+                className={`inline-flex items-center rounded-[var(--radius-pill)] px-2 py-0.5 text-[11px] font-semibold leading-none ${
+                  chip.accent
+                    ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                    : "bg-[var(--surface-subtle)] text-[var(--text-secondary)]"
+                }`}
+              >
+                {chip.label}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Stock status */}
         <p
-          className="product-card-stock"
+          className="product-card-stock mt-2"
           data-status={product.stockStatus === "in_stock" ? "in_stock" : undefined}
         >
           {product.stockStatus === "in_stock" ? "In stock" : product.stockStatus.replaceAll("_", " ")}
         </p>
 
-        {/* Footer: price + add to cart */}
-        <div className="product-card-footer">
+        {/* Footer: price + actions */}
+        <div className="product-card-footer mt-2">
           <div>
             {compareAt && product.compareAtLabel && (
               <p className="text-[11px] text-[var(--text-muted)]">
                 <span className="price-old">
                   {formatPrice(compareAt)}
                 </span>
-                {discount ? ` · ${discount}% off` : ""}
+                {eligibility.eligible ? " · Incl. GST" : ""}
               </p>
             )}
             <p className="product-card-price">
@@ -114,12 +124,39 @@ export function ProductCard({ product }: { product: Product }) {
                 ? formatPrice(product.sellingPriceInclGstPaise)
                 : "Request price"}
             </p>
+            {eligibility.eligible && (
+              <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Incl. GST</p>
+            )}
+            {!eligibility.eligible && (
+              <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Availability confirmation required</p>
+            )}
           </div>
-          <AddToCart
-            productId={product.id}
-            label=""
-            className="product-card-action"
-          />
+        </div>
+
+        {/* Actions row */}
+        <div className="flex items-center gap-2 mt-3">
+          {eligibility.eligible ? (
+            <>
+              <AddToCart
+                productId={product.id}
+                label="Add to cart"
+                className="button-primary flex-1 min-h-[44px]"
+              />
+              <Link
+                href={`/products/${product.slug}`}
+                className="button-tertiary min-h-[44px] text-sm"
+              >
+                View details
+              </Link>
+            </>
+          ) : (
+            <Link
+              href={`/products/${product.slug}`}
+              className="button-secondary flex-1 min-h-[44px]"
+            >
+              Request price
+            </Link>
+          )}
         </div>
       </div>
     </motion.article>

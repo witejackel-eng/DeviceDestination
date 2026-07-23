@@ -14,31 +14,31 @@ export function Brand({
   compactMark?: boolean;
 }) {
   /* Full horizontal logo: monogram + "DeviceDestination" wordmark on one line.
-     Do not split the wordmark across two lines in the main header.
-     Dark-bg version: white wordmark, charcoal monogram strokes, orange aperture.
-     Light-bg version: charcoal wordmark, charcoal monogram strokes, orange aperture. */
+     Light-bg version: entire "DeviceDestination" in charcoal, orange only in monogram aperture.
+     Dark-bg version: white wordmark, charcoal/white monogram strokes, orange aperture.
+     Do not colour the whole "Destination" word orange in the primary header. */
 
   const wordmarkColor = inverted ? "text-white" : "text-[var(--text-primary)]";
 
   return (
     <Link
       href="/"
-      className={`group inline-flex items-center ${compactMark ? "min-h-11 gap-2" : "min-h-11 gap-3"}`}
+      className={`group inline-flex items-center ${compactMark ? "min-h-11 gap-2.5" : "min-h-11 gap-3"}`}
       aria-label={`${siteConfig.name} home`}
     >
       <span
         aria-hidden="true"
         className={`shrink-0 transition-transform duration-200 group-hover:scale-105 ${
-          compactMark ? "h-8 w-8" : "h-10 w-10"
+          compactMark ? "h-8 w-8" : "h-[30px] w-[30px]"
         }`}
       >
-        <DDMark tone={inverted ? "light" : "dark"} className="h-full w-full" />
+        <DDMark tone={inverted ? "light" : "brand"} className="h-full w-full" />
       </span>
       {!compact && (
         <span
-          className={`font-display font-semibold tracking-[-0.025em] ${compactMark ? "text-base" : "text-lg"} ${responsive ? "hidden min-[430px]:inline" : ""} ${wordmarkColor}`}
+          className={`font-display font-semibold tracking-[-0.025em] ${compactMark ? "text-[17px]" : "text-[17px]"} ${responsive ? "hidden min-[430px]:inline" : ""} ${wordmarkColor}`}
         >
-          Device<span className="text-[var(--accent)]">Destination</span>
+          DeviceDestination
         </span>
       )}
     </Link>

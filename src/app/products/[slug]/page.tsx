@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
+  BookOpen,
   Download,
   ExternalLink,
   FileCheck2,
+  FileText,
   MessageCircle,
   ShieldCheck,
   Truck,
@@ -21,6 +23,7 @@ import { CompareToggle } from "@/components/compare-toggle";
 import { siteConfig } from "@/config/site";
 import { MobileProductBar } from "@/components/mobile-product-bar";
 import { RecentlyViewed, TrackRecentlyViewed } from "@/components/recently-viewed";
+import { getSpecChips } from "@/lib/spec-chips";
 
 type Params = Promise<{ slug: string }>;
 
@@ -44,6 +47,12 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
+const documentIcon: Record<string, typeof FileText> = {
+  datasheet: FileText,
+  manual: BookOpen,
+  "installation-guide": Wrench,
+};
+
 export default async function ProductPage({ params }: { params: Params }) {
   const { slug } = await params;
   const product = getProduct(slug);
@@ -55,6 +64,7 @@ export default async function ProductPage({ params }: { params: Params }) {
       ? null
       : calculateDiscountPercent(product.sellingPriceInclGstPaise, compareAt);
   const eligibility = getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() });
+  const chips = getSpecChips(product);
   const related = catalogue
     .filter((item) => item.categorySlug === product.categorySlug && item.id !== product.id)
     .slice(0, 4);
@@ -98,6 +108,13 @@ export default async function ProductPage({ params }: { params: Params }) {
     ],
   };
 
+  const stockLabel: Record<string, string> = {
+    in_stock: "In stock",
+    limited: "Limited stock",
+    lead_time: "Lead time required",
+    quote_only: "Quote only",
+  };
+
   return (
     <div className="container-standard pb-28 pt-6 sm:pt-10">
       <TrackRecentlyViewed productId={product.id} />
@@ -114,8 +131,8 @@ export default async function ProductPage({ params }: { params: Params }) {
 
       {/* ── Product hero: gallery + info ─────────────────────── */}
       <div className="grid gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
-        {/* Gallery — neutral bg */}
-        <div className="relative aspect-square overflow-hidden rounded-[var(--radius-container)] border border-[var(--border)] bg-[var(--surface-subtle)]">
+        {/* Gallery — neutral bg, flexible aspect for single images */}
+        <div className="relative overflow-hidden rounded-[var(--radius-container)] border border-[var(--border)] bg-[var(--surface-subtle)]">
           <ProductGallery images={product.images} alt={`${product.brand} ${product.model}`} />
         </div>
         <div className="lg:pt-2">
@@ -131,6 +148,23 @@ export default async function ProductPage({ params }: { params: Params }) {
           <p className="mt-3 font-mono text-sm font-medium text-[var(--text-secondary)]">
             {product.model}
           </p>
+          {/* Specification chips — derived from trusted specs */}
+          {chips.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {chips.map((chip) => (
+                <span
+                  key={chip.label}
+                  className={`inline-flex items-center rounded-[var(--radius-pill)] px-2.5 py-1 text-[11px] font-semibold leading-none ${
+                    chip.accent
+                      ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                      : "bg-[var(--surface-subtle)] text-[var(--text-secondary)]"
+                  }`}
+                >
+                  {chip.label}
+                </span>
+              ))}
+            </div>
+          )}
           {/* Description */}
           <p className="mt-5 text-base leading-7 text-[var(--text-secondary)]">{product.shortDescription}</p>
 
@@ -151,7 +185,7 @@ export default async function ProductPage({ params }: { params: Params }) {
             </p>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
               {eligibility.eligible
-                ? "Inclusive of all taxes · GST invoice provided"
+                ? "Incl. GST · GST invoice provided"
                 : "Current price and availability must be confirmed before checkout"}
             </p>
             {product.priceVerifiedAt && eligibility.eligible && (
@@ -162,15 +196,21 @@ export default async function ProductPage({ params }: { params: Params }) {
                 )}
               </p>
             )}
+            {/* Availability */}
+            <p className="mt-2 text-sm font-semibold" style={{ color: product.stockStatus === "in_stock" ? "var(--success)" : "var(--warning)" }}>
+              {stockLabel[product.stockStatus]}
+            </p>
           </div>
 
-          {/* Actions */}
+          {/* Actions: Quantity + Add to cart + Buy now */}
           <div className="mt-6">
             <ProductActions productId={product.id} />
           </div>
+          {/* Compare */}
           <div className="mt-3">
             <CompareToggle productId={product.id} />
           </div>
+          {/* Product help + WhatsApp */}
           <div className="mt-4 grid grid-cols-2 gap-2.5">
             <Link href="/quote" className="button-secondary text-center text-sm">
               <Wrench size={15} /> Installation help
@@ -184,9 +224,10 @@ export default async function ProductPage({ params }: { params: Params }) {
               <MessageCircle size={15} /> WhatsApp
             </a>
           </div>
+          {/* Delivery checker */}
           <DeliveryChecker />
 
-          {/* Trust badges */}
+          {/* Warranty assurance trust badges */}
           <div className="mt-6 grid gap-2.5 rounded-[var(--radius-container)] border border-[var(--border)] p-4">
             <p className="flex items-center gap-2.5 text-sm">
               <ShieldCheck size={16} style={{ color: "var(--success)" }} />
@@ -260,49 +301,54 @@ export default async function ProductPage({ params }: { params: Params }) {
             {Object.entries(product.specs).map(([label, value], index) => (
               <div
                 key={label}
-                className={`grid border-b border-[var(--border)] last:border-b-0 sm:grid-cols-[0.38fr_0.62fr] ${index % 2 === 0 ? "" : "bg-[var(--surface-subtle)]"}`}
+                className={`grid border-b border-[var(--border)] last:border-b-0 sm:grid-cols-[0.38fr_0.62fr] ${index % 2 === 0 ? "bg-[var(--surface)]" : "bg-[var(--surface-subtle)]"}`}
               >
                 <dt className="px-5 py-3.5 text-sm font-semibold">{label}</dt>
-                <dd className="px-5 py-3.5 text-sm leading-6 text-[var(--text-secondary)]">{value}</dd>
+                <dd className="px-5 py-3.5 text-sm leading-6 text-[var(--text-secondary)] break-words hyphens-auto">{value}</dd>
               </div>
             ))}
           </dl>
         </div>
       </section>
 
-      {/* ── Downloads — neutral list ────────────────────────── */}
+      {/* ── Downloads — improved document rows ──────────────── */}
       {product.documents.length > 0 && (
         <section className="section-space !pt-10">
           <div className="container-standard">
             <p className="eyebrow">Exact-model downloads</p>
             <h2 className="section-title mt-3">Keep the technical facts close.</h2>
             <div className="mt-6 grid gap-2">
-              {product.documents.map((document) => (
-                <a
-                  key={document.url}
-                  href={document.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 rounded-[var(--radius-btn)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold transition-colors hover:bg-[var(--surface-hover)]"
-                >
-                  <Download size={15} className="text-[var(--text-muted)]" />
-                  <span className="text-[var(--text-secondary)]">{document.type}</span>
-                  <span className="font-mono text-xs text-[var(--text-muted)]">{document.model}</span>
-                  <span className="font-semibold">{document.title}</span>
-                </a>
-              ))}
+              {product.documents.map((document) => {
+                const Icon = documentIcon[document.type] ?? FileText;
+                return (
+                  <a
+                    key={document.url}
+                    href={document.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 rounded-[var(--radius-container)] border border-[var(--border)] bg-[var(--surface)] px-5 py-4 text-sm transition-colors hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)]"
+                  >
+                    <Icon size={18} className="text-[var(--text-muted)] shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{document.title}</p>
+                      <p className="font-mono text-xs text-[var(--text-muted)] mt-0.5">{document.model}</p>
+                    </div>
+                    <Download size={16} className="text-[var(--text-secondary)] shrink-0 ml-auto" />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </section>
       )}
 
-      {/* ── Related products ────────────────────────────────── */}
+      {/* ── Related products — fixed column grid ────────────── */}
       {related.length > 0 && (
         <section className="section-space !pt-10">
           <div className="container-standard">
             <p className="eyebrow">Related exact models</p>
             <h2 className="section-title mt-3">Worth comparing.</h2>
-            <div className="mt-8 grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+            <div className="mt-8 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {related.map((item) => (
                 <ProductCard key={item.id} product={item} />
               ))}

@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { catalogue, brands, categories, searchProducts } from "@/data/catalog";
 import { ProductCard } from "@/components/product-card";
 import { CatalogueToolbar } from "@/components/catalogue-toolbar";
+import { ProductSearch } from "@/components/product-search";
 
 export const metadata: Metadata = {
   title: "Security and biometric products",
@@ -29,6 +30,13 @@ function authenticationOf(product: (typeof catalogue)[number]) {
   if (value.includes("fingerprint")) return "fingerprint";
   return "";
 }
+
+const sortLabels: Record<string, string> = {
+  relevance: "By model",
+  "price-low": "Price: low → high",
+  "price-high": "Price: high → low",
+  newest: "Recently verified",
+};
 
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
@@ -115,12 +123,15 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         </p>
       </div>
 
+      {/* ── Inline search field ─────────────────────────────── */}
+      <ProductSearch variant="inline" initialQuery={q} className="mb-4" />
+
       {/* ── Filter toolbar ──────────────────────────────────── */}
       <CatalogueToolbar {...filterParams} />
 
-      {/* ── Active filters ──────────────────────────────────── */}
+      {/* ── Active filter chips ─────────────────────────────── */}
       {activeFilters.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 mt-4">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           {activeFilters.map((filter) => (
             <Link
               key={filter.label}
@@ -137,20 +148,24 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         </div>
       )}
 
-      {/* ── Product grid ────────────────────────────────────── */}
-      <section aria-labelledby="results-title" className="mt-8">
-        <h2 id="results-title" className="sr-only">
+      {/* ── Product count and sorting ───────────────────────── */}
+      <div className="flex items-center justify-between mb-6">
+        <p className="text-sm font-semibold text-[var(--text-muted)]">
           {products.length} {products.length === 1 ? "product" : "products"}
+        </p>
+        <p className="text-sm text-[var(--text-muted)]">
+          Sorted: {sortLabels[sort] ?? sort}
+        </p>
+      </div>
+
+      {/* ── Product grid ────────────────────────────────────── */}
+      <section aria-labelledby="results-title">
+        <h2 id="results-title" className="sr-only">
+          {products.length} {products.length === 1 ? "product" : "products"} sorted by {sortLabels[sort] ?? sort}
         </h2>
 
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-sm font-semibold text-[var(--text-muted)]">
-            {products.length} {products.length === 1 ? "product" : "products"}
-          </p>
-        </div>
-
         {products.length > 0 ? (
-          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

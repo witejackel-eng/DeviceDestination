@@ -13,9 +13,10 @@ import {
 } from "lucide-react";
 import { catalogue } from "@/data/catalog";
 import { ProductCard } from "@/components/product-card";
+import { ProductSearch } from "@/components/product-search";
 import { publicPageMetadata } from "@/lib/seo";
-import { formatPrice, getPurchaseEligibility } from "@/lib/products";
-import { getPriceMaxAgeDays, siteConfig } from "@/config/site";
+import { siteConfig } from "@/config/site";
+import { getFeaturedProducts } from "@/lib/featured-products";
 
 export const metadata: Metadata = publicPageMetadata({
   title: "Shop CCTV, biometric and networking hardware",
@@ -24,13 +25,14 @@ export const metadata: Metadata = publicPageMetadata({
   path: "/",
 });
 
-/* Four primary categories for section 2 */
+/* Four primary categories for section 2 — with curated representative products and dynamic counts */
 const primaryCategories = [
   {
     slug: "dome-cameras",
     name: "CCTV Cameras",
     description: "Dome, bullet and colour models for indoor and outdoor surveillance.",
     href: "/products?q=camera",
+    representativeModel: "CP-UNC-DA41L3C-D-Q",
     filterFn: (p: (typeof catalogue)[number]) => p.categorySlug.includes("camera"),
   },
   {
@@ -38,6 +40,7 @@ const primaryCategories = [
     name: "NVR & Recording",
     description: "Network video recorders and storage for multi-camera setups.",
     href: "/categories/nvr-systems",
+    representativeModel: "CP-UNR-108F1",
     filterFn: (p: (typeof catalogue)[number]) => p.categorySlug.includes("nvr"),
   },
   {
@@ -45,6 +48,8 @@ const primaryCategories = [
     name: "Biometric Devices",
     description: "Fingerprint, face recognition and access control terminals.",
     href: "/categories/biometric-devices",
+    representativeModel: "X990",
+    fallbackModel: "F22+ID+WIFI",
     filterFn: (p: (typeof catalogue)[number]) => p.categorySlug.includes("biometric"),
   },
   {
@@ -52,35 +57,88 @@ const primaryCategories = [
     name: "PoE & Networking",
     description: "Power-over-Ethernet switches and network infrastructure.",
     href: "/categories/poe-switches",
+    representativeModel: "GS108PP",
     filterFn: (p: (typeof catalogue)[number]) => p.categorySlug.includes("poe") || p.categorySlug.includes("switch"),
   },
 ];
 
-export default function Home() {
-  /* Featured products: up to 8 in-stock models */
-  const featuredProducts = catalogue
-    .filter((product) => product.stockStatus === "in_stock")
-    .slice(0, 8);
+/* Comparison section: specific camera products for meaningful spec comparison */
+const compareProductModels = ["CP-UNC-DA41L3C-D-Q", "CP-UNC-TA41L3C-Q", "CP-UNC-DA41L3C-LQ"];
 
-  /* Compare section: max 3 camera products */
-  const compareProducts = catalogue
-    .filter((product) => product.categorySlug.includes("camera"))
+/* Comparison spec rows for mini table */
+const compareSpecRows = [
+  { label: "Model", key: "model" },
+  { label: "Resolution", key: "resolution" },
+  { label: "Form", key: "form" },
+  { label: "Night vision", key: "nightVision" },
+  { label: "PoE", key: "poe" },
+  { label: "Weather rating", key: "weather" },
+  { label: "Audio", key: "audio" },
+  { label: "Warranty", key: "warranty" },
+];
+
+function getCompareSpecValue(product: (typeof catalogue)[number], key: string): string {
+  const specs = product.specs;
+  switch (key) {
+    case "model":
+      return product.model;
+    case "resolution": {
+      const sensor = specs["Image Sensor"] ?? specs["Max resolution"] ?? "";
+      const resMatch = sensor.match(/(\d)\s*MP/i) ?? specs["Max Resolution"]?.match(/(\d)\s*MP/i);
+      if (resMatch) return `${resMatch[1]} MP`;
+      return specs["Max resolution"] ?? specs["Max Resolution"] ?? "—";
+    }
+    case "form":
+      if (product.categorySlug.includes("dome")) return "Dome";
+      if (product.categorySlug.includes("bullet")) return "Bullet";
+      return product.category;
+    case "nightVision": {
+      const ir = specs["IR Range"] ?? specs["IR range"] ?? "";
+      if (ir) return ir;
+      const night = specs["Night Vision"] ?? specs["Night illumination"] ?? "";
+      if (night) return night;
+      return "—";
+    }
+    case "poe":
+      if (specs["Power"]?.includes("PoE")) return "Yes";
+      return "—";
+    case "weather":
+      return specs["IP Rating"] ?? "—";
+    case "audio":
+      if (specs["Audio"]?.includes("Microphone")) return "Built-in mic";
+      if (specs["Audio"]) return specs["Audio"];
+      return "—";
+    case "warranty":
+      return specs["Warranty"] ?? "—";
+    default:
+      return "—";
+  }
+}
+
+export default function Home() {
+  /* Featured products: curated selection representing multiple categories */
+  const featuredProducts = getFeaturedProducts(8);
+
+  /* Compare section: 3 specific camera products */
+  const compareProducts = compareProductModels
+    .map((model) => catalogue.find((p) => p.model === model))
+    .filter((p): p is (typeof catalogue)[number] => p !== undefined && p.stockStatus === "in_stock")
     .slice(0, 3);
 
-  /* Hero composition: dome, bullet, NVR/biometric */
-  const domeProduct = catalogue.find((p) => p.categorySlug.includes("dome"));
-  const bulletProduct = catalogue.find((p) => p.categorySlug.includes("bullet"));
-  const nvrProduct = catalogue.find((p) => p.categorySlug.includes("nvr"));
+  /* Hero composition: specific products by model */
+  const primaryProduct = catalogue.find((p) => p.model === "CP-UNC-DA41L3C-D-Q");
+  const secondaryProduct = catalogue.find((p) => p.model === "CP-UNC-TA41L3C-Q");
+  const tertiaryProduct = catalogue.find((p) => p.model === "CP-UNR-108F1");
 
   return (
     <>
       {/* ═══════════════════════════════════════════════════════
           SECTION 1 — HERO
-          Clean two-column. Left: copy + search. Right: calm product composition.
+          Clean two-column. Left: copy + real search. Right: art-directed product composition.
           ═══════════════════════════════════════════════════════ */}
       <section style={{ background: "var(--background)" }}>
         <div className="container-standard py-16 sm:py-20 lg:min-h-[80vh] lg:py-0 lg:flex lg:items-center lg:gap-12">
-          {/* Left: Copy */}
+          {/* Left: Copy + Search */}
           <div className="lg:max-w-[52%]">
             <p className="eyebrow">CCTV · NVR · BIOMETRICS · NETWORKING</p>
             <h1 className="display-hero mt-5">
@@ -91,16 +149,8 @@ export default function Home() {
               pricing, model-specific documents, and secure checkout.
             </p>
 
-            {/* Search bar */}
-            <div className="hero-search-bar mt-8">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-              </svg>
-              <Link href="/products" className="min-w-0 flex-1 text-[var(--text-muted)] no-underline">
-                Search by exact model, brand or category…
-              </Link>
-              <kbd className="hidden sm:inline-flex font-mono text-xs text-[var(--text-muted)] border border-[var(--border)] rounded-[var(--radius-stage)] px-2 py-1">/</kbd>
-            </div>
+            {/* Real functional search — shared with header overlay */}
+            <ProductSearch variant="inline" className="mt-8" />
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/products" className="button-primary">
@@ -116,51 +166,73 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Right: Product composition — neutral bg, max 3 products */}
+          {/* Right: Art-directed product composition — one shared neutral stage */}
           <div className="relative mt-10 hidden lg:block lg:mt-0 lg:w-[48%]">
             <div
-              className="relative overflow-hidden rounded-[var(--radius-container)] border border-[var(--border)] bg-[var(--surface-subtle)]"
-              style={{ aspectRatio: "4/3" }}
+              className="hero-composition relative overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface-subtle)]"
+              style={{ aspectRatio: "1.2 / 1" }}
               aria-label="CCTV dome camera, bullet camera and NVR system"
             >
-              <div className="grid grid-cols-3 gap-4 p-8 h-full">
-                {/* Dome camera */}
-                {domeProduct && (
-                  <div className="relative overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] border border-[var(--border)]">
-                    <Image
-                      src={domeProduct.images[0]}
-                      alt={`${domeProduct.brand} ${domeProduct.model}`}
-                      fill
-                      sizes="200px"
-                      className="object-contain p-6"
-                    />
-                  </div>
-                )}
-                {/* Bullet camera */}
-                {bulletProduct && (
-                  <div className="relative overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] border border-[var(--border)]">
-                    <Image
-                      src={bulletProduct.images[0]}
-                      alt={`${bulletProduct.brand} ${bulletProduct.model}`}
-                      fill
-                      sizes="200px"
-                      className="object-contain p-6"
-                    />
-                  </div>
-                )}
-                {/* NVR system */}
-                {nvrProduct && (
-                  <div className="relative overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] border border-[var(--border)]">
-                    <Image
-                      src={nvrProduct.images[0]}
-                      alt={`${nvrProduct.brand} ${nvrProduct.model}`}
-                      fill
-                      sizes="200px"
-                      className="object-contain p-6"
-                    />
-                  </div>
-                )}
+              {/* Primary dome camera — largest object */}
+              {primaryProduct && (
+                <div className="hero-product-primary">
+                  <Image
+                    src={primaryProduct.images[0]}
+                    alt={`${primaryProduct.brand} ${primaryProduct.model}`}
+                    fill
+                    sizes="400px"
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              )}
+              {/* Secondary bullet camera — upper/middle right */}
+              {secondaryProduct && (
+                <div className="hero-product-secondary">
+                  <Image
+                    src={secondaryProduct.images[0]}
+                    alt={`${secondaryProduct.brand} ${secondaryProduct.model}`}
+                    fill
+                    sizes="250px"
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              )}
+              {/* NVR — lower portion, substantial */}
+              {tertiaryProduct && (
+                <div className="hero-product-tertiary">
+                  <Image
+                    src={tertiaryProduct.images[0]}
+                    alt={`${tertiaryProduct.brand} ${tertiaryProduct.model}`}
+                    fill
+                    sizes="350px"
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              )}
+              {/* Technical labels — neutral, small, secondary */}
+              <div className="hero-labels hidden xl:block">
+                <span className="hero-label">4 MP</span>
+                <span className="hero-label">PoE</span>
+                <span className="hero-label">IP67</span>
               </div>
+            </div>
+            {/* Mobile fallback: compact single-product composition */}
+            <div className="lg:hidden mt-6">
+              {primaryProduct && (
+                <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-container)] border border-[var(--border)] bg-[var(--surface-subtle)]">
+                  <Image
+                    src={primaryProduct.images[0]}
+                    alt={`${primaryProduct.brand} ${primaryProduct.model}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    className="object-contain p-[15%]"
+                    priority
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -168,7 +240,7 @@ export default function Home() {
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 2 — FOUR PRIMARY CATEGORIES
-          Equal cards, same width/height, neutral bg, one product image.
+          Curated representatives, dynamic product counts, same-height cards.
           ═══════════════════════════════════════════════════════ */}
       <section className="section-space" style={{ background: "var(--surface)" }}>
         <div className="container-standard">
@@ -178,14 +250,23 @@ export default function Home() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {primaryCategories.map((cat) => {
-              const representative = catalogue.find(cat.filterFn);
+              /* Find curated representative by model, with fallback */
+              let representative = catalogue.find((p) => p.model === cat.representativeModel);
+              if (!representative && "fallbackModel" in cat) {
+                representative = catalogue.find((p) => p.model === (cat as { fallbackModel: string }).fallbackModel);
+              }
+              if (!representative) representative = catalogue.find(cat.filterFn);
+
+              /* Dynamic product count */
+              const productCount = catalogue.filter(cat.filterFn).length;
+
               return (
                 <Link
                   key={cat.slug}
                   href={cat.href}
                   className="category-card group flex flex-col p-5 sm:p-6"
                 >
-                  {/* Product image — neutral bg */}
+                  {/* Product image — neutral bg, consistent ratio */}
                   {representative && (
                     <div className="relative aspect-square mb-4 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface-subtle)]">
                       <Image
@@ -198,8 +279,9 @@ export default function Home() {
                     </div>
                   )}
                   <h3 className="font-display text-xl font-semibold">{cat.name}</h3>
+                  <p className="mt-1 text-sm font-medium text-[var(--accent)]">{productCount} exact models</p>
                   <p className="mt-1 text-sm text-[var(--text-secondary)]">{cat.description}</p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)]">
+                  <span className="mt-auto pt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)]">
                     Shop category
                     <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </span>
@@ -212,6 +294,7 @@ export default function Home() {
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 3 — FEATURED EXACT MODELS
+          Curated selection representing multiple categories. 4-column max grid.
           ═══════════════════════════════════════════════════════ */}
       <section className="section-space">
         <div className="container-standard">
@@ -227,7 +310,7 @@ export default function Home() {
               View all products <ArrowRight size={16} />
             </Link>
           </div>
-          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {featuredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -237,7 +320,7 @@ export default function Home() {
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 4 — COMPARE OR GET ASSISTANCE
-          Compact dark-charcoal section.
+          Compact dark-charcoal section with mini comparison table.
           ═══════════════════════════════════════════════════════ */}
       <section style={{ background: "var(--dark)" }}>
         <div className="container-standard py-16 sm:py-20 lg:py-24">
@@ -260,38 +343,48 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            {/* Comparison preview: max 3 products */}
+            {/* Mini comparison preview: compact spec table */}
             {compareProducts.length > 0 && (
-              <div className="grid grid-cols-3 gap-3">
-                {compareProducts.map((product) => {
-                  const eligible = getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() }).eligible;
-                  return (
-                    <Link
-                      key={product.id}
-                      href={`/products/${product.slug}`}
-                      className="group rounded-[var(--radius-card)] border border-white/10 bg-[var(--dark-elevated)] p-3 transition-transform duration-200 hover:translate-y-[-2px] hover:border-white/20"
-                    >
-                      <div className="relative aspect-square overflow-hidden rounded-[var(--radius-stage)] bg-[var(--surface-subtle)]">
+              <div className="overflow-x-auto no-scrollbar rounded-[var(--radius-container)] border border-white/10 bg-[var(--dark-elevated)]">
+                {/* Product header row with images */}
+                <div className="grid border-b border-white/10" style={{ gridTemplateColumns: `120px repeat(${compareProducts.length}, minmax(140px, 1fr))` }}>
+                  <div className="p-3"></div>
+                  {compareProducts.map((product) => (
+                    <div key={product.id} className="p-3 text-center">
+                      <div className="relative aspect-square mx-auto max-w-[80px] overflow-hidden rounded-[var(--radius-stage)] bg-[var(--surface-subtle)]">
                         <Image
                           src={product.images[0]}
-                          alt={`${product.brand} ${product.model}`}
+                          alt={product.model}
                           fill
-                          sizes="(max-width: 768px) 30vw, 220px"
-                          className="object-contain p-3 sm:p-4"
+                          sizes="80px"
+                          className="object-contain p-2"
                         />
                       </div>
-                      <p className="mt-2 font-mono text-xs font-medium text-[var(--dark-muted)]">
+                      <p className="mt-2 font-mono text-xs font-medium text-[var(--dark-text)]">
                         {product.model}
                       </p>
-                      <p className="mt-0.5 truncate text-xs font-semibold text-[var(--dark-text)]">
-                        {product.brand}
-                      </p>
-                      {eligible && (
-                        <p className="mt-1 text-sm font-bold text-[var(--dark-text)]">
-                          {formatPrice(product.sellingPriceInclGstPaise)}
-                        </p>
-                      )}
-                    </Link>
+                    </div>
+                  ))}
+                </div>
+                {/* Spec rows */}
+                {compareSpecRows.map((row) => {
+                  const values = compareProducts.map((p) => getCompareSpecValue(p, row.key));
+                  /* Skip rows where all values are "—" */
+                  if (values.every((v) => v === "—")) return null;
+
+                  return (
+                    <div
+                      key={row.key}
+                      className="grid border-b border-white/5 last:border-b-0"
+                      style={{ gridTemplateColumns: `120px repeat(${compareProducts.length}, minmax(140px, 1fr))` }}
+                    >
+                      <div className="p-3 text-xs font-semibold text-[var(--dark-muted)]">{row.label}</div>
+                      {values.map((value, i) => (
+                        <div key={i} className={`p-3 text-sm ${value !== values[0] && values.filter(v => v !== "—").length > 1 ? "font-semibold text-[var(--dark-text)]" : "text-[var(--dark-muted)]"}`}>
+                          {value}
+                        </div>
+                      ))}
+                    </div>
                   );
                 })}
               </div>

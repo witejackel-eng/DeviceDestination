@@ -101,7 +101,7 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 body[data-scroll-lock="true"] {
@@ -579,18 +579,7 @@ button {
   gap: 0.5rem;
   padding: 0.75rem 0;
   flex-wrap: wrap;
-  position: sticky;
-  top: 80px;
-  z-index: 30;
-  background: var(--background);
-  border-bottom: 1px solid var(--border);
   margin-bottom: 1rem;
-}
-
-@media (max-width: 768px) {
-  .catalogue-toolbar {
-    top: 64px;
-  }
 }
 
 .filter-pill {
@@ -624,7 +613,7 @@ button {
 }
 
 /* ============================================================
-   HERO — Clean two-column composition
+   HERO — Art-directed product composition
    ============================================================ */
 
 .hero-search-bar {
@@ -639,10 +628,21 @@ button {
   transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 
+@media (max-width: 768px) {
+  .hero-search-bar {
+    min-height: 50px;
+  }
+}
+
 .hero-search-bar:hover,
 .hero-search-bar:focus-within {
   border-color: var(--accent-border-hover);
   box-shadow: 0 2px 12px var(--accent-shadow);
+}
+
+.hero-search-bar:focus-within {
+  outline: 3px solid var(--accent-focus);
+  outline-offset: 3px;
 }
 
 .hero-search-bar input {
@@ -656,6 +656,104 @@ button {
 
 .hero-search-bar input::placeholder {
   color: var(--text-muted);
+}
+
+/* Art-directed hero composition — shared neutral stage */
+.hero-composition {
+  position: relative;
+  background: var(--surface-subtle);
+  border-radius: 18px;
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+}
+
+/* Primary dome camera — largest, slightly left of centre */
+.hero-product-primary {
+  position: absolute;
+  left: 5%;
+  top: 8%;
+  width: 55%;
+  height: 55%;
+}
+
+.hero-product-primary img {
+  object-fit: contain;
+  padding: 10%;
+  filter: drop-shadow(0 4px 12px rgba(17, 18, 20, 0.08));
+}
+
+/* Secondary bullet camera — upper/middle right */
+.hero-product-secondary {
+  position: absolute;
+  right: 3%;
+  top: 5%;
+  width: 38%;
+  height: 38%;
+}
+
+.hero-product-secondary img {
+  object-fit: contain;
+  padding: 8%;
+  filter: drop-shadow(0 3px 8px rgba(17, 18, 20, 0.06));
+}
+
+/* NVR — lower portion, substantial width */
+.hero-product-tertiary {
+  position: absolute;
+  bottom: 2%;
+  left: 10%;
+  width: 50%;
+  height: 30%;
+}
+
+.hero-product-tertiary img {
+  object-fit: contain;
+  padding: 5% 8%;
+  filter: drop-shadow(0 2px 6px rgba(17, 18, 20, 0.05));
+}
+
+/* Technical labels — neutral, small, secondary */
+.hero-labels {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  z-index: 5;
+}
+
+.hero-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 1024px) {
+  .hero-labels {
+    display: none;
+  }
+}
+
+/* Subtle inner lighting effect */
+.hero-composition::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 30%;
+  bottom: 60%;
+  background: radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15), transparent);
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* ============================================================
