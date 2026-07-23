@@ -70,6 +70,9 @@
   --warning: #9A5A00;
   --error: #B42318;
 
+  /* ── Header height ──────────────────────────────────────── */
+  --header-height: 70px;
+
   /* ── Shape system ──────────────────────────────────────── */
   --radius-btn: 10px;
   --radius-input: 10px;
@@ -154,6 +157,9 @@ button {
 }
 
 @media (max-width: 768px) {
+  :root {
+    --header-height: 60px;
+  }
   .container-standard {
     width: min(100% - 36px, 1280px);
   }

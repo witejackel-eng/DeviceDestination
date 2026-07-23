@@ -1,0 +1,1949 @@
+{
+  "timestamp": "2026-07-23T07:31:57.887Z",
+  "canvasSize": 1600,
+  "maxUpscale": 2.5,
+  "totalImages": 50,
+  "successCount": 0,
+  "needsReviewCount": 0,
+  "errorCount": 50,
+  "orphanFiles": [
+    "/images/products/CP-UNC-DA21L3C-LQ-1.png",
+    "/images/products/CP-UNC-DA21L3C-Q-1.png",
+    "/images/products/CP-UNC-DA21L3C-Q-2.png",
+    "/images/products/CP-UNC-DA21L3C-Q-3.png",
+    "/images/products/CP-UNC-DA21L3C-Q-4.png",
+    "/images/products/CP-UNC-DA41L3C-LQ-1.png",
+    "/images/products/CP-UNC-DA41L3C-LQ-2.png",
+    "/images/products/CP-UNC-DA41L3C-LQ-3.png",
+    "/images/products/CP-UNC-DA41L3C-LQ-4.png",
+    "/images/products/CP-UNC-DA41L3C-Q-1.png",
+    "/images/products/CP-UNC-DA41L3C-Q-2.png",
+    "/images/products/CP-UNC-DA41L3C-Q-3.png",
+    "/images/products/CP-UNC-DA41L3C-Q-4.png",
+    "/images/products/CP-UNC-DA41L3C-Q-5.png",
+    "/images/products/CP-UNC-TA21L3C-LQ-1.png",
+    "/images/products/CP-UNC-TA21L3C-LQ-2.png",
+    "/images/products/CP-UNC-TA21L3C-LQ-3.png",
+    "/images/products/CP-UNC-TA21L3C-LQ-4.png",
+    "/images/products/CP-UNC-TA21L3C-Q-1.png",
+    "/images/products/CP-UNC-TA21L3C-Q-2.png",
+    "/images/products/CP-UNC-TA21L3C-Q-3.png",
+    "/images/products/CP-UNC-TA21L3C-Q-4.png",
+    "/images/products/CP-UNC-TA41L3C-LQ-1.png",
+    "/images/products/CP-UNC-TA41L3C-LQ-2.png",
+    "/images/products/CP-UNC-TA41L3C-LQ-3.png",
+    "/images/products/CP-UNC-TA41L3C-LQ-4.png",
+    "/images/products/CP-UNC-TA41L3C-Q-1.png",
+    "/images/products/CP-UNC-TA41L3C-Q-2.png",
+    "/images/products/CP-UNC-TA41L3C-Q-3.png",
+    "/images/products/CP-UNR-108F1-1.jpg",
+    "/images/products/CP-UNR-4K2161-V2-1.jpg",
+    "/images/products/ESSL-AIFACE-MARS-1.webp",
+    "/images/products/ESSL-F18-1.webp",
+    "/images/products/ESSL-F22-1.webp",
+    "/images/products/ESSL-FR1200-1.webp",
+    "/images/products/ESSL-K30PRO-1.webp",
+    "/images/products/ESSL-K90PRO-1.webp",
+    "/images/products/ESSL-X990-1.png",
+    "/images/products/Screenshot 2026-06-23 123444.png",
+    "/images/products/optimized"
+  ],
+  "occupancyTargets": {
+    "dome-cameras": {
+      "min": 66,
+      "target": 71,
+      "max": 72,
+      "mode": "max-dimension"
+    },
+    "color-dome-cameras": {
+      "min": 66,
+      "target": 71,
+      "max": 72,
+      "mode": "max-dimension"
+    },
+    "bullet-cameras": {
+      "min": 70,
+      "target": 74,
+      "max": 78,
+      "mode": "max-dimension"
+    },
+    "color-bullet-cameras": {
+      "min": 70,
+      "target": 74,
+      "max": 78,
+      "mode": "max-dimension"
+    },
+    "nvr-systems": {
+      "min": 78,
+      "target": 82,
+      "max": 86,
+      "mode": "horizontal"
+    },
+    "poe-switches": {
+      "min": 76,
+      "target": 80,
+      "max": 84,
+      "mode": "horizontal"
+    },
+    "biometric-devices": {
+      "min": 66,
+      "target": 71,
+      "max": 74,
+      "mode": "max-dimension"
+    }
+  },
+  "entries": [
+    {
+      "sourcePath": "/images/products/CP-UNC-DA41L3C-D-Q 1st.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA41L3C-D-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-da41l3c-d-q"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA41L3C-D-Q 2nd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA41L3C-D-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-da41l3c-d-q"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA41L3C-D-Q 3rd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA41L3C-D-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-da41l3c-d-q"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA41L3C-D-Q 4th.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA41L3C-D-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-da41l3c-d-q"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA41L3C-D-Q 5th.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA41L3C-D-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-da41l3c-d-q"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA41L3C-Q bullet 1st.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA41L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-ta41l3c-q"
+      ],
+      "productCategory": "Bullet Cameras",
+      "categorySlug": "bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA41L3C-Q bullet 2nd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA41L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-ta41l3c-q"
+      ],
+      "productCategory": "Bullet Cameras",
+      "categorySlug": "bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA41L3C-Q bullet 3rd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA41L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-ta41l3c-q"
+      ],
+      "productCategory": "Bullet Cameras",
+      "categorySlug": "bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA41L3C-LQ 1st.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA41L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-da41l3c-lq"
+      ],
+      "productCategory": "Color Dome Cameras",
+      "categorySlug": "color-dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA41L3C-LQ 2nd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA41L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-da41l3c-lq"
+      ],
+      "productCategory": "Color Dome Cameras",
+      "categorySlug": "color-dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA41L3C-LQ 3rd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA41L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-da41l3c-lq"
+      ],
+      "productCategory": "Color Dome Cameras",
+      "categorySlug": "color-dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA41L3C-LQ 4th.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA41L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-da41l3c-lq"
+      ],
+      "productCategory": "Color Dome Cameras",
+      "categorySlug": "color-dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA41L3C-LQ bullet 1st.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA41L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-ta41l3c-lq"
+      ],
+      "productCategory": "Color Bullet Cameras",
+      "categorySlug": "color-bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA41L3C-LQ bullet 2nd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA41L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-ta41l3c-lq"
+      ],
+      "productCategory": "Color Bullet Cameras",
+      "categorySlug": "color-bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA41L3C-LQ bullet 3rd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA41L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-ta41l3c-lq"
+      ],
+      "productCategory": "Color Bullet Cameras",
+      "categorySlug": "color-bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA41L3C-LQ bullet 4th.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA41L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-ta41l3c-lq"
+      ],
+      "productCategory": "Color Bullet Cameras",
+      "categorySlug": "color-bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA21L3C-Q 1st.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA21L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-da21l3c-q"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA21L3C-Q 2nd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA21L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-da21l3c-q"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA21L3C-Q 3rd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA21L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-da21l3c-q"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA21L3C-Q 4th.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA21L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-da21l3c-q"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA21L3C-Q 1st.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA21L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-ta21l3c-q"
+      ],
+      "productCategory": "Bullet Cameras",
+      "categorySlug": "bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA21L3C-Q 2nd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA21L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-ta21l3c-q"
+      ],
+      "productCategory": "Bullet Cameras",
+      "categorySlug": "bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA21L3C-Q 3rd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA21L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-ta21l3c-q"
+      ],
+      "productCategory": "Bullet Cameras",
+      "categorySlug": "bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA21L3C-Q 4th.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA21L3C-Q"
+      ],
+      "productSlugs": [
+        "cp-unc-ta21l3c-q"
+      ],
+      "productCategory": "Bullet Cameras",
+      "categorySlug": "bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-DA21L3C-LQ 1st.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-DA21L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-da21l3c-lq"
+      ],
+      "productCategory": "Color Dome Cameras",
+      "categorySlug": "color-dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA21L3C-LQ 1st.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA21L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-ta21l3c-lq"
+      ],
+      "productCategory": "Color Bullet Cameras",
+      "categorySlug": "color-bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA21L3C-LQ 2nd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA21L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-ta21l3c-lq"
+      ],
+      "productCategory": "Color Bullet Cameras",
+      "categorySlug": "color-bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA21L3C-LQ 3rd.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA21L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-ta21l3c-lq"
+      ],
+      "productCategory": "Color Bullet Cameras",
+      "categorySlug": "color-bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA21L3C-LQ 4th.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA21L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-unc-ta21l3c-lq"
+      ],
+      "productCategory": "Color Bullet Cameras",
+      "categorySlug": "color-bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNR-108F1 1st.jpg",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNR-108F1"
+      ],
+      "productSlugs": [
+        "cp-unr-108f1"
+      ],
+      "productCategory": "NVR Systems",
+      "categorySlug": "nvr-systems",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 82,
+      "occupancyMode": "horizontal",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Input buffer contains unsupported image format"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNR-4K2161-V2 1st.jpg",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNR-4K2161-V2"
+      ],
+      "productSlugs": [
+        "cp-unr-4k2161-v2"
+      ],
+      "productCategory": "NVR Systems",
+      "categorySlug": "nvr-systems",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 82,
+      "occupancyMode": "horizontal",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Input buffer contains unsupported image format"
+    },
+    {
+      "sourcePath": "/images/products/X-990.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "X990"
+      ],
+      "productSlugs": [
+        "x-990"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Input buffer contains unsupported image format"
+    },
+    {
+      "sourcePath": "/images/products/F22.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "F22+ID+WIFI"
+      ],
+      "productSlugs": [
+        "essl-f22-id-wifi"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/F18.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "F18"
+      ],
+      "productSlugs": [
+        "essl-f18"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/Sf100.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "SF100"
+      ],
+      "productSlugs": [
+        "essl-sf100"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Input buffer contains unsupported image format"
+    },
+    {
+      "sourcePath": "/images/products/K30 pro.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "K30 Pro"
+      ],
+      "productSlugs": [
+        "essl-k30-pro"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Input buffer contains unsupported image format"
+    },
+    {
+      "sourcePath": "/images/products/FR1200.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "FR1200"
+      ],
+      "productSlugs": [
+        "essl-fr1200"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/K90 pro.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "K90 Pro"
+      ],
+      "productSlugs": [
+        "essl-k90-pro"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Input buffer contains unsupported image format"
+    },
+    {
+      "sourcePath": "/images/products/AiFace-Mars.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "AiFace Mars",
+        "AiFace Mars + HID"
+      ],
+      "productSlugs": [
+        "essl-aiface-mars",
+        "essl-aiface-mars-hid"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/NETGEAR-GS108PP.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "GS108PP"
+      ],
+      "productSlugs": [
+        "netgear-gs108pp"
+      ],
+      "productCategory": "PoE Switches",
+      "categorySlug": "poe-switches",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 80,
+      "occupancyMode": "horizontal",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Input buffer contains unsupported image format"
+    },
+    {
+      "sourcePath": "/images/products/NETGEAR-GS116PP.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "GS116PP"
+      ],
+      "productSlugs": [
+        "netgear-gs116pp"
+      ],
+      "productCategory": "PoE Switches",
+      "categorySlug": "poe-switches",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 80,
+      "occupancyMode": "horizontal",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Input buffer contains unsupported image format"
+    },
+    {
+      "sourcePath": "/images/products/PT-NC123D3-ND2.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "PT-NC123D3-N(D2)"
+      ],
+      "productSlugs": [
+        "prama-pt-nc123d3-n-d2"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/PT-NC143D3-ND2.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "PT-NC143D3-N(D2)"
+      ],
+      "productSlugs": [
+        "prama-pt-nc143d3-n-d2"
+      ],
+      "productCategory": "Dome Cameras",
+      "categorySlug": "dome-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/PT-NC140D3-ND2.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "PT-NC140D3-N(D2)"
+      ],
+      "productSlugs": [
+        "prama-pt-nc140d3-n-d2"
+      ],
+      "productCategory": "Bullet Cameras",
+      "categorySlug": "bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/CP-UNC-TA61L3C-LQ.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "CP-UNC-TA61L3C-LQ"
+      ],
+      "productSlugs": [
+        "cp-plus-cp-unc-ta61l3c-lq"
+      ],
+      "productCategory": "Color Bullet Cameras",
+      "categorySlug": "color-bullet-cameras",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 74,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/ESSL-VEGA-W-POE.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "VEGA+W+POE"
+      ],
+      "productSlugs": [
+        "essl-vega-w-poe"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/ESSL-MB160.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "MB160"
+      ],
+      "productSlugs": [
+        "essl-mb160"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/ESSL-MB20.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "MB20"
+      ],
+      "productSlugs": [
+        "essl-mb20"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/ESSL-AIFACE-MERCURY.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "AiFace Mercury"
+      ],
+      "productSlugs": [
+        "essl-aiface-mercury"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    },
+    {
+      "sourcePath": "/images/products/ESSL-AIFACE-NEPTUNE.png",
+      "outputPath": "",
+      "format": "",
+      "productModels": [
+        "AiFace Neptune"
+      ],
+      "productSlugs": [
+        "essl-aiface-neptune"
+      ],
+      "productCategory": "Biometric Devices",
+      "categorySlug": "biometric-devices",
+      "originalWidth": 0,
+      "originalHeight": 0,
+      "originalSizeBytes": 0,
+      "originalFormat": "",
+      "originalHasAlpha": false,
+      "trimmedWidth": null,
+      "trimmedHeight": null,
+      "productWidthOnCanvas": 0,
+      "productHeightOnCanvas": 0,
+      "outputWidth": 0,
+      "outputHeight": 0,
+      "outputSizeBytes": 0,
+      "occupancyPercent": 0,
+      "occupancyTargetPercent": 71,
+      "occupancyMode": "max-dimension",
+      "upscaleFactor": 0,
+      "hasTransparency": false,
+      "backgroundRemoved": false,
+      "innerWhiteRectsRemoved": false,
+      "status": "error",
+      "flags": [
+        "processing-error"
+      ],
+      "notes": "Processing error: Cannot use same file for input and output"
+    }
+  ]
+}

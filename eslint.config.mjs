@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Scripts directory uses sharp types not available in the Next.js build context:
+    "scripts/**",
   ]),
 ]);
 

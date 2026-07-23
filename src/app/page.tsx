@@ -13,10 +13,11 @@ import {
 } from "lucide-react";
 import { catalogue } from "@/data/catalog";
 import { ProductCard } from "@/components/product-card";
-import { ProductSearch } from "@/components/product-search";
 import { publicPageMetadata } from "@/lib/seo";
 import { siteConfig } from "@/config/site";
 import { getFeaturedProducts } from "@/lib/featured-products";
+import { resolveHeroProducts, deriveAnnotations } from "@/lib/home/hero-products";
+import { CinematicCommerceHero } from "@/components/home/cinematic-commerce-hero";
 
 export const metadata: Metadata = publicPageMetadata({
   title: "Shop CCTV, biometric and networking hardware",
@@ -116,6 +117,10 @@ function getCompareSpecValue(product: (typeof catalogue)[number], key: string): 
 }
 
 export default function Home() {
+  /* Hero products: resolved with fallbacks from real catalogue */
+  const heroProducts = resolveHeroProducts();
+  const annotations = deriveAnnotations(heroProducts);
+
   /* Featured products: curated selection representing multiple categories */
   const featuredProducts = getFeaturedProducts(8);
 
@@ -125,118 +130,13 @@ export default function Home() {
     .filter((p): p is (typeof catalogue)[number] => p !== undefined && p.stockStatus === "in_stock")
     .slice(0, 3);
 
-  /* Hero composition: specific products by model */
-  const primaryProduct = catalogue.find((p) => p.model === "CP-UNC-DA41L3C-D-Q");
-  const secondaryProduct = catalogue.find((p) => p.model === "CP-UNC-TA41L3C-Q");
-  const tertiaryProduct = catalogue.find((p) => p.model === "CP-UNR-108F1");
-
   return (
     <>
       {/* ═══════════════════════════════════════════════════════
-          SECTION 1 — HERO
-          Clean two-column. Left: copy + real search. Right: art-directed product composition.
+          SECTION 1 — CINEMATIC HERO
+          Scroll-driven product narrative with real catalogue products.
           ═══════════════════════════════════════════════════════ */}
-      <section style={{ background: "var(--background)" }}>
-        <div className="container-standard py-16 sm:py-20 lg:min-h-[80vh] lg:py-0 lg:flex lg:items-center lg:gap-12">
-          {/* Left: Copy + Search */}
-          <div className="lg:max-w-[52%]">
-            <p className="eyebrow">CCTV · NVR · BIOMETRICS · NETWORKING</p>
-            <h1 className="display-hero mt-5">
-              Security hardware, specified clearly.
-            </h1>
-            <p className="mt-7 max-w-xl text-lg leading-8 text-[var(--text-secondary)]">
-              Find the exact camera, recorder, biometric device or network component — with clear
-              pricing, model-specific documents, and secure checkout.
-            </p>
-
-            {/* Real functional search — shared with header overlay */}
-            <ProductSearch variant="inline" className="mt-8" />
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/products" className="button-primary">
-                Shop all products <ArrowRight size={16} />
-              </Link>
-              <Link href="/compare" className="button-secondary">
-                Compare models <Scale size={16} />
-              </Link>
-            </div>
-
-            <p className="mt-5 text-sm text-[var(--text-muted)]">
-              GST-inclusive pricing · Exact-model documents · Secure Razorpay checkout
-            </p>
-          </div>
-
-          {/* Right: Art-directed product composition — one shared neutral stage */}
-          <div className="relative mt-10 hidden lg:block lg:mt-0 lg:w-[48%]">
-            <div
-              className="hero-composition relative overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface-subtle)]"
-              style={{ aspectRatio: "1.2 / 1" }}
-              aria-label="CCTV dome camera, bullet camera and NVR system"
-            >
-              {/* Primary dome camera — largest object */}
-              {primaryProduct && (
-                <div className="hero-product-primary">
-                  <Image
-                    src={primaryProduct.images[0]}
-                    alt={`${primaryProduct.brand} ${primaryProduct.model}`}
-                    fill
-                    sizes="400px"
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-              )}
-              {/* Secondary bullet camera — upper/middle right */}
-              {secondaryProduct && (
-                <div className="hero-product-secondary">
-                  <Image
-                    src={secondaryProduct.images[0]}
-                    alt={`${secondaryProduct.brand} ${secondaryProduct.model}`}
-                    fill
-                    sizes="250px"
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-              )}
-              {/* NVR — lower portion, substantial */}
-              {tertiaryProduct && (
-                <div className="hero-product-tertiary">
-                  <Image
-                    src={tertiaryProduct.images[0]}
-                    alt={`${tertiaryProduct.brand} ${tertiaryProduct.model}`}
-                    fill
-                    sizes="350px"
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-              )}
-              {/* Technical labels — neutral, small, secondary */}
-              <div className="hero-labels hidden xl:block">
-                <span className="hero-label">4 MP</span>
-                <span className="hero-label">PoE</span>
-                <span className="hero-label">IP67</span>
-              </div>
-            </div>
-            {/* Mobile fallback: compact single-product composition */}
-            <div className="lg:hidden mt-6">
-              {primaryProduct && (
-                <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-container)] border border-[var(--border)] bg-[var(--surface-subtle)]">
-                  <Image
-                    src={primaryProduct.images[0]}
-                    alt={`${primaryProduct.brand} ${primaryProduct.model}`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 400px"
-                    className="object-contain p-[15%]"
-                    priority
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
+      <CinematicCommerceHero heroProducts={heroProducts} annotations={annotations} />
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 2 — FOUR PRIMARY CATEGORIES
