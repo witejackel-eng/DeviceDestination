@@ -44,6 +44,19 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
+/** Category-based colour for product image backgrounds */
+function categoryGalleryBg(categorySlug: string): string {
+  if (categorySlug.includes("dome")) return "var(--powder-blue-soft)";
+  if (categorySlug.includes("bullet")) return "var(--butter-soft)";
+  if (categorySlug.includes("color")) return categorySlug.includes("bullet")
+    ? "var(--peach)"
+    : "var(--coral-soft)";
+  if (categorySlug.includes("nvr")) return "var(--lilac-soft)";
+  if (categorySlug.includes("biometric")) return "var(--mint-soft)";
+  if (categorySlug.includes("poe") || categorySlug.includes("switch")) return "var(--technical-grey)";
+  return "var(--canvas)";
+}
+
 export default async function ProductPage({ params }: { params: Params }) {
   const { slug } = await params;
   const product = getProduct(slug);
@@ -60,6 +73,8 @@ export default async function ProductPage({ params }: { params: Params }) {
     .slice(0, 4);
   const whatsapp = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(`Hello, I need help with ${product.model} (${product.title}).`)}`;
   const siteUrl = siteConfig.url;
+  const galleryBg = categoryGalleryBg(product.categorySlug);
+
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -113,7 +128,9 @@ export default async function ProductPage({ params }: { params: Params }) {
 
       {/* ── Product hero: gallery + info ─────────────────────── */}
       <div className="grid gap-10 lg:grid-cols-[1.04fr_0.96fr] lg:gap-16">
-        <ProductGallery images={product.images} alt={`${product.brand} ${product.model}`} />
+        <div className="relative aspect-square overflow-hidden rounded-[26px] border border-[var(--line)]" style={{ background: galleryBg }}>
+          <ProductGallery images={product.images} alt={`${product.brand} ${product.model}`} />
+        </div>
         <div className="lg:pt-2">
           <p className="eyebrow">
             {product.brand} · {product.category}

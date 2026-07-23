@@ -3,7 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
+import { Scale, Check } from "lucide-react";
 import { AddToCart } from "@/components/add-to-cart";
+import { useCompareStore } from "@/lib/compare-store";
+import { comparisonGroup } from "@/lib/products";
+import { catalogue } from "@/data/catalog";
 import {
   calculateDiscountPercent,
   formatPrice,
@@ -38,6 +42,14 @@ export function ProductCard({ product }: { product: Product }) {
 
   const imgClass = categoryImageClass(product.categorySlug);
 
+  /* Compare state */
+  const compareIds = useCompareStore((state) => state.ids);
+  const toggleCompare = useCompareStore((state) => state.toggle);
+  const isInCompare = compareIds.includes(product.id);
+  const atCompareLimit = compareIds.length >= 4 && !isInCompare;
+  const firstCompareProduct = catalogue.find((p) => p.id === compareIds[0]);
+  const isIncompatible = !isInCompare && firstCompareProduct && comparisonGroup(firstCompareProduct) !== comparisonGroup(product);
+
   return (
     <motion.article
       layout
@@ -58,6 +70,30 @@ export function ProductCard({ product }: { product: Product }) {
         />
         <span className="product-card-model">{product.model}</span>
       </Link>
+
+      {/* Compare button at image corner — always visible on mobile, hover-visible on desktop */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!atCompareLimit && !isIncompatible) toggleCompare(product.id);
+        }}
+        disabled={atCompareLimit || isIncompatible}
+        className="product-card-compare lg:opacity-0 lg:group-hover:opacity-100"
+        data-selected={isInCompare ? "true" : undefined}
+        aria-pressed={isInCompare}
+        aria-label={isInCompare ? `Remove ${product.model} from comparison` : `Add ${product.model} to comparison`}
+        title={
+          atCompareLimit
+            ? "Compare limit reached (4 products)"
+            : isIncompatible
+              ? "Different product type"
+              : undefined
+        }
+      >
+        {isInCompare ? <Check size={14} /> : <Scale size={14} />}
+      </button>
 
       <div className="product-card-info">
         <p className="product-card-brand">{product.brand} · {product.category}</p>

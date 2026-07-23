@@ -16,7 +16,7 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
   return (
     <div>
       <motion.div
-        className="relative aspect-square touch-pan-y overflow-hidden rounded-[26px] border border-[var(--line)] bg-[var(--canvas-alt)]"
+        className="relative aspect-square touch-pan-y overflow-hidden"
         drag={!reduceMotion && images.length > 1 ? "x" : false}
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.08}

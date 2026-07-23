@@ -9,6 +9,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { catalogue } from "@/data/catalog";
 import { useCartStore } from "@/lib/cart-store";
+import { useCompareStore } from "@/lib/compare-store";
 import { Brand } from "@/components/brand";
 import { ProductSearch } from "@/components/product-search";
 import { getPriceMaxAgeDays, siteConfig } from "@/config/site";
@@ -26,12 +27,12 @@ const primaryNav = [
 ] as const;
 
 const shopCategories = [
-  { label: "CCTV cameras", href: "/products?q=camera", color: "var(--coral-soft)" },
-  { label: "Dome cameras", href: "/categories/dome-cameras", color: "var(--powder-blue-soft)" },
-  { label: "Bullet cameras", href: "/categories/bullet-cameras", color: "var(--butter-soft)" },
-  { label: "NVR systems", href: "/categories/nvr-systems", color: "var(--lilac-soft)" },
-  { label: "Biometric devices", href: "/categories/biometric-devices", color: "var(--mint-soft)" },
-  { label: "PoE and networking", href: "/categories/poe-switches", color: "var(--technical-grey)" },
+  { label: "CCTV cameras", href: "/products?q=camera", color: "var(--coral-soft)", icon: "camera" },
+  { label: "Dome cameras", href: "/categories/dome-cameras", color: "var(--powder-blue-soft)", icon: "dome" },
+  { label: "Bullet cameras", href: "/categories/bullet-cameras", color: "var(--butter-soft)", icon: "bullet" },
+  { label: "NVR systems", href: "/categories/nvr-systems", color: "var(--lilac-soft)", icon: "nvr" },
+  { label: "Biometric devices", href: "/categories/biometric-devices", color: "var(--mint-soft)", icon: "biometric" },
+  { label: "PoE and networking", href: "/categories/poe-switches", color: "var(--technical-grey)", icon: "poe" },
 ];
 
 const shopLinks = [
@@ -78,6 +79,13 @@ const mobileNavSections = [
   },
 ];
 
+const mobileCategoryPanels = [
+  { label: "Cameras", href: "/products?q=camera", bg: "var(--coral-soft)" },
+  { label: "NVRs", href: "/categories/nvr-systems", bg: "var(--lilac-soft)" },
+  { label: "Biometrics", href: "/categories/biometric-devices", bg: "var(--mint-soft)" },
+  { label: "Networking", href: "/categories/poe-switches", bg: "var(--butter-soft)" },
+];
+
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
@@ -88,6 +96,8 @@ export function Header() {
   const items = useCartStore((state) => state.items);
   const openCart = useCartStore((state) => state.open);
   const count = items.reduce((sum, item) => sum + item.quantity, 0);
+  const compareIds = useCompareStore((state) => state.ids);
+  const compareCount = compareIds.length;
 
   const featured = useMemo(
     () => catalogue.find((product) => product.stockStatus === "in_stock") ?? catalogue[0],
@@ -158,14 +168,18 @@ export function Header() {
     return () => shopPanel.removeEventListener("keydown", handleTab);
   }, [shopOpen]);
 
+  /* Determine active nav */
+  const isShopActive = shopOpen || pathname.startsWith("/products") || pathname.startsWith("/categories");
+
   return (
     <>
       {/* ── HEADER SHELL ───────────────────────────────────── */}
       <header className="sticky top-5 z-50 sm:top-6">
         <div className="header-shell">
-          <div
+          <motion.div
             data-header-capsule
             className={`header-capsule flex items-center justify-between gap-4 ${compact ? "header-capsule--compact" : ""}`}
+            layout
           >
             <Brand responsive compactMark />
 
@@ -177,7 +191,7 @@ export function Header() {
                   type="button"
                   onClick={() => setShopOpen((value) => !value)}
                   className="header-link"
-                  data-active={shopOpen || pathname.startsWith("/products") ? "true" : "false"}
+                  data-active={isShopActive ? "true" : "false"}
                   aria-expanded={shopOpen}
                   aria-haspopup="true"
                 >
@@ -202,7 +216,7 @@ export function Header() {
                           className="mega-menu-panel"
                           style={{ background: "var(--coral-soft)" }}
                         >
-                          <h3 className="text-[var(--ink)]">Browse hardware</h3>
+                          <h3 className="font-display text-[var(--ink)]">Browse hardware</h3>
                           <p className="text-[var(--ink-soft)]">
                             Find the exact camera, recorder or device you need.
                           </p>
@@ -212,7 +226,7 @@ export function Header() {
                                 key={cat.href}
                                 href={cat.href}
                                 onClick={closeShop}
-                                className="mega-menu-link"
+                                className="mega-menu-link group"
                               >
                                 {cat.label}
                                 <ArrowRight size={13} className="opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -226,7 +240,7 @@ export function Header() {
                           className="mega-menu-panel"
                           style={{ background: "var(--butter-soft)" }}
                         >
-                          <h3 className="text-[var(--ink)]">Recording & access</h3>
+                          <h3 className="font-display text-[var(--ink)]">Recording & access</h3>
                           <p className="text-[var(--ink-soft)]">
                             NVR systems, biometric devices and networking.
                           </p>
@@ -236,7 +250,7 @@ export function Header() {
                                 key={cat.href}
                                 href={cat.href}
                                 onClick={closeShop}
-                                className="mega-menu-link"
+                                className="mega-menu-link group"
                               >
                                 {cat.label}
                                 <ArrowRight size={13} />
@@ -247,7 +261,7 @@ export function Header() {
                                 key={link.href}
                                 href={link.href}
                                 onClick={closeShop}
-                                className="mega-menu-link"
+                                className="mega-menu-link group"
                               >
                                 {link.label}
                                 <ArrowRight size={13} />
@@ -261,7 +275,7 @@ export function Header() {
                           className="mega-menu-panel"
                           style={{ background: "var(--powder-blue-soft)" }}
                         >
-                          <h3 className="text-[var(--ink)]">Featured product</h3>
+                          <h3 className="font-display text-[var(--ink)]">Featured product</h3>
                           <p className="text-[var(--ink-soft)]">
                             A popular in-stock model ready to ship.
                           </p>
@@ -331,6 +345,21 @@ export function Header() {
             {/* ── Right-side actions ──────────────────────────── */}
             <div className="flex items-center gap-1">
               <ProductSearch className="inline-flex" />
+
+              {/* Compare indicator */}
+              {compareCount > 0 && (
+                <Link
+                  href={`/compare?ids=${compareIds.join(",")}`}
+                  className="header-control hidden sm:inline-flex relative"
+                  aria-label={`Compare ${compareCount} products`}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg>
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--lilac)] px-1 text-[9px] font-extrabold text-[var(--ink)]">
+                    {compareCount}
+                  </span>
+                </Link>
+              )}
+
               <Link
                 href="/account"
                 className="header-control hidden sm:inline-flex"
@@ -376,7 +405,7 @@ export function Header() {
                 <Menu size={20} />
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       </header>
 
@@ -417,8 +446,8 @@ export function Header() {
 
                   {/* Mobile search */}
                   <div className="px-5 pt-5">
-                    <div className="flex items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5">
-                      <Search size={16} className="text-[var(--muted)]" />
+                    <div className="hero-search-bar">
+                      <Search size={18} className="text-[var(--muted)]" />
                       <ProductSearch className="min-w-0 flex-1" />
                     </div>
                   </div>
@@ -448,16 +477,11 @@ export function Header() {
                     <div className="mb-8">
                       <p className="eyebrow mb-3">Quick browse</p>
                       <div className="grid grid-cols-2 gap-3">
-                        {[
-                          { label: "Cameras", href: "/products?q=camera", bg: "var(--coral-soft)" },
-                          { label: "NVRs", href: "/categories/nvr-systems", bg: "var(--lilac-soft)" },
-                          { label: "Biometrics", href: "/categories/biometric-devices", bg: "var(--mint-soft)" },
-                          { label: "Networking", href: "/categories/poe-switches", bg: "var(--butter-soft)" },
-                        ].map((tile) => (
+                        {mobileCategoryPanels.map((tile) => (
                           <Dialog.Close asChild key={tile.href}>
                             <Link
                               href={tile.href}
-                              className="flex items-center justify-between rounded-2xl p-4 font-display text-base font-bold"
+                              className="category-panel flex items-center justify-between p-4 font-display text-base font-bold"
                               style={{ background: tile.bg }}
                             >
                               {tile.label}

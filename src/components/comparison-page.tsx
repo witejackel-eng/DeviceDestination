@@ -10,6 +10,19 @@ import { useCompareStore } from "@/lib/compare-store";
 import { comparisonGroup, formatPrice, getPurchaseEligibility } from "@/lib/products";
 import { getPriceMaxAgeDays } from "@/config/site";
 
+/** Category-based colour for compare product panels */
+function categoryPanelBg(categorySlug: string): string {
+  if (categorySlug.includes("dome")) return "var(--powder-blue-soft)";
+  if (categorySlug.includes("bullet")) return "var(--butter-soft)";
+  if (categorySlug.includes("color")) return categorySlug.includes("bullet")
+    ? "var(--peach)"
+    : "var(--coral-soft)";
+  if (categorySlug.includes("nvr")) return "var(--lilac-soft)";
+  if (categorySlug.includes("biometric")) return "var(--mint-soft)";
+  if (categorySlug.includes("poe") || categorySlug.includes("switch")) return "var(--technical-grey)";
+  return "var(--canvas-warm)";
+}
+
 export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
   const ids = useCompareStore((state) => state.ids);
   const replace = useCompareStore((state) => state.replace);
@@ -94,21 +107,22 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
           <table className="w-full min-w-[760px] border-collapse text-left">
             <thead>
               <tr>
-                <th className="w-[210px] bg-[var(--canvas)] p-4 text-sm font-bold">Product</th>
+                <th className="w-[210px] bg-[var(--canvas)] p-4 text-sm font-bold sticky left-0 z-10">Product</th>
                 {selected.map((product) => (
                   <th
                     key={product.id}
                     className="relative min-w-[240px] border-l border-[var(--line)] p-5 align-top"
+                    style={{ background: categoryPanelBg(product.categorySlug) }}
                   >
                     <button
                       type="button"
                       onClick={() => remove(product.id)}
-                      className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-xl border border-[var(--line)] bg-white"
+                      className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-xl border border-[var(--line)] bg-white/80 backdrop-blur-sm"
                       aria-label={`Remove ${product.model}`}
                     >
                       <X size={15} />
                     </button>
-                    <div className="relative mb-4 aspect-[1.3] rounded-2xl" style={{ background: "var(--canvas-warm)" }}>
+                    <div className="relative mb-4 aspect-[1.3] rounded-2xl bg-white/50">
                       <Image
                         src={product.images[0]}
                         alt=""
@@ -139,32 +153,38 @@ export function ComparisonPage({ initialIds }: { initialIds: string[] }) {
             </thead>
             <tbody>
               <tr className="border-t border-[var(--line)]">
-                <th className="bg-[var(--canvas)] p-4 text-sm font-bold">Availability</th>
+                <th className="bg-[var(--canvas)] p-4 text-sm font-bold sticky left-0 z-10">Availability</th>
                 {selected.map((product) => (
                   <td key={product.id} className="border-l border-[var(--line)] p-5 text-sm">
-                    {product.stockStatus.replaceAll("_", " ")}
+                    <span className={`inline-flex items-center gap-1.5 font-semibold ${product.stockStatus === "in_stock" ? "text-[var(--success)]" : "text-[var(--muted)]"}`}>
+                      {product.stockStatus.replaceAll("_", " ")}
+                    </span>
                   </td>
                 ))}
               </tr>
               <tr className="border-t border-[var(--line)]">
-                <th className="bg-[var(--canvas)] p-4 text-sm font-bold">Warranty</th>
+                <th className="bg-[var(--canvas)] p-4 text-sm font-bold sticky left-0 z-10">Warranty</th>
                 {selected.map((product) => (
-                  <td key={product.id} className="border-l border-[var(--line)] p-5 text-sm">
+                  <td key={product.id} className="border-l border-[var(--line)] p-5 text-sm font-semibold">
                     {product.warrantySummary}
                   </td>
                 ))}
               </tr>
               {specLabels.map((label) => (
                 <tr key={label} className="border-t border-[var(--line)]">
-                  <th className="bg-[var(--canvas)] p-4 text-sm font-bold">{label}</th>
-                  {selected.map((product) => (
-                    <td
-                      key={product.id}
-                      className="border-l border-[var(--line)] p-5 text-sm leading-6 text-[var(--muted)]"
-                    >
-                      {product.specs[label] ?? "—"}
-                    </td>
-                  ))}
+                  <th className="bg-[var(--canvas)] p-4 text-sm font-bold sticky left-0 z-10">{label}</th>
+                  {selected.map((product) => {
+                    const value = product.specs[label];
+                    const hasValue = value !== undefined && value !== "—";
+                    return (
+                      <td
+                        key={product.id}
+                        className={`border-l border-[var(--line)] p-5 text-sm leading-6 ${hasValue ? "text-[var(--ink-soft)] font-medium" : "text-[var(--muted)]"}`}
+                      >
+                        {value ?? "—"}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>

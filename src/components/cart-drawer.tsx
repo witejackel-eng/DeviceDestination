@@ -12,6 +12,17 @@ import { getPriceMaxAgeDays } from "@/config/site";
 import { useCartStore } from "@/lib/cart-store";
 import { durations, springs } from "@/lib/motion/constants";
 
+/** Category colour for cart thumbnails */
+function categoryThumbBg(categorySlug: string): string {
+  if (categorySlug.includes("dome")) return "var(--powder-blue-soft)";
+  if (categorySlug.includes("bullet")) return "var(--butter-soft)";
+  if (categorySlug.includes("color")) return "var(--coral-soft)";
+  if (categorySlug.includes("nvr")) return "var(--lilac-soft)";
+  if (categorySlug.includes("biometric")) return "var(--mint-soft)";
+  if (categorySlug.includes("poe") || categorySlug.includes("switch")) return "var(--technical-grey)";
+  return "var(--canvas-warm)";
+}
+
 export function CartDrawer() {
   const reduceMotion = useReducedMotion();
   const { items, isOpen, close, setQuantity, removeItem } = useCartStore();
@@ -92,7 +103,7 @@ export function CartDrawer() {
                             exit={{ opacity: 0, height: 0, marginTop: 0, paddingBottom: 0 }}
                             className="grid grid-cols-[80px_1fr] gap-3 border-b border-[var(--line)] pb-4"
                           >
-                            <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--canvas-warm)]">
+                            <div className="relative aspect-square overflow-hidden rounded-2xl" style={{ background: categoryThumbBg(product.categorySlug) }}>
                               <Image
                                 src={product.images[0]}
                                 alt=""

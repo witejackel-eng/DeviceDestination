@@ -57,12 +57,29 @@
   --peach: #efa78d;
   --technical-grey: #d8d8d0;
 
+  /* ── Category accent pairings ─────────────────────────── */
+  --cat-dome: var(--powder-blue-soft);
+  --cat-dome-accent: var(--powder-blue);
+  --cat-bullet: var(--butter-soft);
+  --cat-bullet-accent: var(--butter);
+  --cat-color-dome: var(--coral-soft);
+  --cat-color-dome-accent: var(--coral);
+  --cat-color-bullet: var(--peach);
+  --cat-color-bullet-accent: var(--peach);
+  --cat-nvr: var(--lilac-soft);
+  --cat-nvr-accent: var(--lilac);
+  --cat-biometric: var(--mint-soft);
+  --cat-biometric-accent: var(--mint);
+  --cat-networking: var(--technical-grey);
+  --cat-networking-accent: #b0b0a8;
+
   /* ── Legacy aliases (for gradual migration) ────────────── */
   --sage: var(--mint-soft);
   --sky: var(--powder-blue-soft);
   --sand: var(--canvas-warm);
   --blush: var(--coral-soft);
   --technical: var(--technical-grey);
+  --canvas-alt: var(--canvas-warm);
 
   /* ── Dark theme utilities ──────────────────────────────── */
   --canvas-rgb: 244 240 231;
@@ -73,14 +90,14 @@
   --success: #24633f;
   --danger: #a92d22;
 
-  /* ── Category-based product image backgrounds ───────────── */
-  --cat-dome: var(--powder-blue-soft);
-  --cat-bullet: var(--butter-soft);
-  --cat-color-dome: var(--coral-soft);
-  --cat-color-bullet: var(--peach);
-  --cat-nvr: var(--lilac-soft);
-  --cat-biometric: var(--mint-soft);
-  --cat-networking: var(--technical-grey);
+  /* ── Shape system ─────────────────────────────────────── */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --radius-2xl: 26px;
+  --radius-3xl: 30px;
+  --radius-pill: 9999px;
 }
 
 /* ── Reset ────────────────────────────────────────────────── */
@@ -211,7 +228,7 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 0.75rem 1.25rem;
   font-weight: 700;
   font-size: 0.875rem;
@@ -272,7 +289,7 @@ button {
 .surface-card {
   border: 1.5px solid var(--line);
   background: var(--surface);
-  border-radius: 22px;
+  border-radius: var(--radius-2xl);
   box-shadow: none;
 }
 
@@ -294,6 +311,15 @@ button {
   display: none;
 }
 
+/* ── Section colour transitions ──────────────────────────── */
+
+.section-transition-coral { background: var(--coral-soft); }
+.section-transition-blue { background: var(--powder-blue-soft); }
+.section-transition-lilac { background: var(--lilac-soft); }
+.section-transition-butter { background: var(--butter-soft); }
+.section-transition-mint { background: var(--mint-soft); }
+.section-transition-ink { background: var(--ink); color: white; }
+
 /* ============================================================
    HEADER — Premium floating navigation shell
    ============================================================ */
@@ -305,7 +331,7 @@ button {
 
 .header-capsule {
   height: 88px;
-  padding-inline: 20px;
+  padding-inline: 24px;
   border-radius: 28px;
   border: 1.5px solid var(--line);
   background: var(--surface);
@@ -374,10 +400,10 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
-  min-width: 42px;
-  min-height: 42px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 9999px;
   background: var(--tangerine);
   color: #1a0e00;
@@ -405,7 +431,7 @@ button {
   left: 0;
   top: 100%;
   margin-top: 12px;
-  width: min(calc(100% - 40px), 1400px);
+  width: min(calc(100% - 40px), 1560px);
   border-radius: 24px;
   border: 1.5px solid var(--line);
   overflow: hidden;
@@ -596,6 +622,49 @@ button {
   backdrop-filter: blur(4px);
 }
 
+/* Compare icon on product card image corner */
+.product-card-compare {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(23, 21, 18, 0.1);
+  color: var(--muted);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.product-card-compare:hover,
+.product-card-compare[data-selected="true"] {
+  background: var(--tangerine-soft);
+  color: var(--tangerine-text);
+  border-color: var(--tangerine-border);
+}
+
+/* Stock indicator on card */
+.product-card-stock {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.product-card-stock[data-status="in_stock"] {
+  color: var(--success);
+}
+
 /* Category colour backgrounds for product images */
 .product-card-image--cat-dome-cameras { background: var(--cat-dome); }
 .product-card-image--cat-bullet-cameras { background: var(--cat-bullet); }
@@ -615,6 +684,12 @@ button {
   gap: 0.5rem;
   padding: 0.75rem 0;
   flex-wrap: wrap;
+  position: sticky;
+  top: 90px;
+  z-index: 30;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0.5rem;
 }
 
 .filter-pill {
@@ -679,6 +754,68 @@ button {
   transition:
     left 550ms ease,
     top 550ms ease;
+}
+
+/* ============================================================
+   HERO — Editorial composition styles
+   ============================================================ */
+
+.hero-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-2xl);
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  min-height: 56px;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.hero-search-bar:hover,
+.hero-search-bar:focus-within {
+  border-color: var(--tangerine-border-hover);
+  box-shadow: 0 4px 20px var(--tangerine-shadow);
+}
+
+.hero-search-bar input {
+  min-width: 0;
+  flex: 1;
+  background: transparent;
+  outline: none;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.hero-search-bar input::placeholder {
+  color: var(--muted);
+}
+
+/* ============================================================
+   CATEGORY PANELS — Editorial category discovery
+   ============================================================ */
+
+.category-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  border: 1.5px solid var(--line);
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 200ms ease;
+}
+
+.category-panel:hover {
+  transform: scale(1.01);
+  border-color: var(--line-strong);
+}
+
+.category-panel-image {
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.category-panel:hover .category-panel-image {
+  transform: scale(1.05);
 }
 
 /* ============================================================

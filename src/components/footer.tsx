@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Brand } from "@/components/brand";
 import { DDMark } from "@/components/dd-mark";
 import { CookieSettingsLink } from "@/components/cookie-settings-link";
 import { siteConfig } from "@/config/site";
+import { IndianRupee, BadgeCheck, CreditCard, ShieldCheck } from "lucide-react";
 
 const groups = [
   {
@@ -42,21 +42,49 @@ const groups = [
 export function Footer() {
   return (
     <footer style={{ background: "var(--ink)" }} className="text-white">
-      {/* Main footer content */}
-      <div className="container-standard py-14 sm:py-16">
-        {/* Brand block */}
-        <div className="flex flex-col gap-6 border-b border-[var(--line-on-dark)] pb-10 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-5">
-            <Brand inverted />
+      {/* ── Large brand statement ──────────────────────────── */}
+      <div className="container-standard pt-16 sm:pt-20 pb-10">
+        <div className="flex items-center gap-5 mb-10">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[20px] bg-[var(--tangerine)] sm:h-24 sm:w-24">
+            <DDMark tone="dark" className="h-[60%] w-[60%] text-[var(--ink)]" />
           </div>
-          <p className="max-w-md text-sm text-white/60 sm:text-right leading-relaxed">
-            Exact-model security hardware with clear pricing and documentation.
-            Based in {siteConfig.serviceArea}.
-          </p>
+          <div>
+            <p className="font-display text-5xl font-extrabold leading-[0.88] tracking-[-0.02em] sm:text-7xl lg:text-8xl">
+              Device
+              <br />
+              Destination
+            </p>
+            <p className="mt-3 text-sm text-white/50 max-w-md">
+              Security hardware, selected with care. Exact models, clear pricing, real documentation.
+            </p>
+          </div>
         </div>
 
-        {/* Link groups */}
-        <div className="mt-10 grid grid-cols-2 gap-8 sm:grid-cols-4">
+        {/* ── Trust badges inline ───────────────────────────── */}
+        <div className="flex flex-wrap gap-4 mb-10 border-t border-[var(--line-on-dark)] pt-8">
+          {[
+            [IndianRupee, "GST-inclusive pricing"],
+            [BadgeCheck, "OEM warranty"],
+            [CreditCard, "Secure Razorpay checkout"],
+            [ShieldCheck, "Exact-model documents"],
+          ].map(([Icon, label]) => {
+            const I = Icon as typeof BadgeCheck;
+            return (
+              <div key={label as string} className="flex items-center gap-2 rounded-full bg-white/8 px-4 py-2.5 text-xs font-bold text-white/70">
+                <I size={14} className="text-[var(--tangerine)]" />
+                {label as string}
+              </div>
+            );
+          })}
+          <span className="flex items-center gap-2 rounded-full bg-white/8 px-4 py-2.5 text-xs font-bold text-white/70">
+            {siteConfig.serviceArea} support
+          </span>
+        </div>
+      </div>
+
+      {/* ── Link groups ─────────────────────────────────────── */}
+      <div className="container-standard">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 pb-10">
           {groups.map((group) => (
             <div key={group.title}>
               <p className="eyebrow mb-4 !text-white/45">{group.title}</p>
@@ -94,23 +122,6 @@ export function Footer() {
                 WhatsApp product help
               </a>
             </address>
-          </div>
-        </div>
-
-        {/* Large wordmark */}
-        <div className="mt-14 flex items-center gap-5">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[var(--tangerine)] sm:h-20 sm:w-20">
-            <DDMark tone="dark" className="h-full w-full text-[var(--ink)]" />
-          </div>
-          <div>
-            <p className="font-display text-5xl font-extrabold leading-[0.88] tracking-[-0.02em] sm:text-7xl">
-              Device
-              <br />
-              Destination
-            </p>
-            <p className="mt-3 text-sm text-white/50">
-              Security hardware, selected with care.
-            </p>
           </div>
         </div>
       </div>

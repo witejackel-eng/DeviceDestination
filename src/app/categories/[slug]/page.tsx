@@ -29,6 +29,7 @@ export default async function CategoryPage({ params }: { params: Params }) {
       title={category.name}
       description={`Compare ${category.name.toLowerCase()} by exact model, documented specifications and GST-inclusive price.`}
       products={products}
+      categorySlug={slug}
     />
   );
 }

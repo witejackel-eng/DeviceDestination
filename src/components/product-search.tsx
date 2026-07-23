@@ -230,7 +230,7 @@ export function ProductSearch({ className = "" }: { className?: string }) {
                   </div>
                 </div>
 
-                <aside className="hidden min-h-0 flex-col overflow-y-auto rounded-[20px] border border-[var(--line)] bg-[var(--canvas-alt)] p-5 shadow-2xl lg:flex">
+                <aside className="hidden min-h-0 flex-col overflow-y-auto rounded-[20px] border border-[var(--line)] bg-[var(--canvas)] p-5 shadow-2xl lg:flex">
                   <p className="eyebrow">Popular exact models</p>
                   <div className="mt-3 grid gap-1">
                     {popularModels.map((product) => (

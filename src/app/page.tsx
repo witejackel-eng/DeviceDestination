@@ -15,6 +15,8 @@ import { ProductCard } from "@/components/product-card";
 import { HomeMotion } from "@/components/home-motion";
 import { CategoryIllustration } from "@/components/category-illustration";
 import { publicPageMetadata } from "@/lib/seo";
+import { formatPrice, getPurchaseEligibility } from "@/lib/products";
+import { getPriceMaxAgeDays } from "@/config/site";
 
 export const metadata: Metadata = publicPageMetadata({
   title: "Shop CCTV, biometric and networking hardware",
@@ -43,13 +45,14 @@ const categoryColors: Record<string, string> = {
   "poe-switches": "var(--technical-grey)",
 };
 
+/* Asymmetric grid spans for 4 primary groups */
 const categoryGridSpans: Record<string, string> = {
-  "dome-cameras": "sm:col-span-2 sm:row-span-2",
+  "dome-cameras": "sm:col-span-2 sm:row-span-2",      /* Large cameras panel */
   "bullet-cameras": "sm:col-span-1 sm:row-span-1",
   "color-dome-cameras": "sm:col-span-1 sm:row-span-1",
   "color-bullet-cameras": "sm:col-span-1 sm:row-span-1",
   "nvr-systems": "sm:col-span-1 sm:row-span-1",
-  "biometric-devices": "sm:col-span-1 sm:row-span-2",
+  "biometric-devices": "sm:col-span-1 sm:row-span-2",  /* Tall biometric panel */
   "poe-switches": "sm:col-span-1 sm:row-span-1",
 };
 
@@ -68,6 +71,11 @@ export default function Home() {
     catalogue.some((product) => product.brandSlug === brand.slug),
   );
 
+  /* NVR product for hero */
+  const nvrProduct = catalogue.find((p) => p.categorySlug === "nvr-systems");
+  const biometricProduct = catalogue.find((p) => p.categorySlug === "biometric-devices");
+  const poeProduct = catalogue.find((p) => p.categorySlug === "poe-switches");
+
   return (
     <>
       <HomeMotion />
@@ -80,8 +88,8 @@ export default function Home() {
         className="relative overflow-hidden"
         style={{ background: "var(--coral-soft)" }}
       >
-        <div className="container-standard py-16 sm:py-20 lg:min-h-[85vh] lg:py-0 lg:flex lg:items-center">
-          <div className="relative z-20 lg:max-w-[55%] lg:pr-12">
+        <div className="container-standard py-16 sm:py-20 lg:min-h-[88vh] lg:py-0 lg:flex lg:items-center lg:gap-0">
+          <div className="relative z-20 lg:max-w-[54%] lg:pr-10" data-hero-copy-area>
             <div
               data-hero-copy
               className="inline-flex items-center overflow-hidden rounded-full border border-[var(--line)] bg-[var(--ink)] text-white"
@@ -127,7 +135,7 @@ export default function Home() {
           </div>
 
           {/* Hero product composition */}
-          <div className="relative mt-10 hidden lg:block lg:mt-0 lg:w-[45%]">
+          <div className="relative mt-10 hidden lg:block lg:mt-0 lg:w-[46%]" data-hero-composition>
             <div
               className="grid grid-cols-4 grid-rows-4 gap-3"
               style={{ height: "520px" }}
@@ -167,7 +175,7 @@ export default function Home() {
                 style={{ background: "var(--lilac-soft)" }}
               >
                 <Image
-                  src={catalogue.find((p) => p.categorySlug === "nvr-systems")?.images[0] ?? "/images/placeholder.png"}
+                  src={nvrProduct?.images[0] ?? "/images/placeholder.png"}
                   alt=""
                   fill
                   sizes="150px"
@@ -181,14 +189,14 @@ export default function Home() {
                 style={{ background: "var(--mint-soft)" }}
               >
                 <Image
-                  src={catalogue.find((p) => p.categorySlug === "biometric-devices")?.images[0] ?? "/images/placeholder.png"}
+                  src={biometricProduct?.images[0] ?? "/images/placeholder.png"}
                   alt=""
                   fill
                   sizes="150px"
                   className="object-contain p-4"
                 />
               </div>
-              {/* Decorative shape */}
+              {/* Decorative DD shape */}
               <div
                 className="col-span-1 row-span-1 rounded-[24px] border border-[var(--line)] bg-[var(--tangerine)]"
               >
@@ -203,7 +211,7 @@ export default function Home() {
                 style={{ background: "var(--powder-blue-soft)" }}
               >
                 <Image
-                  src={catalogue.find((p) => p.categorySlug === "poe-switches")?.images[0] ?? "/images/placeholder.png"}
+                  src={poeProduct?.images[0] ?? "/images/placeholder.png"}
                   alt=""
                   fill
                   sizes="300px"
@@ -242,32 +250,30 @@ export default function Home() {
                   key={category.slug}
                   href={`/categories/${category.slug}`}
                   data-home-category
-                  className={`group relative overflow-hidden rounded-[24px] border border-[var(--line)] transition-transform duration-300 hover:scale-[1.01] ${spanClass}`}
+                  className={`category-panel group flex h-full flex-col justify-between p-5 sm:p-6 ${spanClass}`}
                   style={{ background: bgColor }}
                 >
-                  <div className="flex h-full flex-col justify-between p-5 sm:p-6">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-                        {products.length} {products.length === 1 ? "product" : "products"}
-                      </p>
-                      <h3 className={`mt-2 font-display font-bold leading-tight ${isLarge ? "text-3xl sm:text-4xl" : "text-xl sm:text-2xl"}`}>
-                        {category.name}
-                      </h3>
-                    </div>
-                    <div className="mt-4">
-                      <CategoryIllustration
-                        slug={category.slug}
-                        className={`transition-transform duration-500 group-hover:scale-105 ${isLarge ? "h-24 w-24 sm:h-32 sm:w-32" : "h-16 w-16 sm:h-20 sm:w-20"}`}
-                      />
-                    </div>
-                    <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold">
-                      Shop category
-                      <ArrowRight
-                        size={14}
-                        className="transition-transform group-hover:translate-x-1"
-                      />
-                    </span>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+                      {products.length} {products.length === 1 ? "product" : "products"}
+                    </p>
+                    <h3 className={`mt-2 font-display font-bold leading-tight ${isLarge ? "text-3xl sm:text-4xl" : "text-xl sm:text-2xl"}`}>
+                      {category.name}
+                    </h3>
                   </div>
+                  <div className="mt-4">
+                    <CategoryIllustration
+                      slug={category.slug}
+                      className={`category-panel-image ${isLarge ? "h-24 w-24 sm:h-32 sm:w-32" : "h-16 w-16 sm:h-20 sm:w-20"}`}
+                    />
+                  </div>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold">
+                    Shop category
+                    <ArrowRight
+                      size={14}
+                      className="transition-transform group-hover:translate-x-1"
+                    />
+                  </span>
                 </Link>
               );
             })}
@@ -336,29 +342,37 @@ export default function Home() {
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {compareProducts.map((product) => (
-                <Link
-                  key={product.id}
-                  href={`/products/${product.slug}`}
-                  className="group rounded-[20px] border border-[var(--line)] bg-[var(--surface)] p-3 transition-transform duration-300 hover:scale-[1.03]"
-                >
-                  <div className="relative aspect-square overflow-hidden rounded-2xl">
-                    <Image
-                      src={product.images[0]}
-                      alt={`${product.brand} ${product.model}`}
-                      fill
-                      sizes="(max-width: 768px) 30vw, 220px"
-                      className="object-contain p-3 sm:p-4"
-                    />
-                  </div>
-                  <p className="mt-2 truncate text-[10px] font-bold text-[var(--tangerine-text)] sm:text-xs">
-                    {product.model}
-                  </p>
-                  <p className="mt-0.5 truncate text-xs font-semibold text-[var(--muted)] sm:text-sm">
-                    {product.brand}
-                  </p>
-                </Link>
-              ))}
+              {compareProducts.map((product) => {
+                const eligible = getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() }).eligible;
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/products/${product.slug}`}
+                    className="group rounded-[20px] border border-[var(--line)] bg-[var(--surface)] p-3 transition-transform duration-300 hover:scale-[1.03]"
+                  >
+                    <div className="relative aspect-square overflow-hidden rounded-2xl">
+                      <Image
+                        src={product.images[0]}
+                        alt={`${product.brand} ${product.model}`}
+                        fill
+                        sizes="(max-width: 768px) 30vw, 220px"
+                        className="object-contain p-3 sm:p-4"
+                      />
+                    </div>
+                    <p className="mt-2 truncate text-[10px] font-bold text-[var(--tangerine-text)] sm:text-xs">
+                      {product.model}
+                    </p>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-[var(--muted)] sm:text-sm">
+                      {product.brand}
+                    </p>
+                    {eligible && (
+                      <p className="mt-1 text-xs font-bold">
+                        {formatPrice(product.sellingPriceInclGstPaise)}
+                      </p>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -396,7 +410,7 @@ export default function Home() {
               return (
                 <div
                   key={title as string}
-                  className="rounded-2xl border border-[var(--line)] bg-[var(--canvas)] p-5"
+                  className="surface-card p-5"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--tangerine-soft)]">
