@@ -44,19 +44,6 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
-/** Category-based colour for product image backgrounds */
-function categoryGalleryBg(categorySlug: string): string {
-  if (categorySlug.includes("dome")) return "var(--powder-blue-soft)";
-  if (categorySlug.includes("bullet")) return "var(--butter-soft)";
-  if (categorySlug.includes("color")) return categorySlug.includes("bullet")
-    ? "var(--peach)"
-    : "var(--coral-soft)";
-  if (categorySlug.includes("nvr")) return "var(--lilac-soft)";
-  if (categorySlug.includes("biometric")) return "var(--mint-soft)";
-  if (categorySlug.includes("poe") || categorySlug.includes("switch")) return "var(--technical-grey)";
-  return "var(--canvas)";
-}
-
 export default async function ProductPage({ params }: { params: Params }) {
   const { slug } = await params;
   const product = getProduct(slug);
@@ -73,7 +60,6 @@ export default async function ProductPage({ params }: { params: Params }) {
     .slice(0, 4);
   const whatsapp = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(`Hello, I need help with ${product.model} (${product.title}).`)}`;
   const siteUrl = siteConfig.url;
-  const galleryBg = categoryGalleryBg(product.categorySlug);
 
   const productSchema = {
     "@context": "https://schema.org",
@@ -117,36 +103,41 @@ export default async function ProductPage({ params }: { params: Params }) {
       <TrackRecentlyViewed productId={product.id} />
       <nav
         aria-label="Breadcrumb"
-        className="mb-6 flex flex-wrap gap-2 text-sm text-[var(--muted)]"
+        className="mb-6 flex flex-wrap gap-2 text-sm text-[var(--text-muted)]"
       >
-        <Link href="/" className="hover:text-[var(--ink)] transition-colors">Home</Link>
+        <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">Home</Link>
         <span>/</span>
-        <Link href="/products" className="hover:text-[var(--ink)] transition-colors">Products</Link>
+        <Link href="/products" className="hover:text-[var(--text-primary)] transition-colors">Products</Link>
         <span>/</span>
-        <span aria-current="page" className="text-[var(--ink)]">{product.model}</span>
+        <span aria-current="page" className="text-[var(--text-primary)]">{product.model}</span>
       </nav>
 
       {/* ── Product hero: gallery + info ─────────────────────── */}
-      <div className="grid gap-10 lg:grid-cols-[1.04fr_0.96fr] lg:gap-16">
-        <div className="relative aspect-square overflow-hidden rounded-[26px] border border-[var(--line)]" style={{ background: galleryBg }}>
+      <div className="grid gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
+        {/* Gallery — neutral bg */}
+        <div className="relative aspect-square overflow-hidden rounded-[var(--radius-container)] border border-[var(--border)] bg-[var(--surface-subtle)]">
           <ProductGallery images={product.images} alt={`${product.brand} ${product.model}`} />
         </div>
         <div className="lg:pt-2">
+          {/* Brand/category */}
           <p className="eyebrow">
             {product.brand} · {product.category}
           </p>
-          <h1 className="mt-3 font-display text-[clamp(2.5rem,5vw,5rem)] font-bold leading-[0.94] tracking-[-0.03em]">
+          {/* Title */}
+          <h1 className="mt-3 font-display text-[clamp(2rem,4vw,3.5rem)] font-bold leading-tight tracking-[-0.02em]">
             {product.title}
           </h1>
-          <p className="mt-3 text-sm font-bold uppercase tracking-[0.1em]" style={{ color: "var(--tangerine-text)" }}>
+          {/* Model (Geist Mono) */}
+          <p className="mt-3 font-mono text-sm font-medium text-[var(--text-secondary)]">
             {product.model}
           </p>
-          <p className="mt-5 text-base leading-7 text-[var(--ink-soft)]">{product.shortDescription}</p>
+          {/* Description */}
+          <p className="mt-5 text-base leading-7 text-[var(--text-secondary)]">{product.shortDescription}</p>
 
           {/* Price block */}
-          <div className="mt-6 border-y border-[var(--line)] py-5">
+          <div className="mt-6 border-y border-[var(--border)] py-5">
             {compareAt && product.compareAtLabel && (
-              <p className="text-xs text-[var(--muted)]">
+              <p className="text-xs text-[var(--text-muted)]">
                 <span className="price-old">
                   {product.compareAtLabel} {formatPrice(compareAt)}
                 </span>
@@ -158,13 +149,13 @@ export default async function ProductPage({ params }: { params: Params }) {
                 ? formatPrice(product.sellingPriceInclGstPaise)
                 : "Request latest price"}
             </p>
-            <p className="mt-1 text-xs text-[var(--muted)]">
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
               {eligibility.eligible
                 ? "Inclusive of all taxes · GST invoice provided"
                 : "Current price and availability must be confirmed before checkout"}
             </p>
             {product.priceVerifiedAt && eligibility.eligible && (
-              <p className="mt-1.5 text-[11px] text-[var(--muted)]">
+              <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">
                 Price verified{" "}
                 {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(
                   new Date(product.priceVerifiedAt),
@@ -196,17 +187,17 @@ export default async function ProductPage({ params }: { params: Params }) {
           <DeliveryChecker />
 
           {/* Trust badges */}
-          <div className="mt-6 grid gap-2.5 rounded-2xl border border-[var(--line)] p-4">
+          <div className="mt-6 grid gap-2.5 rounded-[var(--radius-container)] border border-[var(--border)] p-4">
             <p className="flex items-center gap-2.5 text-sm">
               <ShieldCheck size={16} style={{ color: "var(--success)" }} />
               <span className="font-semibold">{product.warrantySummary}</span>
             </p>
-            <p className="flex items-center gap-2.5 text-sm text-[var(--ink-soft)]">
-              <FileCheck2 size={16} className="text-[var(--muted)]" />
+            <p className="flex items-center gap-2.5 text-sm text-[var(--text-secondary)]">
+              <FileCheck2 size={16} className="text-[var(--text-muted)]" />
               GST invoice with exact model
             </p>
-            <p className="flex items-center gap-2.5 text-sm text-[var(--ink-soft)]">
-              <Truck size={16} className="text-[var(--muted)]" />
+            <p className="flex items-center gap-2.5 text-sm text-[var(--text-secondary)]">
+              <Truck size={16} className="text-[var(--text-muted)]" />
               Delivery timing confirmed before dispatch
             </p>
           </div>
@@ -217,7 +208,7 @@ export default async function ProductPage({ params }: { params: Params }) {
       <section className="section-space !pb-10">
         <div className="max-w-2xl mb-8">
           <p className="eyebrow">Product information</p>
-          <h2 className="display-section mt-3">Details you can scan.</h2>
+          <h2 className="section-title mt-3">Details you can scan.</h2>
         </div>
         <div className="container-reading">
           <div className="grid gap-3">
@@ -236,14 +227,14 @@ export default async function ProductPage({ params }: { params: Params }) {
             ].map(([title, body]) => (
               <details
                 key={title}
-                className="group rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5"
+                className="group rounded-[var(--radius-container)] border border-[var(--border)] bg-[var(--surface)] p-5"
                 open={title === "Overview"}
               >
                 <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between font-display text-lg font-bold">
                   <span>{title}</span>
                   <span className="text-xl transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <p className="pb-2 pt-3 leading-7 text-[var(--ink-soft)] text-sm">{body}</p>
+                <p className="pb-2 pt-3 leading-7 text-[var(--text-secondary)] text-sm">{body}</p>
               </details>
             ))}
           </div>
@@ -263,46 +254,43 @@ export default async function ProductPage({ params }: { params: Params }) {
         <div className="container-standard">
           <div className="max-w-2xl mb-8">
             <p className="eyebrow">Technical specifications</p>
-            <h2 className="display-section mt-3">
-              Exact model.
-            </h2>
+            <h2 className="section-title mt-3">Exact model.</h2>
           </div>
-          <dl className="overflow-hidden rounded-[22px] border border-[var(--line)]">
-            {Object.entries(product.specs).map(([label, value]) => (
+          <dl className="overflow-hidden rounded-[var(--radius-container)] border border-[var(--border)]">
+            {Object.entries(product.specs).map(([label, value], index) => (
               <div
                 key={label}
-                className="grid border-b border-[var(--line)] last:border-b-0 sm:grid-cols-[0.38fr_0.62fr]"
+                className={`grid border-b border-[var(--border)] last:border-b-0 sm:grid-cols-[0.38fr_0.62fr] ${index % 2 === 0 ? "" : "bg-[var(--surface-subtle)]"}`}
               >
-                <dt className="px-5 py-3.5 text-sm font-bold bg-[var(--canvas)]">{label}</dt>
-                <dd className="px-5 py-3.5 text-sm leading-6 text-[var(--ink-soft)] bg-[var(--surface)]">{value}</dd>
+                <dt className="px-5 py-3.5 text-sm font-semibold">{label}</dt>
+                <dd className="px-5 py-3.5 text-sm leading-6 text-[var(--text-secondary)]">{value}</dd>
               </div>
             ))}
           </dl>
         </div>
       </section>
 
-      {/* ── Downloads ───────────────────────────────────────── */}
+      {/* ── Downloads — neutral list ────────────────────────── */}
       {product.documents.length > 0 && (
         <section className="section-space !pt-10">
           <div className="container-standard">
-            <div className="rounded-[24px] p-7 sm:p-10" style={{ background: "var(--ink)" }}>
-              <p className="eyebrow !text-white/50">Exact-model downloads</p>
-              <h2 className="mt-3 font-display text-4xl font-bold text-white sm:text-5xl">
-                Keep the technical facts close.
-              </h2>
-              <div className="mt-6 flex flex-wrap gap-2.5">
-                {product.documents.map((document) => (
-                  <a
-                    key={document.url}
-                    href={document.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/20"
-                  >
-                    <Download size={15} /> {document.title}
-                  </a>
-                ))}
-              </div>
+            <p className="eyebrow">Exact-model downloads</p>
+            <h2 className="section-title mt-3">Keep the technical facts close.</h2>
+            <div className="mt-6 grid gap-2">
+              {product.documents.map((document) => (
+                <a
+                  key={document.url}
+                  href={document.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 rounded-[var(--radius-btn)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold transition-colors hover:bg-[var(--surface-hover)]"
+                >
+                  <Download size={15} className="text-[var(--text-muted)]" />
+                  <span className="text-[var(--text-secondary)]">{document.type}</span>
+                  <span className="font-mono text-xs text-[var(--text-muted)]">{document.model}</span>
+                  <span className="font-semibold">{document.title}</span>
+                </a>
+              ))}
             </div>
           </div>
         </section>
@@ -310,11 +298,11 @@ export default async function ProductPage({ params }: { params: Params }) {
 
       {/* ── Related products ────────────────────────────────── */}
       {related.length > 0 && (
-        <section className="section-space !pt-10" style={{ background: "var(--canvas-warm)" }}>
+        <section className="section-space !pt-10">
           <div className="container-standard">
             <p className="eyebrow">Related exact models</p>
-            <h2 className="display-section mt-3">Worth comparing.</h2>
-            <div className="mt-8 grid gap-4 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+            <h2 className="section-title mt-3">Worth comparing.</h2>
+            <div className="mt-8 grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
               {related.map((item) => (
                 <ProductCard key={item.id} product={item} />
               ))}

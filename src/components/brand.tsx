@@ -13,25 +13,32 @@ export function Brand({
   responsive?: boolean;
   compactMark?: boolean;
 }) {
+  /* Full horizontal logo: monogram + "DeviceDestination" wordmark on one line.
+     Do not split the wordmark across two lines in the main header.
+     Dark-bg version: white wordmark, charcoal monogram strokes, orange aperture.
+     Light-bg version: charcoal wordmark, charcoal monogram strokes, orange aperture. */
+
+  const wordmarkColor = inverted ? "text-white" : "text-[var(--text-primary)]";
+
   return (
     <Link
       href="/"
-      className={`group inline-flex items-center ${compactMark ? "min-h-11 gap-2.5" : "min-h-11 gap-3"}`}
+      className={`group inline-flex items-center ${compactMark ? "min-h-11 gap-2" : "min-h-11 gap-3"}`}
       aria-label={`${siteConfig.name} home`}
     >
       <span
         aria-hidden="true"
-        className={`brand-mark grid shrink-0 place-items-center bg-[var(--tangerine)] text-[var(--ink)] transition-transform group-hover:-rotate-2 group-hover:scale-105 ${
-          compactMark ? "h-9 w-9 rounded-[11px] p-1.5" : "h-11 w-11 rounded-[14px] p-2"
+        className={`shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+          compactMark ? "h-8 w-8" : "h-10 w-10"
         }`}
       >
-        <DDMark tone="dark" className="h-full w-full" />
+        <DDMark tone={inverted ? "light" : "dark"} className="h-full w-full" />
       </span>
       {!compact && (
         <span
-          className={`font-display font-bold tracking-[-0.025em] ${compactMark ? "text-lg" : "text-xl"} ${responsive ? "hidden min-[430px]:inline" : ""} ${inverted ? "text-white" : "text-[var(--ink)]"}`}
+          className={`font-display font-semibold tracking-[-0.025em] ${compactMark ? "text-base" : "text-lg"} ${responsive ? "hidden min-[430px]:inline" : ""} ${wordmarkColor}`}
         >
-          Device<span className="text-[var(--tangerine-text)]">Destination</span>
+          Device<span className="text-[var(--accent)]">Destination</span>
         </span>
       )}
     </Link>

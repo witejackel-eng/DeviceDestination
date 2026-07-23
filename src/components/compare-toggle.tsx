@@ -28,7 +28,7 @@ export function CompareToggle({
       disabled={atLimit || incompatible}
       className={
         compact
-          ? "inline-flex items-center gap-1.5 min-h-11 text-xs font-bold text-[var(--muted)] disabled:opacity-45 transition-colors hover:text-[var(--ink)]"
+          ? "inline-flex items-center gap-1.5 min-h-11 text-xs font-bold text-[var(--text-muted)] disabled:opacity-45 transition-colors hover:text-[var(--text-primary)]"
           : "button-secondary w-full"
       }
       aria-pressed={selected}

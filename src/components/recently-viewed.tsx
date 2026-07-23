@@ -46,10 +46,10 @@ export function RecentlyViewed({ excludeId }: { excludeId?: string }) {
     <section className="section-space !pt-10" aria-labelledby="recently-viewed-title">
       <div className="container-standard">
         <p className="eyebrow">Continue shopping</p>
-        <h2 id="recently-viewed-title" className="display-section mt-4">
+        <h2 id="recently-viewed-title" className="section-title mt-4">
           Recently viewed.
         </h2>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-8 grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

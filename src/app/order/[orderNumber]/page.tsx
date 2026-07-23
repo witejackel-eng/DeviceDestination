@@ -39,14 +39,14 @@ export default async function OrderStatusPage({
   return (
     <div className="container-reading section-space !pt-14">
       <p className="eyebrow">Order status</p>
-      <h1 className="display-section mt-4">{verified ? orderNumber : "Reference required"}</h1>
+      <h1 className="section-title mt-4">{verified ? orderNumber : "Reference required"}</h1>
       <div className="surface-card mt-8 p-8">
         {verified ? (
           <>
-            <p className="font-display text-3xl font-semibold">
+            <p className="font-display text-2xl font-semibold">
               {record ? `Order ${record.status.replaceAll("_", " ")}` : "Confirmation recorded"}
             </p>
-            <p className="mt-4 leading-7 text-[var(--muted)]">
+            <p className="mt-4 leading-7 text-[var(--text-muted)]">
               {record
                 ? `Email: ${record.emailStatus}. WhatsApp: ${record.whatsappStatus}.`
                 : "The secure reference is valid. Live fulfilment details appear after production storage is activated."}
@@ -62,10 +62,10 @@ export default async function OrderStatusPage({
           </>
         ) : (
           <>
-            <p className="font-display text-3xl font-semibold">
+            <p className="font-display text-2xl font-semibold">
               Use your secure confirmation link.
             </p>
-            <p className="mt-4 text-[var(--muted)]">
+            <p className="mt-4 text-[var(--text-muted)]">
               A bare order number does not reveal customer or payment data.
             </p>
           </>

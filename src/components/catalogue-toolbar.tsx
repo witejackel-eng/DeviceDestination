@@ -71,13 +71,13 @@ export function CatalogueToolbar({
   return (
     <>
       <div className="catalogue-toolbar">
-        {/* Search */}
+        {/* Search indicator */}
         <div className="filter-pill cursor-default !gap-2">
           <Search size={14} />
           {q ? (
             <span className="max-w-[120px] truncate">{q}</span>
           ) : (
-            <span className="text-[var(--muted)]">Search model…</span>
+            <span className="text-[var(--text-muted)]">Search model…</span>
           )}
         </div>
 
@@ -95,13 +95,13 @@ export function CatalogueToolbar({
             <option value="price-high">Price: high to low</option>
             <option value="newest">Recently verified</option>
           </select>
-          <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--muted)]" />
+          <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]" />
         </div>
 
         {/* Desktop: Category pills */}
         <div className="hidden lg:flex items-center gap-1.5">
           <FilterLink href="/products" active={!category} label="All" />
-          <div className="w-px h-4 bg-[var(--line)]" />
+          <div className="w-px h-4 bg-[var(--border)]" />
           <FilterLink
             href={buildHref({ category: "dome-cameras" })}
             active={category === "dome-cameras"}
@@ -143,7 +143,7 @@ export function CatalogueToolbar({
           <SlidersHorizontal size={14} />
           All filters
           {activeCount > 0 && (
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--tangerine)] px-1.5 text-[10px] font-bold text-[var(--ink)]">
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-[var(--accent-contrast)]">
               {activeCount}
             </span>
           )}
@@ -166,18 +166,18 @@ export function CatalogueToolbar({
               </Dialog.Overlay>
               <Dialog.Content asChild forceMount>
                 <motion.div
-                  className="fixed inset-y-0 right-0 z-[90] flex w-[min(94vw,480px)] flex-col bg-[var(--canvas)] shadow-2xl"
+                  className="fixed inset-y-0 right-0 z-[90] flex w-[min(94vw,480px)] flex-col bg-[var(--surface)] shadow-2xl"
                   initial={reduceMotion ? false : { x: "100%" }}
                   animate={{ x: 0 }}
                   exit={{ x: "100%" }}
                   transition={springs.drawer}
                 >
-                  <div className="flex items-center justify-between border-b border-[var(--line)] p-5 sm:p-6">
+                  <div className="flex items-center justify-between border-b border-[var(--border)] p-5 sm:p-6">
                     <Dialog.Title className="font-display text-2xl font-bold">
                       Filters
                     </Dialog.Title>
                     <Dialog.Close
-                      className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--line)]"
+                      className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-btn)] border border-[var(--border)]"
                       aria-label="Close filters"
                     >
                       <X size={18} />
@@ -225,7 +225,7 @@ function FilterLink({ href, active, label }: { href: string; active: boolean; la
   );
 }
 
-/* ── Filter drawer form (renders actual form for submit) ───── */
+/* ── Filter drawer form ────────────────────────────────────── */
 
 function FilterDrawerForm({
   q, category, brand, sort, resolution, poe, availability, price, authentication,
@@ -235,8 +235,8 @@ function FilterDrawerForm({
     <form action="/products" className="grid gap-5">
       {/* Search */}
       <FilterField label="Search exact model">
-        <div className="flex items-center rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3">
-          <Search size={15} className="text-[var(--muted)]" />
+        <div className="flex items-center rounded-[var(--radius-btn)] border border-[var(--border)] bg-[var(--surface)] px-3">
+          <Search size={15} className="text-[var(--text-muted)]" />
           <input name="q" defaultValue={q} placeholder="e.g. CP-UNC-DA21L3C-Q" className="h-11 min-w-0 flex-1 bg-transparent px-2 text-sm outline-none" />
         </div>
       </FilterField>
@@ -322,7 +322,7 @@ function FilterDrawerForm({
 
       <div className="grid gap-2 pt-2">
         <button className="button-primary w-full" type="submit">Apply filters</button>
-        <Link href="/products" className="button-quiet w-full text-center">Clear all</Link>
+        <Link href="/products" className="button-tertiary w-full text-center">Clear all</Link>
       </div>
     </form>
   );
@@ -344,7 +344,7 @@ function Select({ name, defaultValue, options }: { name: string; defaultValue: s
       id={name}
       name={name}
       defaultValue={defaultValue}
-      className="h-11 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 text-sm"
+      className="h-11 w-full rounded-[var(--radius-btn)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
     >
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>

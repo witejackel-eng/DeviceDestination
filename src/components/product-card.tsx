@@ -17,20 +17,6 @@ import {
 import { getPriceMaxAgeDays } from "@/config/site";
 import { springs } from "@/lib/motion/constants";
 
-/** Map category slugs to CSS class suffixes for colour backgrounds. */
-function categoryImageClass(categorySlug: string): string {
-  if (categorySlug.includes("dome")) return "product-card-image--cat-dome-cameras";
-  if (categorySlug.includes("bullet")) return "product-card-image--cat-bullet-cameras";
-  if (categorySlug.includes("color")) return categorySlug.includes("bullet")
-    ? "product-card-image--cat-color-bullet-cameras"
-    : "product-card-image--cat-color-dome-cameras";
-  if (categorySlug.includes("nvr")) return "product-card-image--cat-nvr-systems";
-  if (categorySlug.includes("biometric")) return "product-card-image--cat-biometric-devices";
-  if (categorySlug.includes("poe") || categorySlug.includes("switch"))
-    return "product-card-image--cat-poe-switches";
-  return "";
-}
-
 export function ProductCard({ product }: { product: Product }) {
   const reduceMotion = useReducedMotion();
   const eligibility = getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() });
@@ -39,8 +25,6 @@ export function ProductCard({ product }: { product: Product }) {
     product.sellingPriceInclGstPaise === null
       ? null
       : calculateDiscountPercent(product.sellingPriceInclGstPaise, compareAt);
-
-  const imgClass = categoryImageClass(product.categorySlug);
 
   /* Compare state */
   const compareIds = useCompareStore((state) => state.ids);
@@ -53,13 +37,13 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <motion.article
       layout
-      whileHover={reduceMotion ? undefined : { y: -3 }}
+      whileHover={reduceMotion ? undefined : { y: -2 }}
       transition={springs.interface}
       className="product-card group"
     >
       <Link
         href={`/products/${product.slug}`}
-        className={`product-card-image block ${imgClass}`}
+        className="product-card-image block"
       >
         <Image
           src={product.images[0]}
@@ -68,10 +52,9 @@ export function ProductCard({ product }: { product: Product }) {
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1440px) 22vw, 18vw"
           className="object-contain p-[12%]"
         />
-        <span className="product-card-model">{product.model}</span>
       </Link>
 
-      {/* Compare button at image corner — always visible on mobile, hover-visible on desktop */}
+      {/* Compare button */}
       <button
         type="button"
         onClick={(e) => {
@@ -96,15 +79,30 @@ export function ProductCard({ product }: { product: Product }) {
       </button>
 
       <div className="product-card-info">
+        {/* Brand/category label */}
         <p className="product-card-brand">{product.brand} · {product.category}</p>
+
+        {/* Title (max 2 lines) */}
         <Link href={`/products/${product.slug}`} className="product-card-title">
           {product.title}
         </Link>
 
+        {/* Exact model (Geist Mono) */}
+        <p className="product-card-model">{product.model}</p>
+
+        {/* Availability */}
+        <p
+          className="product-card-stock"
+          data-status={product.stockStatus === "in_stock" ? "in_stock" : undefined}
+        >
+          {product.stockStatus === "in_stock" ? "In stock" : product.stockStatus.replaceAll("_", " ")}
+        </p>
+
+        {/* Footer: price + add to cart */}
         <div className="product-card-footer">
           <div>
             {compareAt && product.compareAtLabel && (
-              <p className="text-[11px] text-[var(--muted)]">
+              <p className="text-[11px] text-[var(--text-muted)]">
                 <span className="price-old">
                   {formatPrice(compareAt)}
                 </span>

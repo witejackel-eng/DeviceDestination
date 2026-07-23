@@ -15,11 +15,11 @@ export function MobileProductBar({ productId }: { productId: string }) {
       initial={reduceMotion ? false : { y: 70 }}
       animate={{ y: 0 }}
       transition={springs.drawer}
-      className="fixed inset-x-0 bottom-0 z-50 flex items-center gap-3 border-t border-[var(--line)] bg-[rgb(255_253_248/0.96)] p-3 backdrop-blur-xl md:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 flex items-center gap-3 border-t border-[var(--border)] bg-[rgb(255_255_255/0.96)] p-3 backdrop-blur-xl md:hidden"
       aria-label="Mobile purchase actions"
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--tangerine-text)]">
+        <p className="font-mono text-xs font-medium text-[var(--text-secondary)] truncate">
           {product.model}
         </p>
         <p className="font-display text-xl font-bold">

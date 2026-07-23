@@ -25,11 +25,11 @@ export default async function OrderSuccessPage({
     return (
       <div className="container-reading section-space !pt-14">
         <div className="surface-card p-8 text-center">
-          <CircleAlert className="mx-auto text-[var(--danger)]" size={42} />
-          <h1 className="mt-6 font-display text-4xl font-semibold">
+          <CircleAlert className="mx-auto text-[var(--error)]" size={42} />
+          <h1 className="mt-6 font-display text-3xl font-semibold">
             Confirmation link is invalid.
           </h1>
-          <p className="mt-4 leading-7 text-[var(--muted)]">
+          <p className="mt-4 leading-7 text-[var(--text-muted)]">
             No payment or order status is being claimed on this page. Contact support if you
             completed payment.
           </p>
@@ -44,16 +44,16 @@ export default async function OrderSuccessPage({
       <div className="surface-card p-8 text-center sm:p-12">
         <CheckCircle2 className="mx-auto text-[var(--success)]" size={48} />
         <p className="eyebrow mt-7">Server-confirmed reference</p>
-        <h1 className="mt-4 font-display text-5xl font-semibold">Order received.</h1>
-        <p className="mt-5 text-lg text-[var(--muted)]">
-          Reference <strong className="text-[var(--ink)]">{orderNumber}</strong>
+        <h1 className="mt-4 font-display text-4xl font-semibold">Order received.</h1>
+        <p className="mt-5 text-lg text-[var(--text-muted)]">
+          Reference <strong className="text-[var(--text-primary)]">{orderNumber}</strong>
         </p>
         {testMode ? (
-          <p className="mt-4 rounded-xl bg-[var(--tangerine-soft)] p-4 text-sm">
+          <p className="mt-4 rounded-[var(--radius-btn)] bg-[var(--accent-soft)] p-4 text-sm">
             Local test mode confirmed the order workflow. No real payment was captured.
           </p>
         ) : (
-          <p className="mt-4 leading-7 text-[var(--muted)]">
+          <p className="mt-4 leading-7 text-[var(--text-muted)]">
             The payment response passed server signature verification. Webhook reconciliation
             remains the final payment record.
           </p>

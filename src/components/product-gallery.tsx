@@ -51,7 +51,7 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
               type="button"
               key={image}
               onClick={() => setSelected(image)}
-              className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border transition-shadow ${selected === image ? "border-[var(--tangerine)] shadow-[0_0_0_2px_var(--tangerine-border)]" : "border-[var(--line)]"}`}
+              className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-[var(--radius-stage)] border transition-shadow ${selected === image ? "border-[var(--accent)] shadow-[0_0_0_2px_var(--accent-border)]" : "border-[var(--border)]"}`}
               aria-label={`View product image ${index + 1}`}
               aria-pressed={selected === image}
             >

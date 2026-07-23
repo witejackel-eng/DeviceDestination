@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Manrope } from "next/font/google";
+import localFont from "next/font/local";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CartDrawer } from "@/components/cart-drawer";
@@ -10,16 +10,38 @@ import { CookiePreferencesModal } from "@/components/cookie-preferences-modal";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
 
-const bricolageGrotesque = Bricolage_Grotesque({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+/* Geist Sans — loaded from next/font/local using the font files shipped
+   by the @geist/font package or the Vercel Geist font distribution.
+   We use the variable weight file for maximum flexibility. */
+const geistSans = localFont({
+  src: [
+    {
+      path: "../../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2",
+      style: "normal",
+    },
+  ],
   variable: "--font-display",
   display: "swap",
 });
 
-const manrope = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+const geistMono = localFont({
+  src: [
+    {
+      path: "../../node_modules/geist/dist/fonts/geist-mono/GeistMono-Variable.woff2",
+      style: "normal",
+    },
+  ],
+  variable: "--font-mono",
+  display: "swap",
+});
+
+const geistBody = localFont({
+  src: [
+    {
+      path: "../../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2",
+      style: "normal",
+    },
+  ],
   variable: "--font-body",
   display: "swap",
 });
@@ -41,7 +63,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "DeviceDestination",
-    description: "Security hardware, selected with care.",
+    description: "Security hardware, specified clearly.",
     url: siteUrl,
     siteName: "DeviceDestination",
     locale: "en_IN",
@@ -50,12 +72,12 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "DeviceDestination",
-    description: "Security hardware, selected with care.",
+    description: "Security hardware, specified clearly.",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FF7800",
+  themeColor: "#FF6A00",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -77,11 +99,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   };
 
   return (
-    <html lang="en-IN" className={`${bricolageGrotesque.variable} ${manrope.variable}`}>
+    <html lang="en-IN" className={`${geistSans.variable} ${geistBody.variable} ${geistMono.variable}`}>
       <body>
         <a
           href="#main-content"
-          className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-xl bg-[var(--ink)] px-4 py-3 text-sm font-semibold text-white focus:translate-y-0 transition-transform"
+          className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-xl bg-[var(--dark)] px-4 py-3 text-sm font-semibold text-white focus:translate-y-0 transition-transform"
         >
           Skip to content
         </a>

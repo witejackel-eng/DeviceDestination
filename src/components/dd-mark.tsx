@@ -4,47 +4,61 @@ type DDMarkProps = {
 };
 
 export function DDMark({ tone = "brand", className }: DDMarkProps) {
-  const monochrome = tone !== "brand";
-  const leftFill = monochrome ? "currentColor" : "var(--ink)";
-  const rightFill = monochrome ? "currentColor" : "var(--tangerine)";
-  const arrowFill = monochrome ? "currentColor" : "var(--tangerine)";
-  const lensStroke = monochrome ? "currentColor" : "var(--canvas)";
-  const irisFill = monochrome ? "currentColor" : "var(--ink)";
-  const nodeFill = monochrome ? "currentColor" : "var(--ink)";
+  /* Geometric DD monogram:
+     - Two opposing D-shaped outlines
+     - A small central circular aperture (orange on all tones)
+     - Negative space subtly suggests camera lens, hardware port, connected devices, and the initials DD
+     - No gradients, no excessive detail, no cartoon styling */
+
+  const strokeColor = tone === "light" ? "#FFFFFF" : tone === "brand" ? "#111214" : "#111214";
+  const apertureFill = "#FF6A00"; // Orange accent always visible on the aperture
 
   return (
     <svg
-      data-anime-brand-mark
       viewBox="0 0 40 40"
       className={className}
       role="img"
       aria-label="DeviceDestination"
+      fill="none"
     >
+      {/* Left D outline — opens toward center */}
       <path
-        data-dd-part="d-left"
-        d="M9,8 L9,32 A12,12 0 0 1 9,8 Z"
-        fill={leftFill}
+        d="M7 7 L7 33 C7 33 7 33 7 33"
+        stroke={strokeColor}
+        strokeWidth="2.5"
+        strokeLinecap="round"
       />
       <path
-        data-dd-part="d-right"
-        d="M31,8 L31,32 A12,12 0 0 0 31,8 Z"
-        fill={rightFill}
+        d="M7 7 C18 7, 20 13, 20 20 C20 27, 18 33, 7 33"
+        stroke={strokeColor}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <path data-dd-part="d-right" d="M31,15 L37,20 L31,25 Z" fill={arrowFill} />
-      <circle
-        data-dd-part="lens"
-        cx="20"
-        cy="20"
-        r="6"
-        fill="none"
-        stroke={lensStroke}
-        strokeWidth="1.6"
+
+      {/* Right D outline — opens toward center, mirrored */}
+      <path
+        d="M33 7 L33 33"
+        stroke={strokeColor}
+        strokeWidth="2.5"
+        strokeLinecap="round"
       />
-      <circle data-dd-part="lens" cx="20" cy="20" r="2.2" fill={irisFill} />
-      <circle data-dd-part="node" cx="9" cy="8" r="1.6" fill={nodeFill} opacity="0.55" />
-      <circle data-dd-part="node" cx="9" cy="32" r="1.6" fill={nodeFill} opacity="0.55" />
-      <circle data-dd-part="node" cx="31" cy="8" r="1.6" fill={nodeFill} opacity="0.55" />
-      <circle data-dd-part="node" cx="31" cy="32" r="1.6" fill={nodeFill} opacity="0.55" />
+      <path
+        d="M33 7 C22 7, 20 13, 20 20 C20 27, 22 33, 33 33"
+        stroke={strokeColor}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Central circular aperture — orange accent point */}
+      <circle cx="20" cy="20" r="3" fill={apertureFill} />
+
+      {/* Tiny dot accents at D corners — suggesting hardware port pins */}
+      <circle cx="7" cy="7" r="1" fill={strokeColor} opacity="0.4" />
+      <circle cx="7" cy="33" r="1" fill={strokeColor} opacity="0.4" />
+      <circle cx="33" cy="7" r="1" fill={strokeColor} opacity="0.4" />
+      <circle cx="33" cy="33" r="1" fill={strokeColor} opacity="0.4" />
     </svg>
   );
 }

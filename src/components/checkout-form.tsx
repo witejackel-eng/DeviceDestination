@@ -65,7 +65,7 @@ export function CheckoutForm() {
     resolver: zodResolver(checkoutSchema),
     defaultValues: { installationRequested: false, policyConsent: false, website: "" },
   });
-  const input = "h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3";
+  const input = "h-12 w-full rounded-[var(--radius-btn)] border border-[var(--border)] bg-[var(--surface)] px-3";
 
   const onSubmit = handleSubmit(async (customer) => {
     setSubmitting(true);
@@ -155,7 +155,7 @@ export function CheckoutForm() {
   return (
     <form onSubmit={onSubmit} className="grid gap-8 lg:grid-cols-[1.12fr_0.88fr]">
       <div className="surface-card grid gap-5 p-6 sm:p-8">
-        <h2 className="font-display text-3xl font-semibold">Delivery and invoice</h2>
+        <h2 className="font-display text-2xl font-semibold">Delivery and invoice</h2>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Full name" error={errors.name?.message}>
             <input className={input} {...register("name")} autoComplete="name" />
@@ -178,7 +178,7 @@ export function CheckoutForm() {
         </div>
         <Field label="Address" error={errors.address?.message}>
           <textarea
-            className="min-h-24 w-full rounded-xl border border-[var(--line)] bg-white p-3"
+            className="min-h-24 w-full rounded-[var(--radius-btn)] border border-[var(--border)] bg-[var(--surface)] p-3"
             {...register("address")}
           />
         </Field>
@@ -192,7 +192,7 @@ export function CheckoutForm() {
         </div>
         <Field label="Delivery instructions (optional)" error={errors.instructions?.message}>
           <textarea
-            className="min-h-20 w-full rounded-xl border border-[var(--line)] bg-white p-3"
+            className="min-h-20 w-full rounded-[var(--radius-btn)] border border-[var(--border)] bg-[var(--surface)] p-3"
             {...register("instructions")}
           />
         </Field>
@@ -203,16 +203,16 @@ export function CheckoutForm() {
           className="absolute -left-[9999px]"
           aria-hidden="true"
         />
-        <label className="flex min-h-12 items-start gap-3 rounded-xl bg-[var(--canvas-alt)] p-4 text-sm">
+        <label className="flex min-h-12 items-start gap-3 rounded-[var(--radius-btn)] bg-[var(--surface-subtle)] p-4 text-sm">
           <input
             type="checkbox"
             {...register("installationRequested")}
-            className="mt-0.5 h-5 w-5 accent-[var(--tangerine)]"
+            className="mt-0.5 h-5 w-5 accent-[var(--accent)]"
           />
           <span>
             <strong>Request installation help</strong>
             <br />
-            <span className="text-[var(--muted)]">
+            <span className="text-[var(--text-muted)]">
               A third-party installer will quote separately after checking the site.
             </span>
           </span>
@@ -221,7 +221,7 @@ export function CheckoutForm() {
           <input
             type="checkbox"
             {...register("policyConsent")}
-            className="mt-0.5 h-5 w-5 accent-[var(--tangerine)]"
+            className="mt-0.5 h-5 w-5 accent-[var(--accent)]"
           />
           <span>
             I agree to the{" "}
@@ -240,16 +240,16 @@ export function CheckoutForm() {
           </span>
         </label>
         {errors.policyConsent?.message && (
-          <p className="text-sm text-[var(--danger)]">{errors.policyConsent.message}</p>
+          <p className="text-sm text-[var(--error)]">{errors.policyConsent.message}</p>
         )}
       </div>
       <aside className="surface-card h-fit p-6 lg:sticky lg:top-28">
-        <h2 className="font-display text-3xl font-semibold">Order summary</h2>
-        <ul className="mt-5 grid gap-3 border-b border-[var(--line)] pb-5 text-sm">
+        <h2 className="font-display text-2xl font-semibold">Order summary</h2>
+        <ul className="mt-5 grid gap-3 border-b border-[var(--border)] pb-5 text-sm">
           {resolved.map(({ product, quantity }) => (
             <li key={product.id} className="flex justify-between gap-4">
               <span>
-                {product.model} × {quantity}
+                <span className="font-mono text-xs text-[var(--text-muted)]">{product.model}</span> × {quantity}
               </span>
               <strong>{formatPrice((product.sellingPriceInclGstPaise ?? 0) * quantity)}</strong>
             </li>
@@ -268,17 +268,17 @@ export function CheckoutForm() {
             <dt>Installation</dt>
             <dd>Quoted separately</dd>
           </div>
-          <div className="flex justify-between border-t border-[var(--line)] pt-4 text-lg">
+          <div className="flex justify-between border-t border-[var(--border)] pt-4 text-lg">
             <dt className="font-bold">Grand total</dt>
             <dd className="font-bold">{formatPrice(totals.grandTotalInclGstPaise)}</dd>
           </div>
-          <div className="flex justify-between text-[var(--muted)]">
+          <div className="flex justify-between text-[var(--text-muted)]">
             <dt>Includes GST</dt>
             <dd>{formatPrice(totals.includedGstPaise)}</dd>
           </div>
         </dl>
         {serverError && (
-          <p className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-[var(--danger)]" role="alert">
+          <p className="mt-5 rounded-[var(--radius-btn)] bg-red-50 p-4 text-sm text-[var(--error)]" role="alert">
             {serverError}
           </p>
         )}
@@ -289,7 +289,7 @@ export function CheckoutForm() {
         >
           {submitting ? "Checking order…" : "Continue to secure payment"}
         </button>
-        <p className="mt-3 text-center text-xs text-[var(--muted)]">
+        <p className="mt-3 text-center text-xs text-[var(--text-muted)]">
           Cart prices are rechecked on the server before payment.
         </p>
       </aside>
@@ -307,10 +307,10 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="grid gap-2 text-sm font-bold">
+    <label className="grid gap-2 text-sm font-semibold">
       {label}
       {children}
-      {error && <span className="text-xs font-medium text-[var(--danger)]">{error}</span>}
+      {error && <span className="text-xs font-medium text-[var(--error)]">{error}</span>}
     </label>
   );
 }

@@ -17,7 +17,7 @@ export function DeliveryChecker() {
       }}
       className="mt-5"
     >
-      <label htmlFor="delivery-pin" className="text-sm font-bold">
+      <label htmlFor="delivery-pin" className="text-sm font-semibold">
         Check delivery PIN
       </label>
       <div className="mt-2 flex gap-2">
@@ -27,7 +27,7 @@ export function DeliveryChecker() {
           maxLength={6}
           value={pincode}
           onChange={(event) => setPincode(event.target.value.replace(/\D/g, ""))}
-          className="h-12 min-w-0 flex-1 rounded-xl border border-[var(--line)] bg-white px-3"
+          className="h-12 min-w-0 flex-1 rounded-[var(--radius-btn)] border border-[var(--border)] bg-[var(--surface)] px-3"
           placeholder="110075"
         />
         <button type="submit" className="button-secondary">
@@ -35,7 +35,7 @@ export function DeliveryChecker() {
         </button>
       </div>
       {message && (
-        <p className="mt-2 text-sm text-[var(--muted)]" aria-live="polite">
+        <p className="mt-2 text-sm text-[var(--text-muted)]" aria-live="polite">
           {message}
         </p>
       )}

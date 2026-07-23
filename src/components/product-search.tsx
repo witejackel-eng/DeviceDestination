@@ -4,20 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { MessageCircle, Phone, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { catalogue, searchProducts } from "@/data/catalog";
-import { getPriceMaxAgeDays, siteConfig } from "@/config/site";
+import { searchProducts } from "@/data/catalog";
+import { getPriceMaxAgeDays } from "@/config/site";
 import { formatPrice, getPurchaseEligibility } from "@/lib/products";
 import { durations, easings } from "@/lib/motion/constants";
-
-const suggestedCategories = [
-  ["Dome cameras", "/categories/dome-cameras"],
-  ["Bullet cameras", "/categories/bullet-cameras"],
-  ["NVR systems", "/categories/nvr-systems"],
-  ["Biometric devices", "/categories/biometric-devices"],
-  ["PoE switches", "/categories/poe-switches"],
-] as const;
 
 function Highlight({ text, query }: { text: string; query: string }) {
   const term = query.trim();
@@ -27,7 +19,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, index)}
-      <mark className="rounded bg-[var(--tangerine-soft)] px-0.5 text-inherit">
+      <mark className="rounded bg-[var(--accent-soft)] px-0.5 text-inherit">
         {text.slice(index, index + term.length)}
       </mark>
       {text.slice(index + term.length)}
@@ -36,8 +28,9 @@ function Highlight({ text, query }: { text: string; query: string }) {
 }
 
 /**
- * Header search. The trigger is icon-only by design — the storefront has a single
- * search entry point and no inline search fields.
+ * Search icon opens one accessible overlay.
+ * "/" keyboard shortcut, Escape closes, focus trap via Radix Dialog.
+ * Search by: exact model, product name, category, brand.
  */
 export function ProductSearch({ className = "" }: { className?: string }) {
   const [open, setOpen] = useState(false);
@@ -47,11 +40,7 @@ export function ProductSearch({ className = "" }: { className?: string }) {
   const reduceMotion = useReducedMotion();
   const results = useMemo(() => (query.trim() ? searchProducts(query).slice(0, 7) : []), [query]);
 
-  const popularModels = useMemo(
-    () => catalogue.filter((product) => product.stockStatus === "in_stock").slice(0, 4),
-    [],
-  );
-
+  /* "/" shortcut to open search */
   useEffect(() => {
     const openWithSlash = (event: KeyboardEvent) => {
       if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -67,21 +56,20 @@ export function ProductSearch({ className = "" }: { className?: string }) {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <motion.button
+        <button
           type="button"
-          className={`header-control ${className}`}
+          className={`header-action ${className}`}
           aria-label="Search products by exact model"
-          whileTap={reduceMotion ? undefined : { scale: 0.94 }}
         >
           <Search size={19} />
-        </motion.button>
+        </button>
       </Dialog.Trigger>
       <AnimatePresence>
         {open && (
           <Dialog.Portal forceMount>
             <Dialog.Overlay asChild forceMount>
               <motion.div
-                className="fixed inset-0 z-[90] bg-[rgb(23_21_19/0.5)] backdrop-blur-sm"
+                className="fixed inset-0 z-[90] bg-black/25 backdrop-blur-sm"
                 initial={reduceMotion ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -90,7 +78,7 @@ export function ProductSearch({ className = "" }: { className?: string }) {
             </Dialog.Overlay>
             <Dialog.Content asChild forceMount>
               <motion.div
-                className="fixed inset-x-3 top-4 z-[100] mx-auto grid max-h-[calc(100svh-32px)] max-w-5xl gap-3 sm:top-[8vh] lg:grid-cols-[1.55fr_1fr]"
+                className="fixed inset-x-4 top-4 z-[100] mx-auto grid max-h-[calc(100svh-32px)] max-w-2xl gap-3 sm:inset-x-8 sm:top-[8vh]"
                 initial={reduceMotion ? false : { opacity: 0, y: -12, scale: 0.985 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.99 }}
@@ -104,13 +92,13 @@ export function ProductSearch({ className = "" }: { className?: string }) {
                   resultRefs.current[next]?.focus();
                 }}
               >
-                <div className="flex min-h-0 flex-col overflow-hidden rounded-[20px] border border-[var(--line)] bg-[var(--surface)] shadow-2xl">
+                <div className="flex min-h-0 flex-col overflow-hidden rounded-[var(--radius-container)] border border-[var(--border)] bg-[var(--surface)] shadow-2xl">
                   <Dialog.Title className="sr-only">Search the exact-model catalogue</Dialog.Title>
                   <Dialog.Description className="sr-only">
                     Search accepts spaces, dashes, brand names and model-number variations.
                   </Dialog.Description>
-                  <div className="flex items-center gap-3 border-b border-[var(--line)] p-4 sm:p-5">
-                    <Search size={21} className="shrink-0 text-[var(--tangerine-text)]" />
+                  <div className="flex items-center gap-3 border-b border-[var(--border)] p-4 sm:p-5">
+                    <Search size={21} className="shrink-0 text-[var(--accent)]" />
                     <label htmlFor="product-search" className="sr-only">
                       Search exact models
                     </label>
@@ -126,7 +114,7 @@ export function ProductSearch({ className = "" }: { className?: string }) {
                       className="h-12 min-w-0 flex-1 bg-transparent text-lg outline-none"
                     />
                     <Dialog.Close
-                      className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--line)]"
+                      className="grid h-11 w-11 shrink-0 place-items-center rounded-[var(--radius-btn)] border border-[var(--border)]"
                       aria-label="Close search"
                     >
                       <X size={18} />
@@ -138,22 +126,9 @@ export function ProductSearch({ className = "" }: { className?: string }) {
                     </p>
                     {!query.trim() ? (
                       <div className="p-4">
-                        <p className="eyebrow">Suggested categories</p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {suggestedCategories.map(([label, href]) => (
-                            <Dialog.Close asChild key={href}>
-                              <Link
-                                href={href}
-                                className="flex min-h-11 items-center rounded-xl border border-[var(--line)] px-4 text-sm font-bold hover:border-[var(--tangerine-border-hover)]"
-                              >
-                                {label}
-                              </Link>
-                            </Dialog.Close>
-                          ))}
-                        </div>
-                        <p className="mt-6 text-sm text-[var(--muted)]">
+                        <p className="text-sm text-[var(--text-muted)]">
                           Search by model number, product name, brand, specification or category.
-                          Dashes and spaces are optional.
+                          Dashes and spaces are optional. Press <kbd className="font-mono text-[var(--text-secondary)]">/</kbd> anytime to open.
                         </p>
                       </div>
                     ) : results.length ? (
@@ -170,9 +145,9 @@ export function ProductSearch({ className = "" }: { className?: string }) {
                                     resultRefs.current[index] = element;
                                   }}
                                   href={`/products/${product.slug}`}
-                                  className={`grid min-h-24 grid-cols-[68px_1fr] items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-[var(--tangerine-soft)] focus:bg-[var(--tangerine-soft)] sm:grid-cols-[68px_1fr_auto] ${activeIndex === index ? "bg-[var(--tangerine-soft)]" : ""}`}
+                                  className={`grid min-h-24 grid-cols-[68px_1fr] items-center gap-3 rounded-[var(--radius-card)] p-2 transition-colors hover:bg-[var(--accent-soft)] focus:bg-[var(--accent-soft)] sm:grid-cols-[68px_1fr_auto] ${activeIndex === index ? "bg-[var(--accent-soft)]" : ""}`}
                                 >
-                                  <span className="relative aspect-square overflow-hidden rounded-xl bg-white">
+                                  <span className="relative aspect-square overflow-hidden rounded-[var(--radius-stage)] bg-[var(--surface-subtle)]">
                                     <Image
                                       src={product.images[0]}
                                       alt=""
@@ -182,13 +157,13 @@ export function ProductSearch({ className = "" }: { className?: string }) {
                                     />
                                   </span>
                                   <span className="min-w-0">
-                                    <strong className="block text-xs uppercase tracking-[0.08em] text-[var(--tangerine-text)]">
+                                    <strong className="block font-mono text-xs font-medium text-[var(--text-secondary)]">
                                       <Highlight text={product.model} query={query} />
                                     </strong>
                                     <span className="mt-1 block truncate font-display text-lg font-semibold">
                                       <Highlight text={product.title} query={query} />
                                     </span>
-                                    <span className="mt-1 block text-xs text-[var(--muted)] sm:hidden">
+                                    <span className="mt-1 block text-xs text-[var(--text-muted)] sm:hidden">
                                       {product.category} ·{" "}
                                       {eligible ? "Available" : "Check availability"}
                                     </span>
@@ -199,7 +174,7 @@ export function ProductSearch({ className = "" }: { className?: string }) {
                                         ? formatPrice(product.sellingPriceInclGstPaise)
                                         : "Request price"}
                                     </strong>
-                                    <span className="mt-1 block text-xs text-[var(--muted)]">
+                                    <span className="mt-1 block text-xs text-[var(--text-muted)]">
                                       {product.category} ·{" "}
                                       {eligible ? "Available" : "Check availability"}
                                     </span>
@@ -213,7 +188,7 @@ export function ProductSearch({ className = "" }: { className?: string }) {
                     ) : (
                       <div className="p-8 text-center">
                         <p className="font-display text-2xl font-semibold">No exact match found.</p>
-                        <p className="mt-2 text-sm text-[var(--muted)]">
+                        <p className="mt-2 text-sm text-[var(--text-muted)]">
                           Check the model spelling or search the full catalogue by category and
                           specs.
                         </p>
@@ -229,44 +204,6 @@ export function ProductSearch({ className = "" }: { className?: string }) {
                     )}
                   </div>
                 </div>
-
-                <aside className="hidden min-h-0 flex-col overflow-y-auto rounded-[20px] border border-[var(--line)] bg-[var(--canvas)] p-5 shadow-2xl lg:flex">
-                  <p className="eyebrow">Popular exact models</p>
-                  <div className="mt-3 grid gap-1">
-                    {popularModels.map((product) => (
-                      <Dialog.Close asChild key={product.id}>
-                        <Link
-                          href={`/products/${product.slug}`}
-                          className="rounded-xl px-3 py-2.5 text-sm font-bold hover:bg-[var(--tangerine-soft)]"
-                        >
-                          <span className="block text-[11px] uppercase tracking-[0.08em] text-[var(--tangerine-text)]">
-                            {product.brand}
-                          </span>
-                          {product.model}
-                        </Link>
-                      </Dialog.Close>
-                    ))}
-                  </div>
-
-                  <p className="eyebrow mt-7">Need product help?</p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                    Tell us the model or the coverage you need and we will point you to the right
-                    hardware.
-                  </p>
-                  <div className="mt-4 grid gap-2">
-                    <a
-                      href={`https://wa.me/${siteConfig.contact.whatsapp}`}
-                      className="button-secondary"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <MessageCircle size={17} /> WhatsApp
-                    </a>
-                    <a href={`tel:${siteConfig.contact.phoneE164}`} className="button-secondary">
-                      <Phone size={17} /> {siteConfig.contact.phoneDisplay}
-                    </a>
-                  </div>
-                </aside>
               </motion.div>
             </Dialog.Content>
           </Dialog.Portal>

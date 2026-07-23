@@ -17,7 +17,7 @@ export default function CartPage() {
   return (
     <div className="container-standard section-space !pt-14">
       <p className="eyebrow">Your selection</p>
-      <h1 className="display-section mt-4">Cart.</h1>
+      <h1 className="section-title mt-4">Cart.</h1>
       {resolved.length === 0 ? (
         <div className="surface-card mt-10 grid min-h-[420px] place-content-center p-8 text-center">
           <h2 className="font-display text-3xl font-semibold">Nothing here yet.</h2>
@@ -33,7 +33,7 @@ export default function CartPage() {
                 key={product.id}
                 className="surface-card grid grid-cols-[110px_1fr] gap-5 p-4 sm:grid-cols-[150px_1fr]"
               >
-                <div className="relative aspect-square rounded-2xl bg-[var(--canvas-alt)]">
+                <div className="relative aspect-square rounded-[var(--radius-card)] bg-[var(--surface-subtle)]">
                   <Image
                     src={product.images[0]}
                     alt=""
@@ -43,16 +43,16 @@ export default function CartPage() {
                   />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[var(--muted)]">{product.model}</p>
+                  <p className="font-mono text-xs font-medium text-[var(--text-muted)]">{product.model}</p>
                   <Link
                     href={`/products/${product.slug}`}
-                    className="mt-1 block font-display text-2xl font-semibold"
+                    className="mt-1 block font-display text-xl font-semibold"
                   >
                     {product.title}
                   </Link>
                   <p className="mt-3 font-bold">{formatPrice(product.sellingPriceInclGstPaise)}</p>
                   <div className="mt-4 flex items-center gap-3">
-                    <div className="flex rounded-xl border border-[var(--line)]">
+                    <div className="flex rounded-[var(--radius-btn)] border border-[var(--border)]">
                       <button
                         type="button"
                         className="flex h-11 w-11 items-center justify-center"
@@ -75,7 +75,7 @@ export default function CartPage() {
                     </div>
                     <button
                       type="button"
-                      className="flex h-11 w-11 items-center justify-center text-[var(--danger)]"
+                      className="flex h-11 w-11 items-center justify-center text-[var(--error)]"
                       onClick={() => removeItem(product.id)}
                       aria-label={`Remove ${product.model}`}
                     >
@@ -87,7 +87,7 @@ export default function CartPage() {
             ))}
           </ul>
           <aside className="surface-card h-fit p-6 lg:sticky lg:top-28">
-            <h2 className="font-display text-3xl font-semibold">Order summary</h2>
+            <h2 className="font-display text-2xl font-semibold">Order summary</h2>
             <dl className="mt-6 grid gap-3 text-sm">
               <div className="flex justify-between">
                 <dt>Products subtotal</dt>
@@ -101,11 +101,11 @@ export default function CartPage() {
                 <dt>Installation</dt>
                 <dd>Quoted separately</dd>
               </div>
-              <div className="mt-2 flex justify-between border-t border-[var(--line)] pt-4 text-lg">
+              <div className="mt-2 flex justify-between border-t border-[var(--border)] pt-4 text-lg">
                 <dt className="font-bold">Grand total</dt>
                 <dd className="font-bold">{formatPrice(totals.grandTotalInclGstPaise)}</dd>
               </div>
-              <div className="flex justify-between text-[var(--muted)]">
+              <div className="flex justify-between text-[var(--text-muted)]">
                 <dt>Includes GST</dt>
                 <dd>{formatPrice(totals.includedGstPaise)}</dd>
               </div>
@@ -113,7 +113,7 @@ export default function CartPage() {
             <Link href="/checkout" className="button-primary mt-6 w-full">
               Checkout
             </Link>
-            <Link href="/products" className="button-quiet mt-2 w-full">
+            <Link href="/products" className="button-tertiary mt-2 w-full text-center">
               Continue shopping
             </Link>
           </aside>

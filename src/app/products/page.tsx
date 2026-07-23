@@ -107,9 +107,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     <div className="container-standard pt-10 pb-16 sm:pt-12 sm:pb-20">
       {/* ── Page header ──────────────────────────────────────── */}
       <div className="max-w-3xl mb-8">
-        <p className="eyebrow">Exact-model catalogue</p>
-        <h1 className="display-product-listing mt-3">Find the right hardware.</h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--ink-soft)]">
+        <p className="eyebrow">Product catalogue</p>
+        <h1 className="page-title mt-3">Security and access hardware.</h1>
+        <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-secondary)]">
           Search by model number or narrow by brand and category. Every displayed price already
           includes GST.
         </p>
@@ -131,7 +131,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
               <X size={12} />
             </Link>
           ))}
-          <Link href="/products" className="text-sm font-semibold text-[var(--muted)] hover:text-[var(--ink)] transition-colors">
+          <Link href="/products" className="text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
             Clear all
           </Link>
         </div>
@@ -144,13 +144,13 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         </h2>
 
         <div className="flex items-center justify-between mb-6">
-          <p className="text-sm font-bold text-[var(--muted)]">
+          <p className="text-sm font-semibold text-[var(--text-muted)]">
             {products.length} {products.length === 1 ? "product" : "products"}
           </p>
         </div>
 
         {products.length > 0 ? (
-          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -158,11 +158,14 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         ) : (
           <div className="surface-card grid min-h-[360px] place-content-center p-8 text-center">
             <h2 className="font-display text-3xl font-semibold">No exact match.</h2>
-            <p className="mt-3 text-[var(--muted)]">
+            <p className="mt-3 text-[var(--text-muted)]">
               Check the model spelling or clear the filters.
             </p>
             <Link href="/products" className="button-primary mt-6">
-              Clear filters
+              Clear all filters
+            </Link>
+            <Link href="/contact" className="button-secondary mt-3">
+              Contact product support
             </Link>
           </div>
         )}

@@ -9,15 +9,16 @@ export const metadata: Metadata = publicPageMetadata({
   description: "Speak with DeviceDestination about exact security and biometric product models.",
   path: "/contact",
 });
+
 export default function ContactPage() {
   return (
     <div className="container-standard section-space !pt-14">
       <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         <div>
           <p className="eyebrow">Product help</p>
-          <h1 className="display-section mt-4">Talk to a person who checks the model.</h1>
+          <h1 className="section-title mt-4">Talk to a product specialist.</h1>
         </div>
-        <p className="max-w-2xl self-end text-lg leading-8 text-[var(--muted)]">
+        <p className="max-w-2xl self-end text-lg leading-8 text-[var(--text-secondary)]">
           Send the model number, quantity and site type if you know them. If you do not, describe
           the space in plain language.
         </p>
@@ -28,22 +29,22 @@ export default function ContactPage() {
             href={`tel:${siteConfig.contact.phoneE164}`}
             className="surface-card flex min-h-24 items-center gap-4 p-5"
           >
-            <Phone />
+            <Phone size={20} className="text-[var(--text-secondary)]" />
             <span>
-              <strong>Call</strong>
+              <strong className="text-[var(--text-primary)]">Call</strong>
               <br />
-              <span className="text-sm text-[var(--muted)]">{siteConfig.contact.phoneDisplay}</span>
+              <span className="text-sm text-[var(--text-muted)]">{siteConfig.contact.phoneDisplay}</span>
             </span>
           </a>
           <a
             href={`mailto:${siteConfig.contact.email}`}
             className="surface-card flex min-h-24 items-center gap-4 p-5"
           >
-            <Mail />
+            <Mail size={20} className="text-[var(--text-secondary)]" />
             <span>
-              <strong>Email</strong>
+              <strong className="text-[var(--text-primary)]">Email</strong>
               <br />
-              <span className="text-sm text-[var(--muted)]">{siteConfig.contact.email}</span>
+              <span className="text-sm text-[var(--text-muted)]">{siteConfig.contact.email}</span>
             </span>
           </a>
           <a
@@ -52,22 +53,23 @@ export default function ContactPage() {
             rel="noopener noreferrer"
             className="surface-card flex min-h-24 items-center gap-4 p-5"
           >
-            <MessageCircle />
+            <MessageCircle size={20} className="text-[var(--accent)]" />
             <span>
-              <strong>WhatsApp</strong>
+              <strong className="text-[var(--text-primary)]">WhatsApp</strong>
               <br />
-              <span className="text-sm text-[var(--muted)]">Product enquiries</span>
+              <span className="text-sm text-[var(--text-muted)]">Product enquiries</span>
             </span>
           </a>
           <div className="surface-card flex min-h-24 items-start gap-4 p-5">
-            <MapPin className="mt-1 shrink-0" />
+            <MapPin size={20} className="mt-1 shrink-0 text-[var(--text-secondary)]" />
             <span>
-              <strong>Dwarka, New Delhi</strong>
+              <strong className="text-[var(--text-primary)]">{siteConfig.address.city}</strong>
               <br />
-              <span className="text-sm leading-6 text-[var(--muted)]">
-                {siteConfig.address.street}, {siteConfig.address.city}{" "}
-                {siteConfig.address.postalCode}
+              <span className="text-sm leading-6 text-[var(--text-muted)]">
+                {siteConfig.address.street}, {siteConfig.address.city} {siteConfig.address.postalCode}
               </span>
+              <br />
+              <span className="text-sm text-[var(--text-muted)]">Service area: {siteConfig.serviceArea}</span>
             </span>
           </div>
         </aside>

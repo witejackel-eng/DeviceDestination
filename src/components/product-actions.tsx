@@ -22,9 +22,9 @@ export function ProductActions({ productId }: { productId: string }) {
     : { eligible: false as const, reason: "missing_price" as const };
   if (!eligibility.eligible)
     return (
-      <div className="rounded-2xl border border-[var(--line)] bg-[var(--tangerine-soft)] p-5">
+      <div className="rounded-[var(--radius-container)] border border-[var(--border)] bg-[var(--accent-soft)] p-5">
         <p className="font-display text-xl font-semibold">Price confirmation required</p>
-        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+        <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
           This model cannot enter checkout until its current price and availability are confirmed.
         </p>
         <Link
@@ -38,7 +38,7 @@ export function ProductActions({ productId }: { productId: string }) {
   return (
     <div className="grid gap-3">
       <div className="flex gap-3">
-        <div className="flex items-center rounded-xl border border-[var(--line)]">
+        <div className="flex items-center rounded-[var(--radius-btn)] border border-[var(--border)]">
           <button
             type="button"
             onClick={() => setQuantity((value) => Math.max(1, value - 1))}
