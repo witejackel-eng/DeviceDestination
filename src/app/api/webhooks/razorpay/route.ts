@@ -2,12 +2,11 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getDb, isDatabaseConfigured } from "@/db/client";
-import { addresses, customers, orderItems, orders, payments } from "@/db/schema";
+import { orders, payments } from "@/db/schema";
 import { verifyRazorpayWebhookSignature } from "@/lib/razorpay";
 import { logger } from "@/lib/logger";
-import { createInvoicePdf } from "@/lib/invoice";
-import { sendPaidOrderNotifications } from "@/lib/notifications";
-import { formatPrice } from "@/lib/products";
+import { consumeReservationsForOrder, releaseReservationsForOrder } from "@/lib/inventory";
+import { enqueueJob } from "@/lib/jobs";
 
 const webhookSchema = z.object({
   event: z.string(),
@@ -82,98 +81,25 @@ export async function POST(request: Request) {
       { event: "order_payment_captured", providerOrderId: payment[0].providerOrderId },
       "Order marked paid after captured webhook",
     );
-    const orderRecord = await db
-      .select({ order: orders, customer: customers, address: addresses })
-      .from(orders)
-      .innerJoin(customers, eq(customers.id, orders.customerId))
-      .innerJoin(addresses, eq(addresses.id, orders.shippingAddressId))
-      .where(eq(orders.id, payment[0].orderId))
-      .limit(1);
-    if (
-      orderRecord[0] &&
-      (orderRecord[0].order.emailStatus !== "sent" ||
-        orderRecord[0].order.whatsappStatus !== "sent")
-    ) {
-      const record = orderRecord[0];
-      const lines = await db
-        .select()
-        .from(orderItems)
-        .where(eq(orderItems.orderId, record.order.id));
-      const invoiceNumber = record.order.invoiceNumber ?? `INV-${record.order.orderNumber}`;
-      try {
-        const invoicePdf = await createInvoicePdf({
-          invoiceNumber,
-          orderNumber: record.order.orderNumber,
-          issuedAt: new Date(),
-          customer: {
-            name: record.customer.name,
-            businessName: record.customer.businessName,
-            gstin: record.customer.gstin,
-            address: record.address.line1,
-            city: record.address.city,
-            state: record.address.state,
-            pincode: record.address.pincode,
-          },
-          items: lines,
-          totalInclGstPaise: record.order.totalInclGstPaise,
-          includedGstPaise: record.order.includedGstPaise,
-        });
-        await db
-          .update(orders)
-          .set({ invoiceNumber, invoiceGeneratedAt: new Date() })
-          .where(eq(orders.id, record.order.id));
-        const retryEmail = record.order.emailStatus !== "sent";
-        const retryWhatsapp = record.order.whatsappStatus !== "sent";
-        const notification = await sendPaidOrderNotifications(
-          {
-            orderNumber: record.order.orderNumber,
-            invoiceNumber,
-            customerName: record.customer.name,
-            customerEmail: record.customer.email,
-            customerMobile: record.customer.mobile,
-            total: formatPrice(record.order.totalInclGstPaise),
-            invoicePdf,
-          },
-          {},
-          { email: retryEmail, whatsapp: retryWhatsapp },
-        );
-        const statuses = {
-          emailStatus: retryEmail ? notification.emailStatus : record.order.emailStatus,
-          whatsappStatus: retryWhatsapp ? notification.whatsappStatus : record.order.whatsappStatus,
-        };
-        await db
-          .update(orders)
-          .set({ ...statuses, notificationUpdatedAt: new Date() })
-          .where(eq(orders.id, record.order.id));
-        if (statuses.emailStatus === "failed")
-          logger.error(
-            { event: "order_email_failed", orderNumber: record.order.orderNumber },
-            "Paid-order email failed",
-          );
-        if (statuses.whatsappStatus === "failed")
-          logger.error(
-            { event: "order_whatsapp_failed", orderNumber: record.order.orderNumber },
-            "Paid-order WhatsApp failed",
-          );
-      } catch (error) {
-        logger.error(
-          {
-            event: "invoice_generation_failed",
-            orderNumber: record.order.orderNumber,
-            error: error instanceof Error ? error.message : "unknown",
-          },
-          "Paid-order fulfilment notification failed",
-        );
-        await db
-          .update(orders)
-          .set({
-            emailStatus: record.order.emailStatus === "sent" ? "sent" : "failed",
-            whatsappStatus: record.order.whatsappStatus === "sent" ? "sent" : "failed",
-            notificationUpdatedAt: new Date(),
-          })
-          .where(eq(orders.id, record.order.id));
-      }
-    }
+
+    // Consume the inventory reservations for this order (decrement available
+    // and reserved atomically). Idempotent.
+    await consumeReservationsForOrder(payment[0].orderId);
+
+    // Enqueue invoice generation and notifications as durable jobs so that
+    // failures can be retried independently without rolling back paid status.
+    await enqueueJob({
+      type: "generate-invoice",
+      payload: { orderId: payment[0].orderId },
+    });
+    await enqueueJob({
+      type: "send-order-email",
+      payload: { orderId: payment[0].orderId },
+    });
+    await enqueueJob({
+      type: "send-order-whatsapp",
+      payload: { orderId: payment[0].orderId },
+    });
   } else if (parsed.data.event === "payment.failed") {
     await db
       .update(payments)
@@ -184,6 +110,9 @@ export async function POST(request: Request) {
         updatedAt: new Date(),
       })
       .where(eq(payments.id, payment[0].id));
+    // Release the inventory reservations — the order remains as a record but
+    // stock is no longer held.
+    await releaseReservationsForOrder(payment[0].orderId, "payment_failed");
   }
   return NextResponse.json({ received: true, matched: true });
 }

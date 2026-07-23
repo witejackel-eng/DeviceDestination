@@ -1,6 +1,5 @@
 import {
   boolean,
-  index,
   integer,
   jsonb,
   pgEnum,
@@ -9,6 +8,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  index,
 } from "drizzle-orm/pg-core";
 
 const timestamps = {
@@ -31,6 +31,7 @@ export const orderStatus = pgEnum("order_status", [
   "shipped",
   "delivered",
   "cancelled",
+  "refund_pending",
   "refunded",
 ]);
 export const paymentStatus = pgEnum("payment_status", [
@@ -45,6 +46,79 @@ export const userRole = pgEnum("user_role", [
   "catalogue_manager",
   "operations",
   "admin",
+]);
+
+export const reservationStatus = pgEnum("reservation_status", [
+  "active",
+  "consumed",
+  "released",
+  "expired",
+  "cancelled",
+]);
+
+export const inventoryAdjustmentType = pgEnum("inventory_adjustment_type", [
+  "receipt",
+  "correction",
+  "damage",
+  "return",
+  "reservation_correction",
+  "release",
+]);
+
+export const priceSourceStatus = pgEnum("price_source_status", [
+  "verified",
+  "request_price",
+  "needs_review",
+]);
+
+export const refundStatus = pgEnum("refund_status", [
+  "pending",
+  "processing",
+  "processed",
+  "failed",
+  "cancelled",
+]);
+
+export const jobStatus = pgEnum("job_status", [
+  "pending",
+  "processing",
+  "completed",
+  "failed",
+  "cancelled",
+]);
+
+export const quoteStatus = pgEnum("quote_status", [
+  "draft",
+  "sent",
+  "accepted",
+  "rejected",
+  "expired",
+  "converted",
+]);
+
+export const enquiryStatus = pgEnum("enquiry_status", [
+  "new",
+  "contacted",
+  "qualified",
+  "quoted",
+  "won",
+  "lost",
+  "closed",
+]);
+
+export const shippingServiceability = pgEnum("shipping_serviceability", [
+  "serviceable",
+  "manual_confirmation",
+  "unserviceable",
+]);
+
+export const reconciliationOutcome = pgEnum("reconciliation_outcome", [
+  "match",
+  "local_paid_provider_pending",
+  "local_pending_provider_captured",
+  "amount_mismatch",
+  "duplicate_event",
+  "provider_error",
 ]);
 
 export const brands = pgTable(
@@ -96,8 +170,9 @@ export const products = pgTable(
     compareAtLabel: text("compare_at_label"),
     gstRateBasisPoints: integer("gst_rate_basis_points").default(1800).notNull(),
     gstIncluded: boolean("gst_included").default(true).notNull(),
-    priceSourceStatus: text("price_source_status").default("needs-review").notNull(),
+    priceSourceStatus: priceSourceStatus("price_source_status").default("needs_review").notNull(),
     priceVerifiedAt: timestamp("price_verified_at", { withTimezone: true }),
+    publicSourceLabel: text("public_source_label"),
     warrantySummary: text("warranty_summary"),
     officialSourceUrl: text("official_source_url").notNull(),
     verifiedAt: timestamp("verified_at", { withTimezone: true }).notNull(),
@@ -110,31 +185,42 @@ export const products = pgTable(
     uniqueIndex("products_model_idx").on(table.model),
     index("products_brand_idx").on(table.brandId),
     index("products_category_idx").on(table.categoryId),
+    index("products_status_idx").on(table.status),
+    index("products_stock_status_idx").on(table.stockStatus),
+    index("products_price_source_idx").on(table.priceSourceStatus),
   ],
 );
 
-export const productImages = pgTable("product_images", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  productId: uuid("product_id")
-    .references(() => products.id, { onDelete: "cascade" })
-    .notNull(),
-  url: text("url").notNull(),
-  alt: text("alt").notNull(),
-  position: integer("position").default(0).notNull(),
-  ...timestamps,
-});
+export const productImages = pgTable(
+  "product_images",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    productId: uuid("product_id")
+      .references(() => products.id, { onDelete: "cascade" })
+      .notNull(),
+    url: text("url").notNull(),
+    alt: text("alt").notNull(),
+    position: integer("position").default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("product_images_product_idx").on(table.productId)],
+);
 
-export const productDocuments = pgTable("product_documents", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  productId: uuid("product_id")
-    .references(() => products.id, { onDelete: "cascade" })
-    .notNull(),
-  type: text("type").notNull(),
-  title: text("title").notNull(),
-  url: text("url").notNull(),
-  modelVerified: boolean("model_verified").default(false).notNull(),
-  ...timestamps,
-});
+export const productDocuments = pgTable(
+  "product_documents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    productId: uuid("product_id")
+      .references(() => products.id, { onDelete: "cascade" })
+      .notNull(),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    modelVerified: boolean("model_verified").default(false).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("product_documents_product_idx").on(table.productId)],
+);
 
 export const productSpecs = pgTable("product_specs", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -167,6 +253,29 @@ export const productCompatibility = pgTable("product_compatibility", {
   note: text("note"),
 });
 
+export const productPriceHistory = pgTable(
+  "product_price_history",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    productId: uuid("product_id")
+      .references(() => products.id)
+      .notNull(),
+    previousPricePaise: integer("previous_price_paise"),
+    newPricePaise: integer("new_price_paise"),
+    gstRateBasisPoints: integer("gst_rate_basis_points").notNull(),
+    previousSourceStatus: priceSourceStatus("previous_source_status"),
+    newSourceStatus: priceSourceStatus("new_source_status"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    changedBy: text("changed_by").notNull(),
+    changeReason: text("change_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("product_price_history_product_idx").on(table.productId, table.createdAt),
+    index("product_price_history_changed_by_idx").on(table.changedBy),
+  ],
+);
+
 export const inventory = pgTable(
   "inventory",
   {
@@ -179,7 +288,60 @@ export const inventory = pgTable(
     leadTime: text("lead_time"),
     ...timestamps,
   },
-  (table) => [uniqueIndex("inventory_product_idx").on(table.productId)],
+  (table) => [
+    uniqueIndex("inventory_product_idx").on(table.productId),
+  ],
+);
+
+export const inventoryReservations = pgTable(
+  "inventory_reservations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .references(() => orders.id, { onDelete: "cascade" })
+      .notNull(),
+    productId: uuid("product_id")
+      .references(() => products.id)
+      .notNull(),
+    quantity: integer("quantity").notNull(),
+    status: reservationStatus("status").default("active").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    releasedAt: timestamp("released_at", { withTimezone: true }),
+    releaseReason: text("release_reason"),
+    ...timestamps,
+  },
+  (table) => [
+    index("inventory_reservations_order_idx").on(table.orderId),
+    index("inventory_reservations_product_idx").on(table.productId),
+    index("inventory_reservations_status_idx").on(table.status, table.expiresAt),
+    uniqueIndex("inventory_reservations_order_product_idx").on(table.orderId, table.productId),
+  ],
+);
+
+export const inventoryAdjustments = pgTable(
+  "inventory_adjustments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    productId: uuid("product_id")
+      .references(() => products.id)
+      .notNull(),
+    type: inventoryAdjustmentType("type").notNull(),
+    delta: integer("delta").notNull(),
+    reason: text("reason").notNull(),
+    internalNote: text("internal_note"),
+    actorUserId: text("actor_user_id"),
+    actorEmail: text("actor_email"),
+    quantityBefore: integer("quantity_before"),
+    quantityAfter: integer("quantity_after"),
+    reservedBefore: integer("reserved_before"),
+    reservedAfter: integer("reserved_after"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("inventory_adjustments_product_idx").on(table.productId, table.createdAt),
+    index("inventory_adjustments_actor_idx").on(table.actorUserId),
+  ],
 );
 
 export const users = pgTable(
@@ -191,6 +353,11 @@ export const users = pgTable(
     emailVerified: boolean("email_verified").default(false).notNull(),
     image: text("image"),
     role: userRole("role").default("customer").notNull(),
+    mobile: text("mobile"),
+    accountDeletionRequestedAt: timestamp("account_deletion_requested_at", {
+      withTimezone: true,
+    }),
+    dataExportRequestedAt: timestamp("data_export_requested_at", { withTimezone: true }),
     ...timestamps,
   },
   (table) => [uniqueIndex("users_email_idx").on(table.email)],
@@ -237,31 +404,42 @@ export const verifications = pgTable("verifications", {
   ...timestamps,
 });
 
-export const customers = pgTable("customers", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: text("user_id").references(() => users.id),
-  name: text("name").notNull(),
-  email: text("email").notNull(),
-  mobile: text("mobile").notNull(),
-  gstin: text("gstin"),
-  businessName: text("business_name"),
-  ...timestamps,
-});
+export const customers = pgTable(
+  "customers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id").references(() => users.id),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    mobile: text("mobile").notNull(),
+    gstin: text("gstin"),
+    businessName: text("business_name"),
+    ...timestamps,
+  },
+  (table) => [
+    index("customers_user_idx").on(table.userId),
+    index("customers_email_idx").on(table.email),
+  ],
+);
 
-export const addresses = pgTable("addresses", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  customerId: uuid("customer_id")
-    .references(() => customers.id, { onDelete: "cascade" })
-    .notNull(),
-  line1: text("line1").notNull(),
-  line2: text("line2"),
-  city: text("city").notNull(),
-  state: text("state").notNull(),
-  pincode: text("pincode").notNull(),
-  instructions: text("instructions"),
-  isDefault: boolean("is_default").default(false).notNull(),
-  ...timestamps,
-});
+export const addresses = pgTable(
+  "addresses",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    customerId: uuid("customer_id")
+      .references(() => customers.id, { onDelete: "cascade" })
+      .notNull(),
+    line1: text("line1").notNull(),
+    line2: text("line2"),
+    city: text("city").notNull(),
+    state: text("state").notNull(),
+    pincode: text("pincode").notNull(),
+    instructions: text("instructions"),
+    isDefault: boolean("is_default").default(false).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("addresses_customer_idx").on(table.customerId)],
+);
 
 export const carts = pgTable("carts", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -310,12 +488,25 @@ export const orders = pgTable(
     emailStatus: text("email_status").default("pending").notNull(),
     whatsappStatus: text("whatsapp_status").default("pending").notNull(),
     notificationUpdatedAt: timestamp("notification_updated_at", { withTimezone: true }),
+    serviceabilityResult: jsonb("serviceability_result").$type<Record<string, unknown>>(),
+    courierName: text("courier_name"),
+    trackingNumber: text("tracking_number"),
+    trackingUrl: text("tracking_url"),
+    dispatchedAt: timestamp("dispatched_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    estimatedDeliveryAt: timestamp("estimated_delivery_at", { withTimezone: true }),
+    fulfilmentNotes: text("fulfilment_notes"),
+    internalNotes: text("internal_notes"),
+    refundTotalPaise: integer("refund_total_paise").default(0).notNull(),
+    lastReconciledAt: timestamp("last_reconciled_at", { withTimezone: true }),
     ...timestamps,
   },
   (table) => [
     uniqueIndex("orders_number_idx").on(table.orderNumber),
     uniqueIndex("orders_idempotency_idx").on(table.idempotencyKey),
     uniqueIndex("orders_invoice_number_idx").on(table.invoiceNumber),
+    index("orders_status_idx").on(table.status, table.createdAt),
+    index("orders_customer_idx").on(table.customerId),
   ],
 );
 
@@ -334,6 +525,23 @@ export const orderItems = pgTable("order_items", {
   gstRateBasisPoints: integer("gst_rate_basis_points").notNull(),
 });
 
+export const orderStatusEvents = pgTable(
+  "order_status_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .references(() => orders.id, { onDelete: "cascade" })
+      .notNull(),
+    fromStatus: orderStatus("from_status"),
+    toStatus: orderStatus("to_status").notNull(),
+    actorUserId: text("actor_user_id"),
+    actorEmail: text("actor_email"),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index("order_status_events_order_idx").on(table.orderId, table.createdAt)],
+);
+
 export const payments = pgTable(
   "payments",
   {
@@ -349,7 +557,61 @@ export const payments = pgTable(
     rawEventId: text("raw_event_id"),
     ...timestamps,
   },
-  (table) => [uniqueIndex("payment_provider_order_idx").on(table.providerOrderId)],
+  (table) => [
+    uniqueIndex("payment_provider_order_idx").on(table.providerOrderId),
+    index("payment_status_idx").on(table.status),
+    index("payment_provider_payment_idx").on(table.providerPaymentId),
+  ],
+);
+
+export const refunds = pgTable(
+  "refunds",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .references(() => orders.id, { onDelete: "restrict" })
+      .notNull(),
+    paymentId: uuid("payment_id")
+      .references(() => payments.id, { onDelete: "restrict" })
+      .notNull(),
+    providerRefundId: text("provider_refund_id"),
+    amountPaise: integer("amount_paise").notNull(),
+    reason: text("reason").notNull(),
+    status: refundStatus("status").default("pending").notNull(),
+    requestedBy: text("requested_by").notNull(),
+    requestedAt: timestamp("requested_at", { withTimezone: true }).defaultNow().notNull(),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    idempotencyKey: text("idempotency_key").notNull(),
+    providerResponse: jsonb("provider_response").$type<Record<string, unknown>>(),
+    failureReason: text("failure_reason"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("refunds_idempotency_idx").on(table.idempotencyKey),
+    index("refunds_order_idx").on(table.orderId),
+    index("refunds_payment_idx").on(table.paymentId),
+    index("refunds_status_idx").on(table.status),
+  ],
+);
+
+export const paymentReconciliationResults = pgTable(
+  "payment_reconciliation_results",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .references(() => orders.id, { onDelete: "cascade" })
+      .notNull(),
+    paymentId: uuid("payment_id").references(() => payments.id),
+    outcome: reconciliationOutcome("outcome").notNull(),
+    localStatus: text("local_status"),
+    providerStatus: text("provider_status"),
+    localAmountPaise: integer("local_amount_paise"),
+    providerAmountPaise: integer("provider_amount_paise"),
+    notes: text("notes"),
+    actorUserId: text("actor_user_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index("reconciliation_order_idx").on(table.orderId, table.createdAt)],
 );
 
 export const enquiries = pgTable(
@@ -363,9 +625,20 @@ export const enquiries = pgTable(
     mobile: text("mobile").notNull(),
     message: text("message").notNull(),
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    status: enquiryStatus("status").default("new").notNull(),
+    assignedTo: text("assigned_to"),
+    internalNotes: text("internal_notes"),
+    followUpAt: timestamp("follow_up_at", { withTimezone: true }),
+    lastContactedAt: timestamp("last_contacted_at", { withTimezone: true }),
+    linkedQuoteId: uuid("linked_quote_id"),
+    linkedOrderId: uuid("linked_order_id"),
     ...timestamps,
   },
-  (table) => [uniqueIndex("enquiry_reference_idx").on(table.referenceNumber)],
+  (table) => [
+    uniqueIndex("enquiry_reference_idx").on(table.referenceNumber),
+    index("enquiries_status_idx").on(table.status, table.createdAt),
+    index("enquiries_assigned_to_idx").on(table.assignedTo),
+  ],
 );
 
 export const installationRequests = pgTable("installation_requests", {
@@ -379,15 +652,167 @@ export const installationRequests = pgTable("installation_requests", {
   ...timestamps,
 });
 
-export const adminAuditLogs = pgTable("admin_audit_logs", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  actorUserId: text("actor_user_id")
-    .references(() => users.id)
-    .notNull(),
-  action: text("action").notNull(),
-  entityType: text("entity_type").notNull(),
-  entityId: text("entity_id").notNull(),
-  before: jsonb("before").$type<Record<string, unknown>>(),
-  after: jsonb("after").$type<Record<string, unknown>>(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const quotes = pgTable(
+  "quotes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    quoteNumber: text("quote_number").notNull(),
+    enquiryId: uuid("enquiry_id").references(() => enquiries.id),
+    customerName: text("customer_name").notNull(),
+    customerEmail: text("customer_email").notNull(),
+    customerMobile: text("customer_mobile").notNull(),
+    customerBusinessName: text("customer_business_name"),
+    customerGstin: text("customer_gstin"),
+    expiryAt: timestamp("expiry_at", { withTimezone: true }),
+    status: quoteStatus("status").default("draft").notNull(),
+    subtotalInclGstPaise: integer("subtotal_incl_gst_paise").default(0).notNull(),
+    includedGstPaise: integer("included_gst_paise").default(0).notNull(),
+    shippingPaise: integer("shipping_paise").default(0).notNull(),
+    installationPaise: integer("installation_paise").default(0).notNull(),
+    totalInclGstPaise: integer("total_incl_gst_paise").default(0).notNull(),
+    notes: text("notes"),
+    createdBy: text("created_by").notNull(),
+    approvedBy: text("approved_by"),
+    convertedOrderId: uuid("converted_order_id").references(() => orders.id),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("quotes_number_idx").on(table.quoteNumber),
+    index("quotes_status_idx").on(table.status, table.expiryAt),
+    index("quotes_enquiry_idx").on(table.enquiryId),
+  ],
+);
+
+export const quoteItems = pgTable(
+  "quote_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    quoteId: uuid("quote_id")
+      .references(() => quotes.id, { onDelete: "cascade" })
+      .notNull(),
+    productId: uuid("product_id").references(() => products.id),
+    model: text("model").notNull(),
+    title: text("title").notNull(),
+    quantity: integer("quantity").notNull(),
+    unitPriceInclGstPaise: integer("unit_price_incl_gst_paise").notNull(),
+    gstRateBasisPoints: integer("gst_rate_basis_points").notNull(),
+  },
+  (table) => [index("quote_items_quote_idx").on(table.quoteId)],
+);
+
+export const quoteStatusHistory = pgTable(
+  "quote_status_history",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    quoteId: uuid("quote_id")
+      .references(() => quotes.id, { onDelete: "cascade" })
+      .notNull(),
+    fromStatus: quoteStatus("from_status"),
+    toStatus: quoteStatus("to_status").notNull(),
+    actorUserId: text("actor_user_id"),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index("quote_status_history_quote_idx").on(table.quoteId, table.createdAt)],
+);
+
+export const shippingZones = pgTable(
+  "shipping_zones",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    deliveryFeePaise: integer("delivery_fee_paise").default(0).notNull(),
+    freeShippingThresholdPaise: integer("free_shipping_threshold_paise"),
+    estimatedDaysMin: integer("estimated_days_min"),
+    estimatedDaysMax: integer("estimated_days_max"),
+    codAvailable: boolean("cod_available").default(false).notNull(),
+    remoteAreaSurchargePaise: integer("remote_area_surcharge_paise").default(0).notNull(),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (table) => [uniqueIndex("shipping_zones_slug_idx").on(table.slug)],
+);
+
+export const shippingPincodeRules = pgTable(
+  "shipping_pincode_rules",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    zoneId: uuid("zone_id")
+      .references(() => shippingZones.id, { onDelete: "cascade" })
+      .notNull(),
+    pincodePrefix: text("pincode_prefix").notNull(),
+    serviceability: shippingServiceability("serviceability").default("manual_confirmation").notNull(),
+    overrideFeePaise: integer("override_fee_paise"),
+    overrideEstimatedDaysMin: integer("override_estimated_days_min"),
+    overrideEstimatedDaysMax: integer("override_estimated_days_max"),
+    isActive: boolean("is_active").default(true).notNull(),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (table) => [
+    index("shipping_pincode_rules_prefix_idx").on(table.pincodePrefix),
+    index("shipping_pincode_rules_zone_idx").on(table.zoneId),
+  ],
+);
+
+export const jobs = pgTable(
+  "jobs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    type: text("type").notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    status: jobStatus("status").default("pending").notNull(),
+    attempts: integer("attempts").default(0).notNull(),
+    maxAttempts: integer("max_attempts").default(5).notNull(),
+    runAfter: timestamp("run_after", { withTimezone: true }).defaultNow().notNull(),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lockedBy: text("locked_by"),
+    lastError: text("last_error"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    index("jobs_status_run_after_idx").on(table.status, table.runAfter),
+    index("jobs_type_idx").on(table.type),
+    index("jobs_locked_by_idx").on(table.lockedBy),
+  ],
+);
+
+export const settings = pgTable(
+  "settings",
+  {
+    key: text("key").primaryKey(),
+    value: text("value").notNull(),
+    description: text("description"),
+    updatedBy: text("updated_by"),
+    ...timestamps,
+  },
+);
+
+export const adminAuditLogs = pgTable(
+  "admin_audit_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    actorUserId: text("actor_user_id")
+      .references(() => users.id)
+      .notNull(),
+    actorEmail: text("actor_email"),
+    action: text("action").notNull(),
+    entityType: text("entity_type").notNull(),
+    entityId: text("entity_id").notNull(),
+    before: jsonb("before").$type<Record<string, unknown>>(),
+    after: jsonb("after").$type<Record<string, unknown>>(),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    ipAddress: text("ip_address"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("admin_audit_logs_entity_idx").on(table.entityType, table.entityId, table.createdAt),
+    index("admin_audit_logs_actor_idx").on(table.actorUserId, table.createdAt),
+    index("admin_audit_logs_action_idx").on(table.action, table.createdAt),
+  ],
+);
+
+// Re-export for callers that want arbitrary-precision arithmetic on prices.

@@ -6,6 +6,7 @@ import { getDb } from "@/db/client";
 import {
   addresses,
   customers,
+  inventoryReservations,
   orderItems,
   orders,
   payments,
@@ -19,6 +20,10 @@ import { logger } from "@/lib/logger";
 import { getRazorpay } from "@/lib/razorpay";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { orderRequestSchema } from "@/lib/validation";
+import { getShippingQuote } from "@/lib/shipping";
+import { reserveInventoryForOrder, releaseReservationsForOrder } from "@/lib/inventory";
+import { enqueueJob } from "@/lib/jobs";
+import { isDatabaseConfigured } from "@/db/client";
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
@@ -154,12 +159,33 @@ export async function POST(request: NextRequest) {
       ),
     0,
   );
+
+  // Server-side shipping validation. Block checkout for explicitly unserviceable
+  // pincodes. Manual-confirmation pincodes still proceed (the order record
+  // carries the serviceability result so operations can confirm before dispatch).
+  const shippingQuote = await getShippingQuote({
+    pincode: parsed.data.customer.pincode,
+    subtotalInclGstPaise,
+    products: trustedLines.map((line) => ({
+      model: line.product.model,
+      quantity: line.quantity,
+    })),
+  });
+  if (shippingQuote.serviceability === "unserviceable") {
+    return NextResponse.json(
+      { error: shippingQuote.message },
+      { status: 400 },
+    );
+  }
+  const shippingPaise = shippingQuote.shippingPaise;
+  const grandTotalInclGstPaise = subtotalInclGstPaise + shippingPaise;
+
   const totals = {
     subtotalInclGstPaise,
-    shippingPaise: 0,
+    shippingPaise,
     installationPaise: null,
     includedGstPaise,
-    grandTotalInclGstPaise: subtotalInclGstPaise,
+    grandTotalInclGstPaise,
   };
 
   const customer = parsed.data.customer;
@@ -192,11 +218,15 @@ export async function POST(request: NextRequest) {
       shippingAddressId: savedAddress.id,
       status: "payment_pending",
       subtotalInclGstPaise,
-      shippingPaise: 0,
-      totalInclGstPaise: subtotalInclGstPaise,
+      shippingPaise,
+      totalInclGstPaise: grandTotalInclGstPaise,
       includedGstPaise,
       installationRequested: customer.installationRequested,
       idempotencyKey,
+      serviceabilityResult: shippingQuote as unknown as Record<string, unknown>,
+      estimatedDeliveryAt: shippingQuote.estimatedDaysMax
+        ? new Date(Date.now() + shippingQuote.estimatedDaysMax * 86_400_000)
+        : null,
     })
     .returning({ id: orders.id });
   await db.insert(orderItems).values(
@@ -211,15 +241,68 @@ export async function POST(request: NextRequest) {
     })),
   );
 
-  const razorpayOrder = await getRazorpay().orders.create({
-    amount: totals.grandTotalInclGstPaise,
-    currency: "INR",
-    receipt: orderNumber,
-    notes: {
-      customerEmail: customer.email,
-      installationRequested: String(customer.installationRequested),
-    },
-  });
+  // Inventory reservation: atomic, with compensation on failure.
+  try {
+    await reserveInventoryForOrder({
+      orderId: savedOrder.id,
+      items: trustedLines.map((line) => ({
+        productId: line.product.id,
+        quantity: line.quantity,
+      })),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown";
+    logger.error(
+      { event: "inventory_reservation_failed", orderNumber, error: message },
+      "Inventory reservation failed during checkout",
+    );
+    // Best-effort cleanup of the partial order record. Reservations that did
+    // succeed have already been released by reserveInventoryForOrder.
+    try {
+      await db.delete(orderItems).where(eq(orderItems.orderId, savedOrder.id));
+      await db.delete(orders).where(eq(orders.id, savedOrder.id));
+    } catch {
+      // swallow — the order record remains but has no payment and will be
+      // cancelled by the cron expiration sweep.
+    }
+    return NextResponse.json(
+      { error: "Insufficient stock for one or more items. Please adjust your cart." },
+      { status: 409 },
+    );
+  }
+
+  let razorpayOrder: { id: string };
+  try {
+    razorpayOrder = await getRazorpay().orders.create({
+      amount: totals.grandTotalInclGstPaise,
+      currency: "INR",
+      receipt: orderNumber,
+      notes: {
+        customerEmail: customer.email,
+        installationRequested: String(customer.installationRequested),
+      },
+    });
+  } catch (error) {
+    // Compensation: release reservations and cancel the pending order.
+    await releaseReservationsForOrder(savedOrder.id, "razorpay_create_failed");
+    await db
+      .update(orders)
+      .set({ status: "cancelled", updatedAt: new Date() })
+      .where(eq(orders.id, savedOrder.id));
+    logger.error(
+      {
+        event: "razorpay_order_create_failed",
+        orderNumber,
+        error: error instanceof Error ? error.message : "unknown",
+      },
+      "Razorpay order creation failed",
+    );
+    return NextResponse.json(
+      { error: "Payment provider is unavailable. Please retry or request a quote." },
+      { status: 502 },
+    );
+  }
+
   await db.insert(payments).values({
     orderId: savedOrder.id,
     providerOrderId: razorpayOrder.id,
@@ -227,8 +310,8 @@ export async function POST(request: NextRequest) {
     amountPaise: totals.grandTotalInclGstPaise,
   });
   logger.info(
-    { event: "order_created", orderNumber, providerOrderId: razorpayOrder.id },
-    "Order created",
+    { event: "order_created", orderNumber, providerOrderId: razorpayOrder.id, shippingPaise },
+    "Order created with shipping and inventory reservation",
   );
   return NextResponse.json({
     mode: "razorpay",
@@ -237,5 +320,6 @@ export async function POST(request: NextRequest) {
     razorpayOrderId: razorpayOrder.id,
     amount: totals.grandTotalInclGstPaise,
     totals,
+    shipping: shippingQuote,
   });
 }
