@@ -1,0 +1,43 @@
+[
+  {
+    "model": "CP-UNC-DA41L3C-D-Q",
+    "sourceDimensions": "400×520 png ch=4",
+    "intermediateDimensions": "400×520",
+    "outputDimensions": "384×359",
+    "notes": [
+      "Removed 1157 near-white pixels (threshold=240)",
+      "Output: 384×359 WebP",
+      "⚠️  Verify: complete dome housing preserved",
+      "⚠️  Verify: lens and CP PLUS logo intact",
+      "⚠️  Verify: no top or side crop"
+    ],
+    "needsVisualReview": true
+  },
+  {
+    "model": "CP-UNC-TA41L3C-Q",
+    "sourceDimensions": "400×520 png ch=4",
+    "intermediateDimensions": "400×520",
+    "outputDimensions": "348×180",
+    "notes": [
+      "Removed 3261 near-white pixels (threshold=240)",
+      "Output: 348×180 WebP",
+      "⚠️  Verify: complete mounting arm preserved",
+      "⚠️  Verify: camera body fills most of asset bounds"
+    ],
+    "needsVisualReview": true
+  },
+  {
+    "model": "CP-UNR-108F1",
+    "sourceDimensions": "400×520 jpeg ch=3",
+    "intermediateDimensions": "400×520",
+    "outputDimensions": "389×68",
+    "notes": [
+      "Removed 182512 near-white pixels (threshold=230)",
+      "Output: 389×68 WebP",
+      "⚠️  Verify: no white rectangle visible around NVR body",
+      "⚠️  Verify: NVR preserves natural wide/thin aspect ratio",
+      "⚠️  Verify: red front detail and face details preserved"
+    ],
+    "needsVisualReview": true
+  }
+]

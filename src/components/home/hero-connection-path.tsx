@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "motion/react";
 interface HeroConnectionPathProps {
   scrollProgress: number; // 0–1 within the "connect" stage
   visible: boolean;
-  /** Viewport-relative coordinates for the SVG path endpoints */
+  /** Stage-relative coordinates (0-1) for the SVG path endpoints */
   primaryProductCenter: { x: number; y: number };
   tertiaryProductCenter: { x: number; y: number };
   secondaryProductCenter: { x: number; y: number };
@@ -20,21 +20,18 @@ export function HeroConnectionPath({
 }: HeroConnectionPathProps) {
   const reduceMotion = useReducedMotion();
 
-  // Pulse is triggered once when scroll progress exceeds threshold.
-  // Derive directly from scroll progress — no state or ref needed.
-  // The pulse animation only fires once (motion animate does not loop).
   const pulseTriggered = scrollProgress > 0.3;
 
   if (!visible) return null;
 
-  // Calculate path drawing progress (0-1 within connect stage)
   const drawProgress = reduceMotion ? 1 : Math.min(1, scrollProgress * 1.5);
 
-  // SVG viewBox dimensions (using a normalized coordinate system)
+  // SVG viewBox using normalized coordinate system
   const viewBoxWidth = 100;
-  const viewBoxHeight = 80;
+  const viewBoxHeight = 100;
 
-  // Convert percentage-based positions to viewBox coordinates
+  // Convert fraction-based positions to viewBox coordinates
+  // Connector anchor points start from visible product edges, not wrapper centres
   const p1x = primaryProductCenter.x * viewBoxWidth;
   const p1y = primaryProductCenter.y * viewBoxHeight;
   const p2x = secondaryProductCenter.x * viewBoxWidth;
@@ -42,11 +39,13 @@ export function HeroConnectionPath({
   const nvrX = tertiaryProductCenter.x * viewBoxWidth;
   const nvrY = tertiaryProductCenter.y * viewBoxHeight;
 
-  // Create curved paths from cameras to NVR
-  const domeToNvrPath = `M ${p1x} ${p1y} C ${p1x + 5} ${p1y + 10}, ${nvrX - 10} ${nvrY - 5}, ${nvrX} ${nvrY}`;
-  const bulletToNvrPath = `M ${p2x} ${p2y} C ${p2x - 3} ${p2y + 8}, ${nvrX + 10} ${nvrY - 4}, ${nvrX} ${nvrY}`;
+  // Curved paths from cameras to NVR
+  // Dome dome-bottom → NVR centre-top
+  const domeToNvrPath = `M ${p1x} ${p1y + 10} C ${p1x - 2} ${p1y + 18}, ${nvrX - 8} ${nvrY - 6}, ${nvrX} ${nvrY}`;
 
-  // Path length estimation for dash reveal
+  // Bullet bottom → NVR right-top
+  const bulletToNvrPath = `M ${p2x} ${p2y + 6} C ${p2x - 2} ${p2y + 12}, ${nvrX + 6} ${nvrY - 4}, ${nvrX} ${nvrY}`;
+
   const estimatedPathLength = 80;
 
   // Pulse position along the path (0-1)
@@ -67,7 +66,7 @@ export function HeroConnectionPath({
         d={domeToNvrPath}
         fill="none"
         stroke="var(--text-muted)"
-        strokeWidth="0.6"
+        strokeWidth="0.5"
         strokeLinecap="round"
         strokeDasharray={estimatedPathLength}
         strokeDashoffset={estimatedPathLength * (1 - drawProgress)}
@@ -81,7 +80,7 @@ export function HeroConnectionPath({
         d={bulletToNvrPath}
         fill="none"
         stroke="var(--text-muted)"
-        strokeWidth="0.6"
+        strokeWidth="0.5"
         strokeLinecap="round"
         strokeDasharray={estimatedPathLength}
         strokeDashoffset={estimatedPathLength * (1 - drawProgress)}
@@ -94,7 +93,7 @@ export function HeroConnectionPath({
       {pulseTriggered && (
         <motion.circle
           cx={p1x + (nvrX - p1x) * pulsePosition}
-          cy={p1y + (nvrY - p1y) * pulsePosition}
+          cy={(p1y + 10) + (nvrY - (p1y + 10)) * pulsePosition}
           r="1.2"
           fill="var(--accent)"
           initial={reduceMotion ? false : { scale: 0, opacity: 0 }}
@@ -110,7 +109,7 @@ export function HeroConnectionPath({
       {pulseTriggered && (
         <motion.circle
           cx={p2x + (nvrX - p2x) * pulsePosition}
-          cy={p2y + (nvrY - p2y) * pulsePosition}
+          cy={(p2y + 6) + (nvrY - (p2y + 6)) * pulsePosition}
           r="1.0"
           fill="var(--accent)"
           initial={reduceMotion ? false : { scale: 0, opacity: 0 }}

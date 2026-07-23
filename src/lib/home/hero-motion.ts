@@ -25,25 +25,33 @@ export const heroSprings = {
   pointer: { stiffness: 400, damping: 40, mass: 0.5 },
 } as const;
 
-// Product transforms per scroll stage
+// ── Product transforms per scroll stage ──
+// Retuned to preserve visual hierarchy and respect limits:
+// - Dome: dominant, never scaled beyond 1.05
+// - Bullet: recognisable, never reduced below 0.88
+// - NVR: visual anchor, opacity never below 0.85
+// Products move from one deliberate composition to another.
 export const productTransforms = {
   primary: {
+    // Dome camera — dominant, slight left of centre
     introduction: { x: 0, y: 0, scale: 1, rotation: 0 },
-    identify: { x: -7, y: -3, scale: 1.08, rotation: -1 },
-    connect: { x: -15, y: -8, scale: 0.96, rotation: 0 },
-    resolve: { x: -15, y: -8, scale: 0.96, rotation: 0 },
+    identify: { x: -6, y: -4, scale: 1.04, rotation: -0.5 }, // Slight scale up to emphasise, never >1.05
+    connect: { x: -12, y: -6, scale: 0.97, rotation: 0 },    // Pulls slightly toward NVR
+    resolve: { x: -12, y: -6, scale: 0.97, rotation: 0 },
   },
   secondary: {
+    // Bullet camera — secondary, upper-right, points toward centre
     introduction: { x: 0, y: 0, scale: 1, opacity: 1 },
-    identify: { x: 10, y: -5, scale: 0.92, opacity: 0.72 },
-    connect: { x: 20, y: -10, scale: 0.87, opacity: 1 },
-    resolve: { x: 20, y: -10, scale: 0.87, opacity: 1 },
+    identify: { x: 8, y: -4, scale: 0.94, opacity: 0.82 },  // Slight pull away during identify
+    connect: { x: 14, y: -8, scale: 0.90, opacity: 1 },     // Comes forward during connect, never <0.88
+    resolve: { x: 14, y: -8, scale: 0.90, opacity: 1 },
   },
   tertiary: {
+    // NVR — lower visual anchor, wide and grounded
     introduction: { x: 0, y: 0, scale: 1, opacity: 1 },
-    identify: { x: 0, y: 7, scale: 0.9, opacity: 0.66 },
-    connect: { x: 1, y: 22, scale: 1.04, opacity: 1 },
-    resolve: { x: 1, y: 22, scale: 1.04, opacity: 1 },
+    identify: { x: 0, y: 6, scale: 0.92, opacity: 0.88 },   // Slight settle, opacity never <0.85
+    connect: { x: 0, y: 18, scale: 1.02, opacity: 1 },       // Lifts slightly, emphasised during connect
+    resolve: { x: 0, y: 18, scale: 1.02, opacity: 1 },
   },
 } as const;
 

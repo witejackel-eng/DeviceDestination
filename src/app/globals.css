@@ -664,7 +664,8 @@ button {
   color: var(--text-muted);
 }
 
-/* Art-directed hero composition — shared neutral stage */
+/* Art-directed hero composition — shared neutral stage
+   (Positioning now handled inline via hero-media config, not via CSS classes) */
 .hero-composition {
   position: relative;
   background: var(--surface-subtle);
@@ -673,83 +674,12 @@ button {
   overflow: hidden;
 }
 
-/* Primary dome camera — largest, slightly left of centre */
-.hero-product-primary {
-  position: absolute;
-  left: 5%;
-  top: 8%;
-  width: 55%;
-  height: 55%;
-}
+/* Hero composition background is now rendered by the React component.
+   The .hero-product-* and .hero-label* CSS classes are no longer used.
+   Product positioning, shadows, and labels are driven by hero-media.ts
+   configuration to ensure art-directed composition. */
 
-.hero-product-primary img {
-  object-fit: contain;
-  padding: 10%;
-  filter: drop-shadow(0 4px 12px rgba(17, 18, 20, 0.08));
-}
-
-/* Secondary bullet camera — upper/middle right */
-.hero-product-secondary {
-  position: absolute;
-  right: 3%;
-  top: 5%;
-  width: 38%;
-  height: 38%;
-}
-
-.hero-product-secondary img {
-  object-fit: contain;
-  padding: 8%;
-  filter: drop-shadow(0 3px 8px rgba(17, 18, 20, 0.06));
-}
-
-/* NVR — lower portion, substantial width */
-.hero-product-tertiary {
-  position: absolute;
-  bottom: 2%;
-  left: 10%;
-  width: 50%;
-  height: 30%;
-}
-
-.hero-product-tertiary img {
-  object-fit: contain;
-  padding: 5% 8%;
-  filter: drop-shadow(0 2px 6px rgba(17, 18, 20, 0.05));
-}
-
-/* Technical labels — neutral, small, secondary */
-.hero-labels {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  gap: 6px;
-  z-index: 5;
-}
-
-.hero-label {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(4px);
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 0.02em;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-@media (max-width: 1024px) {
-  .hero-labels {
-    display: none;
-  }
-}
-
-/* Subtle inner lighting effect */
+/* Subtle inner lighting effect — still used as fallback */
 .hero-composition::before {
   content: "";
   position: absolute;

@@ -44,10 +44,9 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
   const isMobile = breakpoint === "mobile";
   const isDesktop = breakpoint === "desktop";
 
-  // Entrance animation state — set via onAnimationComplete callback, not useEffect
+  // Entrance animation state
   const [entranceComplete, setEntranceComplete] = useState(reduceMotion ? true : false);
 
-  // Callback triggered when entrance animations complete
   const handleEntranceComplete = useCallback(() => {
     setEntranceComplete(true);
   }, []);
@@ -59,13 +58,10 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
     offset: ["start start", "end start"],
   });
 
-  // Transform scroll progress (0-1) for use in the product stage
   const scrollProgress = useTransform(scrollYProgress, [0, 1], [0, 1]);
-
-  // Animated scroll value for spring-based smoothing
   const smoothProgress = useSpring(scrollProgress, heroSprings.scroll);
 
-  // Heading transitions — switch from initial to stage 3 heading during connect stage
+  // Heading transitions
   const headingOpacity1 = useTransform(scrollYProgress, [0, scrollStages.connect.start], [1, 0]);
   const headingOpacity2 = useTransform(scrollYProgress, [scrollStages.connect.start, scrollStages.connect.end], [0, 1]);
 
@@ -84,7 +80,6 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
     return () => unsubscribe();
   }, [smoothProgress, isMobile]);
 
-  // Determine the current stage
   const getStage = useCallback((progress: number): "introduction" | "identify" | "connect" | "resolve" => {
     if (progress < scrollStages.identify.start) return "introduction";
     if (progress < scrollStages.connect.start) return "identify";
@@ -95,6 +90,8 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
   const currentStage = getStage(currentProgress);
 
   // ──────────────────────── MOBILE HERO ────────────────────────
+  // Mobile: dome + NVR only. No bullet camera, no labels, no connections.
+  // Stage height: 280-340px. Search and actions remain above the stage.
   if (isMobile) {
     return (
       <section style={{ background: "var(--background)" }}>
@@ -129,7 +126,7 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
             Find exact cameras, recorders, biometric devices and networking hardware with GST-inclusive pricing, model-specific documents and secure checkout.
           </motion.p>
 
-          {/* Search */}
+          {/* Search — must remain above the stage */}
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -153,7 +150,7 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
             </Link>
           </motion.div>
 
-          {/* Product composition */}
+          {/* Product composition — dome + NVR only, ~300px tall */}
           <motion.div
             className="mt-8"
             initial={reduceMotion ? false : { opacity: 0 }}
@@ -162,7 +159,7 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
           >
             <CinematicProductStage
               heroProducts={heroProducts}
-              annotations={annotations}
+              annotations={[]} // No labels on mobile
               scrollProgress={0}
               entranceComplete={true}
               isMobile={true}
@@ -189,7 +186,6 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
     ? "185svh"
     : "120svh";
 
-  // Entrance animation duration for the copy (last entrance element)
   const copyEntranceDuration = entrance.copy.duration / 1000;
   const copyEntranceDelay = entrance.copy.delay / 1000;
 
@@ -202,11 +198,11 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
       >
         {/* Sticky viewport stage */}
         <motion.div
-          className="sticky top-[var(--header-height)] flex items-start lg:items-center gap-12 pt-8 pb-4 lg:pt-0 lg:pb-0 container-standard"
+          className="sticky top-[var(--header-height)] flex items-start lg:items-center gap-6 pt-8 pb-4 lg:pt-0 lg:pb-0 container-standard"
           style={{ minHeight: "calc(100svh - var(--header-height))" }}
         >
-          {/* Left: Copy + Search + CTAs */}
-          <div className="lg:max-w-[52%] flex-shrink-0">
+          {/* Left: Copy + Search + CTAs — ~49-52% width */}
+          <div className="lg:max-w-[51%] flex-shrink-0">
             {/* Eyebrow */}
             <motion.p
               className="eyebrow"
@@ -219,7 +215,6 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
 
             {/* Heading — transitions between initial and Stage 3 */}
             <div className="mt-5 relative">
-              {/* Stage 1 heading */}
               <motion.h1
                 className="display-hero"
                 style={{ opacity: headingOpacity1 }}
@@ -227,7 +222,6 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
                 Security hardware, specified clearly.
               </motion.h1>
 
-              {/* Stage 3 heading */}
               <motion.h1
                 className="display-hero absolute inset-0"
                 style={{ opacity: headingOpacity2 }}
@@ -236,9 +230,8 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
               </motion.h1>
             </div>
 
-            {/* Supporting paragraph — transitions between initial and Stage 3 */}
+            {/* Supporting paragraph — transitions */}
             <div className="mt-7 relative">
-              {/* Initial paragraph */}
               <motion.p
                 className="max-w-xl text-lg leading-8 text-[var(--text-secondary)]"
                 style={{ opacity: headingOpacity1 }}
@@ -246,7 +239,6 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
                 Find exact cameras, recorders, biometric devices and networking hardware with GST-inclusive pricing, model-specific documents and secure checkout.
               </motion.p>
 
-              {/* Stage 3 paragraph */}
               <motion.p
                 className="max-w-xl text-lg leading-8 text-[var(--text-secondary)] absolute inset-0"
                 style={{ opacity: headingOpacity2 }}
@@ -270,7 +262,7 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
                 </Link>
               </div>
 
-              {/* Confidence / resolve line — fires entranceComplete callback on animation end */}
+              {/* Confidence line */}
               <motion.p
                 className="mt-5 text-sm text-[var(--text-muted)]"
                 initial={reduceMotion ? false : { opacity: 0, y: entrance.copy.translateY }}
@@ -285,9 +277,9 @@ export function CinematicCommerceHero({ heroProducts, annotations }: CinematicCo
             </motion.div>
           </div>
 
-          {/* Right: Product stage */}
+          {/* Right: Product stage — ~48-51% width */}
           <motion.div
-            className="relative mt-8 lg:mt-0 lg:w-[48%] flex-shrink-0"
+            className="relative mt-8 lg:mt-0 lg:w-[49%] flex-shrink-0"
             initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: entrance.primaryProduct.duration / 1000, delay: entrance.primaryProduct.delay / 1000, ease: [0.22, 1, 0.36, 1] }}

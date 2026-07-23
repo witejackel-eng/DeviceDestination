@@ -24,6 +24,7 @@
     "products:validate": "node --import tsx scripts/validate-product-data.ts",
     "products:report": "node --import tsx scripts/write-catalogue-report.ts",
     "products:images": "npx tsx scripts/optimize-product-images.ts",
+    "products:hero-images": "npx tsx scripts/prepare-hero-product-images.ts",
     "theme:validate": "node scripts/validate-theme.mjs",
     "format": "prettier --write ."
   },

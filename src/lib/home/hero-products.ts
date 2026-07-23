@@ -1,5 +1,6 @@
 import { catalogue } from "@/data/catalog";
 import type { Product } from "@/lib/products";
+import { resolveHeroMedia } from "@/lib/home/hero-media";
 
 export type HeroProductRole = "primary" | "secondary" | "tertiary";
 
@@ -7,6 +8,8 @@ export interface HeroProduct {
   product: Product;
   role: HeroProductRole;
   resolvedVia: string;
+  /** Hero-media configuration for art-directed image, positioning, and scaling */
+  heroMedia: ReturnType<typeof resolveHeroMedia>;
 }
 
 // Preferred models per role
@@ -41,7 +44,12 @@ export function resolveHeroProducts(): HeroProduct[] {
     const exact = catalogue.find(p => p.model === preferred && !usedIds.has(p.id));
     if (exact) {
       usedIds.add(exact.id);
-      results.push({ product: exact, role, resolvedVia: "exact" });
+      results.push({
+        product: exact,
+        role,
+        resolvedVia: "exact",
+        heroMedia: resolveHeroMedia(exact.model),
+      });
       continue;
     }
 
@@ -51,7 +59,12 @@ export function resolveHeroProducts(): HeroProduct[] {
       const fallback = catalogue.find(p => filterFn(p) && !usedIds.has(p.id));
       if (fallback) {
         usedIds.add(fallback.id);
-        results.push({ product: fallback, role, resolvedVia: `fallback-${role}` });
+        results.push({
+          product: fallback,
+          role,
+          resolvedVia: `fallback-${role}`,
+          heroMedia: resolveHeroMedia(fallback.model),
+        });
         found = true;
         break;
       }
@@ -62,12 +75,31 @@ export function resolveHeroProducts(): HeroProduct[] {
       const anyProduct = catalogue.find(p => !usedIds.has(p.id) && p.stockStatus === "in_stock");
       if (anyProduct) {
         usedIds.add(anyProduct.id);
-        results.push({ product: anyProduct, role, resolvedVia: "emergency-fallback" });
+        results.push({
+          product: anyProduct,
+          role,
+          resolvedVia: "emergency-fallback",
+          heroMedia: resolveHeroMedia(anyProduct.model),
+        });
       }
     }
   }
 
   return results;
+}
+
+/**
+ * Get the hero image path for a hero product.
+ * Uses the hero-media optimized image if available, otherwise falls back
+ * to the catalogue source image. NO MORE BLIND product.images[0].
+ */
+export function getHeroImage(heroProduct: HeroProduct): string {
+  const media = heroProduct.heroMedia;
+  if (media) {
+    return media.optimizedImage;
+  }
+  // Fallback: use the best source image from the product gallery
+  return heroProduct.product.images[0];
 }
 
 // Derive technical annotations from real product specs
