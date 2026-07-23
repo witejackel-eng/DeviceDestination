@@ -96,14 +96,45 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Bottom row */}
+      {/* ── Bottom row: copyright, GST identity, quick links ── */}
       <div className="container-standard flex flex-col gap-2 border-t border-white/10 py-5 text-xs text-[var(--dark-muted)] sm:flex-row sm:items-center sm:justify-between">
-        <p>&copy; {new Date().getFullYear()} {siteConfig.legalName}. All rights reserved.</p>
-        <p>Installation is quoted separately through qualified third-party installers.</p>
+        <p>&copy; {new Date().getFullYear()} {siteConfig.legalName}. All rights reserved.{siteConfig.gstin ? ` · GSTIN: ${siteConfig.gstin}` : ""}</p>
         <div className="flex gap-3">
           <CookieSettingsLink className="underline hover:text-[var(--dark-text)] transition-colors" />
           <Link href="/privacy" className="underline hover:text-[var(--dark-text)] transition-colors">Privacy</Link>
           <Link href="/terms" className="underline hover:text-[var(--dark-text)] transition-colors">Terms</Link>
+        </div>
+      </div>
+
+      {/* ── Legal and assurance panel ───────────────────────── */}
+      <div className="border-t border-white/10">
+        <div className="container-standard py-[30px] sm:py-[42px] lg:py-[48px]">
+          {/* Assurance line */}
+          <p className="text-center text-[13px] sm:text-[14px] font-semibold tracking-[0.06em] sm:tracking-[0.12em] uppercase text-[#A8C4E0] max-w-[820px] mx-auto">
+            <span aria-hidden="true" className="inline-block mr-1.5 text-[var(--accent)] opacity-70">✦</span>
+            SAFE SHOPPING · OEM WARRANTY · GENUINE PRODUCTS · SECURE PAYMENTS
+          </p>
+
+          {/* Legal paragraph */}
+          <p className="mx-auto mt-5 max-w-[820px] text-center text-[13px] sm:text-[14px] leading-[1.65] text-[var(--dark-muted)]">
+            All products are sold with OEM warranty only. Installation and service are provided through independent third-party partners at the customer&apos;s discretion. By using this website, you agree to our{" "}
+            <Link href="/terms" className="underline hover:text-[var(--dark-text)] transition-colors focus-visible:outline-[3px] focus-visible:outline-[var(--accent-focus)] focus-visible:outline-offset-[3px]">
+              Terms &amp; Conditions
+            </Link>,{" "}
+            <Link href="/refund-policy" className="underline hover:text-[var(--dark-text)] transition-colors focus-visible:outline-[3px] focus-visible:outline-[var(--accent-focus)] focus-visible:outline-offset-[3px]">
+              Return/Refund Policy
+            </Link>, and{" "}
+            <Link href="/privacy" className="underline hover:text-[var(--dark-text)] transition-colors focus-visible:outline-[3px] focus-visible:outline-[var(--accent-focus)] focus-visible:outline-offset-[3px]">
+              Privacy Policy
+            </Link>. All disputes are subject to the jurisdiction of New Delhi, India.
+          </p>
+
+          {/* Powered-by line */}
+          <p className="mt-5 text-center text-[12px] sm:text-[13px] italic text-[var(--dark-muted)] opacity-60">
+            <Link href="/" className="hover:text-[var(--dark-text)] transition-colors focus-visible:outline-[3px] focus-visible:outline-[var(--accent-focus)] focus-visible:outline-offset-[3px]">
+              DeviceDestination.com
+            </Link>{" "}— Powered by Insight Business Solution
+          </p>
         </div>
       </div>
     </footer>
