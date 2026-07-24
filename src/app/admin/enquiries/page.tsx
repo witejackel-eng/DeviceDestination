@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { listEnquiriesForAdmin } from "@/app/admin/actions/enquiries";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Enquiries", robots: { index: false, follow: false } };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function AdminEnquiriesPage({ searchParams }: { searchParams: SearchParams }) {
+  await requireAdmin();
   const query = await searchParams;
   const status = (typeof query.status === "string" ? query.status : "all") as
     | "new"

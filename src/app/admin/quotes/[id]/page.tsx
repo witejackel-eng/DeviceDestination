@@ -5,11 +5,13 @@ import { getQuoteForAdmin } from "@/app/admin/actions/quotes";
 import { QuoteDetail } from "@/components/admin/quote-detail";
 import { formatPrice } from "@/lib/products";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Quote", robots: { index: false, follow: false } };
 
 type Params = Promise<{ id: string }>;
 
 export default async function AdminQuoteDetailPage({ params }: { params: Params }) {
+  await requireAdmin();
   const { id } = await params;
   const data = await getQuoteForAdmin(id);
   if (!data) notFound();

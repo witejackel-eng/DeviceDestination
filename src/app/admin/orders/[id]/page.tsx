@@ -5,11 +5,13 @@ import { getOrderDetailForAdmin } from "@/app/admin/actions/orders";
 import { OrderDetail } from "@/components/admin/order-detail";
 import { formatPrice } from "@/lib/products";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Order", robots: { index: false, follow: false } };
 
 type Params = Promise<{ id: string }>;
 
 export default async function AdminOrderDetailPage({ params }: { params: Params }) {
+  await requireAdmin();
   const { id } = await params;
   const data = await getOrderDetailForAdmin(id);
   if (!data) notFound();

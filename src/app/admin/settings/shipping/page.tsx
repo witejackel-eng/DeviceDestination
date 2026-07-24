@@ -6,12 +6,14 @@ import {
 } from "@/app/admin/actions/settings";
 import { ShippingManager } from "@/components/admin/shipping-manager";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = {
   title: "Admin · Shipping",
   robots: { index: false, follow: false },
 };
 
 export default async function AdminShippingSettingsPage() {
+  await requireAdmin();
   const zones = await listShippingZonesForAdmin();
   const rules = await listShippingRulesForAdmin();
   return (

@@ -84,7 +84,7 @@ vi.mock("@/lib/inventory", async () => {
 
 // Partial mock of jobs so individual tests can override enqueueDeduplicatedJob.
 vi.mock("@/lib/jobs", async () => {
-  const actual = await vi.importActual("@/lib/jobs");
+  const actual = (await vi.importActual("@/lib/jobs")) as typeof import("@/lib/jobs");
   return {
     ...actual,
     enqueueDeduplicatedJob: vi.fn(actual.enqueueDeduplicatedJob),

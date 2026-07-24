@@ -4,11 +4,13 @@ import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import { getDb, isDatabaseConfigured } from "@/db/client";
 import { adminAuditLogs, jobs } from "@/db/schema";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Audit", robots: { index: false, follow: false } };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function AdminAuditPage({ searchParams }: { searchParams: SearchParams }) {
+  await requireAdmin();
   const query = await searchParams;
   const tab = typeof query.tab === "string" ? query.tab : "audit";
   const action = typeof query.action === "string" ? query.action : "";

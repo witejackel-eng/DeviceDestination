@@ -4,11 +4,13 @@ import { listQuotesForAdmin } from "@/app/admin/actions/quotes";
 import { formatPrice } from "@/lib/products";
 import { QuoteCreateForm } from "@/components/admin/quote-create-form";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Quotes", robots: { index: false, follow: false } };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function AdminQuotesPage({ searchParams }: { searchParams: SearchParams }) {
+  await requireAdmin();
   const query = await searchParams;
   const status = (typeof query.status === "string" ? query.status : "all") as
     | "draft"

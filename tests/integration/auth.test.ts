@@ -59,6 +59,7 @@ vi.mock("@/lib/auth", () => ({
     },
   }),
   isAuthConfigured: vi.fn().mockReturnValue(true),
+  isAuthFullyConfiguredForAdmin: vi.fn().mockReturnValue(true),
 }));
 
 vi.mock("next/headers", () => ({
@@ -104,7 +105,7 @@ describe.skipIf(!hasTestDb())("AUTHORIZATION integration tests", () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.reason).toBe("Sign in required.");
+      expect(result.reason).toBe("unauthenticated");
       expect(result.status).toBe(401);
     }
   });
@@ -134,7 +135,7 @@ describe.skipIf(!hasTestDb())("AUTHORIZATION integration tests", () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.reason).toBe("Forbidden.");
+      expect(result.reason).toBe("forbidden");
       expect(result.status).toBe(403);
     }
   });

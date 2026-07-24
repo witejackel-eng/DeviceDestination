@@ -4,11 +4,13 @@ import { notFound } from "next/navigation";
 import { getEnquiryForAdmin } from "@/app/admin/actions/enquiries";
 import { EnquiryDetail } from "@/components/admin/enquiry-detail";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Enquiry", robots: { index: false, follow: false } };
 
 type Params = Promise<{ id: string }>;
 
 export default async function AdminEnquiryDetailPage({ params }: { params: Params }) {
+  await requireAdmin();
   const { id } = await params;
   const enquiry = await getEnquiryForAdmin(id);
   if (!enquiry) notFound();

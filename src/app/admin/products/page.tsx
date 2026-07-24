@@ -3,11 +3,13 @@ import Link from "next/link";
 import { listProductsForAdmin } from "@/app/admin/actions/products";
 import { formatPrice } from "@/lib/products";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Products", robots: { index: false, follow: false } };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function AdminProductsPage({ searchParams }: { searchParams: SearchParams }) {
+  await requireAdmin();
   const query = await searchParams;
   const search = typeof query.search === "string" ? query.search : "";
   const status = (typeof query.status === "string" ? query.status : "all") as

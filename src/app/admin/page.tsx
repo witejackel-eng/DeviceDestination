@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { desc, eq, sql } from "drizzle-orm";
-import { isAuthConfigured } from "@/lib/auth";
 import { getDb, isDatabaseConfigured } from "@/db/client";
 import {
   adminAuditLogs,
@@ -12,7 +11,7 @@ import {
   orders,
   products,
 } from "@/db/schema";
-import { formatPrice } from "@/lib/products";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
@@ -138,18 +137,13 @@ async function getRecentAuditEvents() {
 }
 
 export default async function AdminPage() {
+  await requireAdmin();
   const stats = await getOperationalStats();
   const recentAudit = await getRecentAuditEvents();
   return (
     <div className="container-standard section-space !pt-14">
       <p className="eyebrow">Protected operations</p>
       <h1 className="display-section mt-4">Admin.</h1>
-      {!isAuthConfigured() && (
-        <div className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-5">
-          <strong>Configuration mode.</strong> Add Neon, Better Auth and ADMIN_EMAILS variables
-          before this interface can mutate production data.
-        </div>
-      )}
       <section className="mt-10">
         <h2 className="font-display text-2xl font-semibold">Operational snapshot</h2>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
