@@ -64,6 +64,13 @@
       "when": 1784890000000,
       "tag": "0008_order_access_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784892000000,
+      "tag": "0009_invoices_immutable",
+      "breakpoints": true
     }
   ]
 }

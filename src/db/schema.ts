@@ -675,6 +675,52 @@ export const payments = pgTable(
   ],
 );
 
+/**
+ * Immutable invoice model.
+ *
+ * Each invoice is generated once from a snapshot of the order and business
+ * settings at issue time. The PDF is stored immutably in Vercel Blob (when
+ * configured) and its SHA-256 hash is recorded for integrity verification.
+ * Historical invoices never change when current business settings change.
+ *
+ * If Blob is not configured, the invoice is created with status 'deferred'
+ * and the invoice-generation job is marked as configuration-deferred.
+ */
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    invoiceNumber: text("invoice_number").notNull(),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "restrict" }),
+    orderNumber: text("order_number").notNull(),
+    sellerSnapshot: jsonb("seller_snapshot").$type<Record<string, unknown>>().notNull(),
+    gstinSnapshot: text("gstin_snapshot"),
+    sellerAddressSnapshot: jsonb("seller_address_snapshot").$type<Record<string, unknown>>().notNull(),
+    customerBillingSnapshot: jsonb("customer_billing_snapshot").$type<Record<string, unknown>>().notNull(),
+    placeOfSupplySnapshot: text("place_of_supply_snapshot"),
+    lineItemsSnapshot: jsonb("line_items_snapshot").$type<unknown[]>().notNull(),
+    priceGstSnapshot: jsonb("price_gst_snapshot").$type<Record<string, unknown>>().notNull(),
+    subtotalPaise: integer("subtotal_paise").notNull(),
+    shippingPaise: integer("shipping_paise").notNull(),
+    includedGstPaise: integer("included_gst_paise").notNull(),
+    finalTotalPaise: integer("final_total_paise").notNull(),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).defaultNow().notNull(),
+    fiscalSequence: integer("fiscal_sequence"),
+    renderingVersion: integer("rendering_version").default(1).notNull(),
+    pdfStorageUrl: text("pdf_storage_url"),
+    pdfStorageKey: text("pdf_storage_key"),
+    pdfSha256: text("pdf_sha256"),
+    status: text("status").default("deferred").notNull(),
+    creditNoteInvoiceId: uuid("credit_note_invoice_id"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("invoices_number_idx").on(table.invoiceNumber),
+    uniqueIndex("invoices_order_active_idx").on(table.orderId),
+    index("invoices_pdf_hash_idx").on(table.pdfSha256),
+  ],
+);
+
 export const refunds = pgTable(
   "refunds",
   {

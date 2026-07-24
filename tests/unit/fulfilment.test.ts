@@ -34,6 +34,8 @@ describe("paid-order fulfilment", () => {
         },
       ],
       totalInclGstPaise: 365800,
+      subtotalInclGstPaise: 365800,
+      shippingPaise: 0,
       includedGstPaise: 55800,
     });
     expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
