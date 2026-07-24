@@ -370,6 +370,49 @@ export const inventoryAdjustments = pgTable(
   ],
 );
 
+/**
+ * Append-only inventory ledger.
+ *
+ * Every atomic inventory mutation (reserve, consume, release, expire, adjust,
+ * reconcile) writes exactly one row to this table. The `operation_id` column
+ * is unique, preventing replay of the same operation. Counters can be
+ * reconciled from the ledger at any time by summing the deltas per product.
+ *
+ * This table is the source of truth for inventory audit. The `inventory`
+ * table's `reserved` and `quantity_available` columns are a denormalised
+ * cache of the ledger's current state.
+ */
+export const inventoryLedger = pgTable(
+  "inventory_ledger",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    operationId: text("operation_id").notNull(),
+    productId: uuid("product_id")
+      .references(() => products.id, { onDelete: "restrict" })
+      .notNull(),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "set null" }),
+    reservationId: uuid("reservation_id").references(() => inventoryReservations.id, {
+      onDelete: "set null",
+    }),
+    operationType: text("operation_type").notNull(),
+    quantityDelta: integer("quantity_delta").notNull(),
+    reservedDelta: integer("reserved_delta").notNull(),
+    availableBefore: integer("available_before"),
+    availableAfter: integer("available_after"),
+    reservedBefore: integer("reserved_before").notNull(),
+    reservedAfter: integer("reserved_after").notNull(),
+    actor: text("actor"),
+    idempotencyKey: text("idempotency_key"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("inventory_ledger_operation_id_idx").on(table.operationId),
+    index("inventory_ledger_product_idx").on(table.productId, table.createdAt),
+    index("inventory_ledger_order_idx").on(table.orderId),
+    index("inventory_ledger_reservation_idx").on(table.reservationId),
+  ],
+);
+
 export const users = pgTable(
   "users",
   {

@@ -1,19 +1,27 @@
 /**
- * Inventory reservation/consumption/release with atomic status claims.
+ * Inventory reservation/consumption/release with atomic PostgreSQL functions.
  *
- * The neon-http driver does NOT support interactive transactions with row
- * locks, so all atomic operations use conditional UPDATEs with RETURNING.
+ * Critical mutations are encapsulated in SECURITY DEFINER functions
+ * (migration 0004_inventory_atomic.sql) that use row-level locks internally.
+ * Each function is a single atomic transaction: it validates the expected
+ * state, updates counters, updates reservation state, and writes an
+ * immutable inventory_ledger entry — all or nothing.
  *
- * Key design choices:
- *  - Reservation rows are inserted in "pending" status FIRST, before
- *    incrementing the inventory counter. If the counter update fails,
- *    the reservation is marked "failed" and the counter is not touched.
- *  - Consumption and release use atomic status claims (active → consuming
- *    or releasing) so only the claiming worker may alter inventory.
- *  - Never let reserved go negative, never let quantityAvailable go negative.
+ * The functions are called from TypeScript via `db.execute(sql\`SELECT ...\`)`.
+ * This works with both the neon-http driver (production) and the node-postgres
+ * driver (tests/local dev).
+ *
+ * Invariants enforced by the database:
+ *  - reserved >= 0 (CHECK constraint)
+ *  - quantity_available >= 0 (CHECK constraint)
+ *  - reservation quantity > 0 (CHECK constraint)
+ *  - operation_id is unique (prevents replay)
+ *  - One reservation cannot be consumed twice (function checks status)
+ *  - Release and consumption cannot both succeed (function checks status)
  */
 
 import { and, eq, inArray, lte, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { getDb, isDatabaseConfigured } from "@/db/client";
 import {
   inventory,
@@ -52,15 +60,22 @@ function aggregateItems(items: Array<{ productId: string; quantity: number }>): 
 }
 
 /**
- * Reserve inventory for an order using the pending→active flow.
+ * Reserve inventory for an order using the atomic `reserve_inventory_for_order`
+ * PostgreSQL function. Each item is reserved in its own atomic transaction;
+ * if any item fails, all previously-created reservations for this order are
+ * released.
  *
- * 1. Aggregate duplicate product lines by product ID
- * 2. Insert reservation row with status "pending" FIRST
- * 3. Atomically increment inventory.reserved only when stock is available
- * 4. If inventory update fails → mark reservation "failed"
- * 5. If inventory update succeeds → atomically activate (pending → active)
- * 6. If activation fails after inventory increment → compensate the counter
- * 7. If ANY line fails → rollback all previously-created reservations
+ * The function:
+ *   1. Inserts a reservation row with status 'pending'
+ *   2. Locks the inventory row (FOR UPDATE)
+ *   3. Validates stock availability
+ *   4. Increments inventory.reserved
+ *   5. Activates the reservation (pending → active)
+ *   6. Writes an inventory_ledger entry
+ *   7. Returns the reservation ID
+ *
+ * All of this happens inside a single DB transaction. A process crash cannot
+ * leave the counters and reservation state inconsistent.
  */
 export async function reserveInventoryForOrder(input: {
   orderId: string;
@@ -80,122 +95,55 @@ export async function reserveInventoryForOrder(input: {
   const minutes = Number.isFinite(reservationMinutes) && reservationMinutes > 0 ? reservationMinutes : 15;
   const expiresAt = new Date(Date.now() + minutes * 60_000);
 
-  // Step 1: Aggregate duplicates.
   const aggregated = aggregateItems(input.items);
-
   const created: string[] = [];
-  const pendingReservations: string[] = []; // Track for rollback.
 
   for (const item of aggregated) {
-    // Step 2: Insert reservation row with status "pending" FIRST.
-    const [reservation] = await db
-      .insert(inventoryReservations)
-      .values({
-        orderId: input.orderId,
-        productId: item.productId,
-        quantity: item.quantity,
-        status: "pending",
-        expiresAt,
-      })
-      .returning({ id: inventoryReservations.id });
-
-    if (!reservation) {
-      // Mark any previous pending reservations as failed.
-      for (const pendingId of pendingReservations) {
-        await db
-          .update(inventoryReservations)
-          .set({ status: "failed", updatedAt: new Date() })
-          .where(eq(inventoryReservations.id, pendingId));
+    const operationId = `reserve_${input.orderId}_${item.productId}_${randomUUID().slice(0, 8)}`;
+    try {
+      const result = await db.execute(sql`
+        SELECT reserve_inventory_for_order(
+          ${input.orderId}::uuid,
+          ${item.productId}::uuid,
+          ${item.quantity}::integer,
+          ${expiresAt}::timestamptz,
+          ${operationId}::text,
+          'system'::text
+        ) AS reservation_id
+      `);
+      const rows = Array.isArray(result) ? result : ((result as any).rows ?? []);
+      const reservationId = (rows[0] as { reservation_id?: string })?.reservation_id;
+      if (!reservationId) {
+        throw new InventoryError("Failed to create reservation", "reservation_failed");
       }
-      throw new InventoryError("Failed to create reservation record", "reservation_failed");
-    }
-
-    pendingReservations.push(reservation.id);
-
-    // Step 3: Atomically increment inventory.reserved only when stock is available.
-    const updated = await db
-      .update(inventory)
-      .set({
-        reserved: sql`${inventory.reserved} + ${item.quantity}`,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(inventory.productId, item.productId),
-          sql`COALESCE(${inventory.quantityAvailable}, 0) - ${inventory.reserved} >= ${item.quantity}`,
-        ),
-      )
-      .returning({ id: inventory.id });
-
-    if (updated.length === 0) {
-      // Step 4: Inventory update failed → mark reservation "failed".
-      await db
-        .update(inventoryReservations)
-        .set({ status: "failed", updatedAt: new Date() })
-        .where(eq(inventoryReservations.id, reservation.id));
-
-      // Roll back all previously-activated reservations for this order.
+      created.push(reservationId);
+    } catch (error) {
+      // Roll back all previously-created reservations for this order.
       for (const prevId of created) {
-        // These were already activated, so we need to compensate.
-        await compensateActivatedReservation(db, prevId, input.orderId);
-      }
-      // Also mark any previous pending reservations as failed.
-      for (const pendingId of pendingReservations) {
-        if (pendingId !== reservation.id) {
-          await db
-            .update(inventoryReservations)
-            .set({ status: "failed", updatedAt: new Date() })
-            .where(eq(inventoryReservations.id, pendingId));
+        const rollbackOpId = `release_rollback_${prevId}_${randomUUID().slice(0, 8)}`;
+        try {
+          await db.execute(sql`
+            SELECT release_reservation(
+              ${prevId}::uuid,
+              'reserve_rollback'::text,
+              ${rollbackOpId}::text,
+              'system'::text
+            )
+          `);
+        } catch {
+          // Best-effort rollback; the ledger records the attempt.
         }
       }
-
+      const message = error instanceof Error ? error.message : "Insufficient stock";
+      logger.warn(
+        { event: "inventory_reservation_failed", orderId: input.orderId, productId: item.productId, error: message },
+        "Inventory reservation failed",
+      );
       throw new InventoryError(
         `Insufficient stock for product ${item.productId}`,
         "insufficient_stock",
       );
     }
-
-    // Step 5: Atomically activate reservation (pending → active).
-    const activated = await db
-      .update(inventoryReservations)
-      .set({ status: "active", updatedAt: new Date() })
-      .where(
-        and(
-          eq(inventoryReservations.id, reservation.id),
-          eq(inventoryReservations.status, "pending"),
-        ),
-      )
-      .returning({ id: inventoryReservations.id });
-
-    if (activated.length === 0) {
-      // Step 6: Activation failed after inventory increment — compensate.
-      // Decrement the reserved counter back.
-      await db
-        .update(inventory)
-        .set({
-          reserved: sql`GREATEST(${inventory.reserved} - ${item.quantity}, 0)`,
-          updatedAt: new Date(),
-        })
-        .where(eq(inventory.productId, item.productId));
-
-      // Mark reservation as failed.
-      await db
-        .update(inventoryReservations)
-        .set({ status: "failed", updatedAt: new Date() })
-        .where(eq(inventoryReservations.id, reservation.id));
-
-      // Roll back all previously-activated reservations.
-      for (const prevId of created) {
-        await compensateActivatedReservation(db, prevId, input.orderId);
-      }
-
-      throw new InventoryError(
-        "Failed to activate reservation after inventory increment",
-        "activation_failed",
-      );
-    }
-
-    created.push(reservation.id);
   }
 
   logger.info(
@@ -243,141 +191,122 @@ async function compensateActivatedReservation(
 
 /**
  * Release all active reservations for an order. Idempotent — calling twice is
- * safe. Uses atomic status claims: active → releasing → released.
+ * safe. Uses the atomic `release_reservation` PostgreSQL function per
+ * reservation, which locks the reservation row, validates status, decrements
+ * the counter, and writes a ledger entry in a single transaction.
  */
 export async function releaseReservationsForOrder(orderId: string, reason: string): Promise<number> {
   if (!isDatabaseConfigured()) return 0;
   const db = getDb();
 
-  // Atomically claim all active reservations: active → releasing.
-  const claimed = await db
-    .update(inventoryReservations)
-    .set({ status: "releasing", updatedAt: new Date() })
+  // Find all active reservations for this order.
+  const active = await db
+    .select({ id: inventoryReservations.id })
+    .from(inventoryReservations)
     .where(
       and(
         eq(inventoryReservations.orderId, orderId),
         eq(inventoryReservations.status, "active"),
       ),
-    )
-    .returning({
-      id: inventoryReservations.id,
-      productId: inventoryReservations.productId,
-      quantity: inventoryReservations.quantity,
-    });
+    );
 
-  if (claimed.length === 0) return 0;
-
-  // Also claim any "pending" reservations (shouldn't normally exist, but
-  // handle them for safety).
-  const pendingClaimed = await db
-    .update(inventoryReservations)
-    .set({ status: "failed", updatedAt: new Date() })
-    .where(
-      and(
-        eq(inventoryReservations.orderId, orderId),
-        eq(inventoryReservations.status, "pending"),
-      ),
-    )
-    .returning({ id: inventoryReservations.id });
-
-  for (const reservation of claimed) {
-    // Decrement reserved atomically — never let it go negative.
-    await db
-      .update(inventory)
-      .set({
-        reserved: sql`GREATEST(${inventory.reserved} - ${reservation.quantity}, 0)`,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(inventory.productId, reservation.productId),
-          sql`${inventory.reserved} >= ${reservation.quantity}`,
-        ),
-      );
-
-    // Mark reservation released.
+  if (active.length === 0) {
+    // Also fail any pending reservations (shouldn't normally exist).
     await db
       .update(inventoryReservations)
-      .set({
-        status: "released",
-        releasedAt: new Date(),
-        releaseReason: reason,
-        updatedAt: new Date(),
-      })
-      .where(eq(inventoryReservations.id, reservation.id));
+      .set({ status: "failed", updatedAt: new Date() })
+      .where(
+        and(
+          eq(inventoryReservations.orderId, orderId),
+          eq(inventoryReservations.status, "pending"),
+        ),
+      );
+    return 0;
+  }
+
+  let released = 0;
+  for (const reservation of active) {
+    const operationId = `release_${reservation.id}_${randomUUID().slice(0, 8)}`;
+    try {
+      const result = await db.execute(sql`
+        SELECT release_reservation(
+          ${reservation.id}::uuid,
+          ${reason}::text,
+          ${operationId}::text,
+          'system'::text
+        ) AS released_qty
+      `);
+      const rows = Array.isArray(result) ? result : ((result as any).rows ?? []);
+      const qty = (rows[0] as { released_qty?: number })?.released_qty;
+      if (qty && qty > 0) released++;
+    } catch (error) {
+      logger.error(
+        { event: "release_reservation_failed", reservationId: reservation.id, orderId, error: error instanceof Error ? error.message : "unknown" },
+        "Failed to release reservation",
+      );
+    }
   }
 
   logger.info(
-    { event: "inventory_released", orderId, reason, count: claimed.length },
+    { event: "inventory_released", orderId, reason, count: released },
     "Inventory released",
   );
-  return claimed.length;
+  return released;
 }
 
 /**
  * Consume reservations for an order after verified payment capture.
- * Uses atomic status claims: active → consuming → consumed.
+ * Uses the atomic `consume_reservation` PostgreSQL function per reservation,
+ * which locks the reservation row, validates status, decrements both counters,
+ * and writes a ledger entry in a single transaction.
  *
- * Decrements both the reserved counter AND the physical available quantity.
- * Idempotent — already-consumed reservations are skipped.
- * Never permits double consumption.
+ * Idempotent — already-consumed reservations return 0 from the function.
+ * Never permits double consumption (the function checks status = 'active').
  */
 export async function consumeReservationsForOrder(orderId: string): Promise<number> {
   if (!isDatabaseConfigured()) return 0;
   const db = getDb();
 
-  // Atomically claim all active reservations: active → consuming.
-  // Only the worker receiving the returned row may alter inventory.
-  const claimed = await db
-    .update(inventoryReservations)
-    .set({ status: "consuming", updatedAt: new Date() })
+  // Find all active reservations for this order.
+  const active = await db
+    .select({ id: inventoryReservations.id })
+    .from(inventoryReservations)
     .where(
       and(
         eq(inventoryReservations.orderId, orderId),
         eq(inventoryReservations.status, "active"),
       ),
-    )
-    .returning({
-      id: inventoryReservations.id,
-      productId: inventoryReservations.productId,
-      quantity: inventoryReservations.quantity,
-    });
+    );
 
-  if (claimed.length === 0) return 0;
+  if (active.length === 0) return 0;
 
-  for (const reservation of claimed) {
-    // Decrement both reserved and quantityAvailable atomically.
-    // Never let either go negative.
-    await db
-      .update(inventory)
-      .set({
-        reserved: sql`GREATEST(${inventory.reserved} - ${reservation.quantity}, 0)`,
-        quantityAvailable: sql`GREATEST(COALESCE(${inventory.quantityAvailable}, 0) - ${reservation.quantity}, 0)`,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(inventory.productId, reservation.productId),
-          sql`${inventory.reserved} >= ${reservation.quantity}`,
-        ),
+  let consumed = 0;
+  for (const reservation of active) {
+    const operationId = `consume_${reservation.id}_${randomUUID().slice(0, 8)}`;
+    try {
+      const result = await db.execute(sql`
+        SELECT consume_reservation(
+          ${reservation.id}::uuid,
+          ${operationId}::text,
+          'system'::text
+        ) AS consumed_qty
+      `);
+      const rows = Array.isArray(result) ? result : ((result as any).rows ?? []);
+      const qty = (rows[0] as { consumed_qty?: number })?.consumed_qty;
+      if (qty && qty > 0) consumed++;
+    } catch (error) {
+      logger.error(
+        { event: "consume_reservation_failed", reservationId: reservation.id, orderId, error: error instanceof Error ? error.message : "unknown" },
+        "Failed to consume reservation",
       );
-
-    // Change consuming → consumed.
-    await db
-      .update(inventoryReservations)
-      .set({
-        status: "consumed",
-        consumedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(inventoryReservations.id, reservation.id));
+    }
   }
 
   logger.info(
-    { event: "inventory_consumed", orderId, count: claimed.length },
+    { event: "inventory_consumed", orderId, count: consumed },
     "Inventory consumed for paid order",
   );
-  return claimed.length;
+  return consumed;
 }
 
 /**

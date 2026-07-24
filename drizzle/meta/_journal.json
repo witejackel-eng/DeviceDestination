@@ -29,6 +29,13 @@
       "when": 1784878000000,
       "tag": "0003_checkout_saga",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784882000000,
+      "tag": "0004_inventory_atomic",
+      "breakpoints": true
     }
   ]
 }
