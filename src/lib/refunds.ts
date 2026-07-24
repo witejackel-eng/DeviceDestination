@@ -248,3 +248,90 @@ export async function recomputeOrderRefundTotal(orderId: string): Promise<{
     fullyRefunded: totalRefunded >= payment.amountPaise && payment.amountPaise > 0,
   };
 }
+
+/**
+ * Process a refund webhook event from Razorpay. Updates the refund status
+ * based on the provider's confirmation. This is the idempotent webhook-side
+ * counterpart to {@link createRefund}.
+ *
+ * Supported events:
+ *   - refund.processed: the refund succeeded at the provider. Mark the refund
+ *     as `processed` and recompute the order's refund total.
+ *   - refund.failed: the refund failed at the provider. Mark the refund as
+ *     `failed` so the admin can retry.
+ *   - refund.created: informational; mark as `processing` if currently pending.
+ *
+ * Idempotent: if the refund is already in the target state, this is a no-op.
+ */
+export async function processRefundWebhook(input: {
+  eventType: string;
+  providerPaymentId?: string;
+  refundId?: string;
+  eventId: string;
+}): Promise<{ status: "completed" | "ignored" | "failed" | "retryable"; error?: string }> {
+  if (!isDatabaseConfigured()) {
+    return { status: "retryable", error: "Database not configured" };
+  }
+  if (!input.refundId) {
+    return { status: "ignored" };
+  }
+
+  const db = getDb();
+
+  // Find the refund by provider refund ID.
+  const [refund] = await db
+    .select()
+    .from(refunds)
+    .where(eq(refunds.providerRefundId, input.refundId))
+    .limit(1);
+
+  if (!refund) {
+    // The refund wasn't created locally (maybe created directly in the
+    // Razorpay dashboard). Log and ignore — an admin will need to reconcile.
+    logger.warn(
+      { event: "refund_webhook_no_local_refund", providerRefundId: input.refundId, eventId: input.eventId },
+      "Refund webhook received for unknown local refund",
+    );
+    return { status: "ignored" };
+  }
+
+  switch (input.eventType) {
+    case "refund.processed": {
+      if (refund.status === "processed") return { status: "completed" };
+      await db
+        .update(refunds)
+        .set({ status: "processed", processedAt: new Date(), updatedAt: new Date() })
+        .where(eq(refunds.id, refund.id));
+      await recomputeOrderRefundTotal(refund.orderId);
+      logger.info(
+        { event: "refund_processed", refundId: refund.id, providerRefundId: input.refundId },
+        "Refund processed via webhook",
+      );
+      return { status: "completed" };
+    }
+    case "refund.failed": {
+      if (refund.status === "failed") return { status: "completed" };
+      await db
+        .update(refunds)
+        .set({ status: "failed", failureReason: "Provider reported refund failed", updatedAt: new Date() })
+        .where(eq(refunds.id, refund.id));
+      logger.warn(
+        { event: "refund_failed", refundId: refund.id, providerRefundId: input.refundId },
+        "Refund failed via webhook",
+      );
+      return { status: "completed" };
+    }
+    case "refund.created": {
+      if (refund.status === "pending") {
+        await db
+          .update(refunds)
+          .set({ status: "processing", updatedAt: new Date() })
+          .where(eq(refunds.id, refund.id));
+      }
+      return { status: "completed" };
+    }
+    default:
+      return { status: "ignored" };
+  }
+}
+
