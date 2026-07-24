@@ -12,8 +12,8 @@
  * gracefully if it's not configured.
  */
 
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { eq, inArray, sql } from "drizzle-orm";
 import * as schema from "@/db/schema";
 import { randomUUID } from "node:crypto";
@@ -33,13 +33,15 @@ export function skipMessage(reason: string): string {
 // ─── Database connection ──────────────────────────────────────────────────
 
 let testDb: ReturnType<typeof drizzle<typeof schema>> | null = null;
+let testPool: Pool | null = null;
 
 export function getTestDb(): ReturnType<typeof drizzle<typeof schema>> {
   if (!hasTestDb()) {
     throw new Error("TEST_DATABASE_URL is not set. Cannot create test database connection.");
   }
   if (!testDb) {
-    testDb = drizzle(neon(TEST_DATABASE_URL), { schema });
+    testPool = new Pool({ connectionString: TEST_DATABASE_URL, max: 8 });
+    testDb = drizzle(testPool, { schema });
   }
   return testDb;
 }
@@ -47,15 +49,51 @@ export function getTestDb(): ReturnType<typeof drizzle<typeof schema>> {
 /**
  * Reset the cached DB instance (useful if tests change environment at runtime).
  */
-export function resetTestDb(): void {
+export async function resetTestDb(): Promise<void> {
+  if (testPool) {
+    await testPool.end();
+    testPool = null;
+  }
   testDb = null;
 }
 
 // ─── Test data identifiers ────────────────────────────────────────────────
 
+/**
+ * Tests need identifiers that:
+ *   1. Are valid UUIDs (most PK columns in the schema are `uuid`).
+ *   2. Are recognisable so cleanup can delete only test rows.
+ *
+ * We use a fixed 4-hex marker prefix `dddd` in the first segment of a v4
+ * UUID. The resulting UUID is fully spec-compliant:
+ *   `ddddXXXX-XXXX-4xxx-Yxxx-XXXXXXXXXXXX`
+ * where Y ∈ {8,9,a,b}. Cleanup matches `id::text LIKE 'dddd%'` on UUID
+ * columns and falls back to text-pattern matches for text columns.
+ */
+const TEST_MARKER = "dddd";
 const TEST_PREFIX = "itest_";
 
+function hex(n: number): string {
+  return Math.floor(Math.random() * 16).toString(16);
+}
+
+export function testUuid(): string {
+  const seg2 = Array.from({ length: 4 }, hex).join("");
+  const seg3 = `4${Array.from({ length: 3 }, hex).join("")}`;
+  const seg4 = `${(8 + Math.floor(Math.random() * 4)).toString(16)}${Array.from({ length: 3 }, hex).join("")}`;
+  const seg5 = Array.from({ length: 12 }, hex).join("");
+  return `${TEST_MARKER}${Array.from({ length: 4 }, hex).join("")}-${seg2}-${seg3}-${seg4}-${seg5}`;
+}
+
 export function testId(label: string): string {
+  // Return a valid UUID; the label is ignored but kept for call-site
+  // readability. Cleanup uses the `dddd` prefix to identify test rows.
+  void label;
+  return testUuid();
+}
+
+/** Text identifier for non-uuid columns (idempotency keys, provider IDs). */
+export function testTextId(label: string): string {
   return `${TEST_PREFIX}${label}_${randomUUID().slice(0, 8)}`;
 }
 
@@ -68,6 +106,7 @@ export type SeedProduct = {
   slug: string;
   model: string;
   title: string;
+  shortDescription: string;
   brandId: string;
   categoryId: string;
   sellingPriceInclGstPaise: number;
@@ -170,6 +209,7 @@ export async function seedProduct(overrides?: Partial<SeedProduct>): Promise<See
     slug: `test-product-${id}`,
     model: `TEST-MODEL-${id}`,
     title: `Test Product ${id}`,
+    shortDescription: `Test product description for ${id}`,
     brandId: brand.id,
     categoryId: category.id,
     sellingPriceInclGstPaise: 100000, // ₹1,000
@@ -182,7 +222,7 @@ export async function seedProduct(overrides?: Partial<SeedProduct>): Promise<See
     officialSourceUrl: "https://example.com/test-product",
     verifiedAt: new Date(),
   };
-  const values = { ...defaults, ...overrides, id };
+  const values = { ...defaults, ...overrides };
   // Remove any overrides that don't belong in the insert
   await db.insert(schema.products).values(values as any);
   return values;
@@ -203,12 +243,14 @@ export async function seedInventory(overrides?: Partial<SeedInventory>): Promise
     reserved: 0,
   };
   const values = { ...defaults, ...overrides };
-  await db.insert(schema.inventory).values({
-    id: values.id,
-    productId: values.productId,
-    quantityAvailable: values.quantityAvailable,
-    reserved: values.reserved,
-  });
+  await db.insert(schema.inventory)
+    .values({
+      id: values.id,
+      productId: values.productId,
+      quantityAvailable: values.quantityAvailable,
+      reserved: values.reserved,
+    })
+    .onConflictDoNothing({ target: schema.inventory.productId });
   return values;
 }
 
@@ -265,14 +307,47 @@ export async function seedOrderWithPayment(
   payment: SeedPayment;
 }> {
   const db = getTestDb();
-  const product = await seedProduct(productOverrides);
-  const inv = await seedInventory({ productId: product.id, ...inventoryOverrides });
+  // If the caller provides a product id, assume the product already exists
+  // (created earlier in the test) and skip seeding a new one. This lets
+  // tests reuse a product+inventory pair across multiple helpers.
+  let product: SeedProduct;
+  if (productOverrides?.id) {
+    const [existing] = await db
+      .select()
+      .from(schema.products)
+      .where(eq(schema.products.id, productOverrides.id))
+      .limit(1);
+    if (existing) {
+      product = existing as unknown as SeedProduct;
+    } else {
+      product = await seedProduct(productOverrides);
+    }
+  } else {
+    product = await seedProduct(productOverrides);
+  }
+  // Same for inventory: if it already exists for this product, skip insert.
+  let inv: SeedInventory;
+  const [existingInv] = await db
+    .select()
+    .from(schema.inventory)
+    .where(eq(schema.inventory.productId, product.id))
+    .limit(1);
+  if (existingInv) {
+    inv = {
+      id: existingInv.id,
+      productId: existingInv.productId,
+      quantityAvailable: existingInv.quantityAvailable,
+      reserved: existingInv.reserved,
+    };
+  } else {
+    inv = await seedInventory({ productId: product.id, ...inventoryOverrides });
+  }
   const customer = await seedCustomer();
   const address = await seedAddress(customer.id);
 
   const orderId = testId("order");
   const orderNumber = `DD-TEST-${orderId.slice(0, 8)}`;
-  const idempotencyKey = testId("idem");
+  const idempotencyKey = testTextId("idem");
   const subtotalInclGstPaise = product.sellingPriceInclGstPaise * 1; // 1 unit
   const shippingPaise = 0;
   const totalInclGstPaise = subtotalInclGstPaise + shippingPaise;
@@ -351,6 +426,7 @@ export async function cleanupTestData(): Promise<void> {
     "payment_webhook_events",
     "checkout_attempts",
     "payment_reconciliation_results",
+    "inventory_ledger",
     "jobs",
     "inventory_adjustments",
     "inventory_reservations",
@@ -378,7 +454,7 @@ export async function cleanupTestData(): Promise<void> {
   for (const table of tablesInOrder) {
     try {
       await db.execute(
-        sql.raw(`DELETE FROM "${table}" WHERE id::text LIKE '${TEST_PREFIX}%' OR id::text LIKE '%itest_%'`),
+        sql.raw(`DELETE FROM "${table}" WHERE id::text LIKE '${TEST_MARKER}%' OR id::text LIKE '${TEST_PREFIX}%' OR id::text LIKE '%itest_%'`),
       );
     } catch {
       // Some tables may not have an id column matching this pattern,
@@ -417,7 +493,7 @@ export async function cleanupTestData(): Promise<void> {
   // Also clean inventory_reservations by order_id pattern (FK-based)
   try {
     await db.execute(
-      sql.raw(`DELETE FROM inventory_reservations WHERE order_id IN (SELECT id FROM orders WHERE id::text LIKE '${TEST_PREFIX}%')`),
+      sql.raw(`DELETE FROM inventory_reservations WHERE order_id IN (SELECT id FROM orders WHERE id::text LIKE '${TEST_MARKER}%')`),
     );
   } catch { /* ignore */ }
 }
@@ -504,12 +580,12 @@ export function delay(ms: number): Promise<void> {
  * Generate a unique idempotency key for checkout tests.
  */
 export function uniqueIdempotencyKey(): string {
-  return testId("idem");
+  return testTextId("idem");
 }
 
 /**
  * Generate a unique provider event ID for webhook tests.
  */
 export function uniqueProviderEventId(): string {
-  return testId("evt");
+  return testTextId("evt");
 }

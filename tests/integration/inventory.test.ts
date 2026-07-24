@@ -316,9 +316,9 @@ describe.skipIf(!hasTestDb())("INVENTORY integration tests", () => {
 
   it("double consume changes stock once", async () => {
     const product = await seedProduct();
-    await seedInventory({ productId: product.id, quantityAvailable: 10, reserved: 2 });
+    await seedInventory({ productId: product.id, quantityAvailable: 10, reserved: 0 });
 
-    const { order } = await seedOrderWithPayment({ id: product.id }, { productId: product.id, quantityAvailable: 10, reserved: 2 });
+    const { order } = await seedOrderWithPayment({ id: product.id }, { productId: product.id, quantityAvailable: 10, reserved: 0 });
 
     const { reserveInventoryForOrder, consumeReservationsForOrder } = await import("@/lib/inventory");
 
@@ -564,6 +564,126 @@ describe.skipIf(!hasTestDb())("INVENTORY integration tests", () => {
       expect(row.quantityAvailable ?? 0).toBeGreaterThanOrEqual(0);
       // Also check: available - reserved >= 0 (sellable quantity never negative)
       expect((row.quantityAvailable ?? 0) - row.reserved).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  // ── 13. High-concurrency reservation cannot oversell ───────────────────
+
+  it("high-concurrency reservation cannot oversell (atomic function proof)", async () => {
+    const product = await seedProduct();
+    // Only 5 units available.
+    await seedInventory({ productId: product.id, quantityAvailable: 5, reserved: 0 });
+
+    // Create 20 orders that all try to reserve 1 unit simultaneously.
+    const orders: { id: string }[] = [];
+    for (let i = 0; i < 20; i++) {
+      const { order } = await seedOrderWithPayment(
+        { id: product.id },
+        { productId: product.id, quantityAvailable: 5 },
+      );
+      orders.push(order);
+    }
+
+    const { reserveInventoryForOrder } = await import("@/lib/inventory");
+
+    // Fire all 20 reservations concurrently.
+    const results = await Promise.allSettled(
+      orders.map((order) =>
+        reserveInventoryForOrder({
+          orderId: order.id,
+          items: [{ productId: product.id, quantity: 1 }],
+        }),
+      ),
+    );
+
+    // Exactly 5 should succeed, 15 should fail with insufficient stock.
+    const succeeded = results.filter(
+      (r) => r.status === "fulfilled",
+    ).length;
+    const failed = results.filter(
+      (r) => r.status === "rejected",
+    ).length;
+
+    expect(succeeded).toBe(5);
+    expect(failed).toBe(15);
+
+    // Verify the inventory counters are exactly correct.
+    const [invRow] = await db
+      .select()
+      .from(inventory)
+      .where(eq(inventory.productId, product.id))
+      .limit(1);
+    expect(invRow.reserved).toBe(5);
+    expect(invRow.quantityAvailable).toBe(5); // Unchanged — reserve only touches reserved
+
+    // Verify the ledger has exactly 5 'reserve' entries for this product.
+    const { inventoryLedger } = await import("@/db/schema");
+    const ledgerEntries = await db
+      .select()
+      .from(inventoryLedger)
+      .where(eq(inventoryLedger.productId, product.id));
+    const reserveEntries = ledgerEntries.filter((e) => e.operationType === "reserve");
+    expect(reserveEntries.length).toBe(5);
+
+    // Verify the ledger entries are consistent with the counters.
+    const totalReservedDelta = reserveEntries.reduce((sum, e) => sum + e.reservedDelta, 0);
+    expect(totalReservedDelta).toBe(5);
+    expect(totalReservedDelta).toBe(invRow.reserved);
+  });
+
+  // ── 14. Consume-versus-release race ─────────────────────────────────────
+
+  it("consume and release cannot both succeed on the same reservation", async () => {
+    const product = await seedProduct();
+    await seedInventory({ productId: product.id, quantityAvailable: 10, reserved: 0 });
+
+    const { order } = await seedOrderWithPayment(
+      { id: product.id },
+      { productId: product.id, quantityAvailable: 10 },
+    );
+
+    const { reserveInventoryForOrder, consumeReservationsForOrder, releaseReservationsForOrder } = await import("@/lib/inventory");
+
+    await reserveInventoryForOrder({
+      orderId: order.id,
+      items: [{ productId: product.id, quantity: 2 }],
+    });
+
+    // Fire consume and release concurrently. Only one should win.
+    const [consumeResult, releaseResult] = await Promise.allSettled([
+      consumeReservationsForOrder(order.id),
+      releaseReservationsForOrder(order.id, "race_test"),
+    ]);
+
+    const consumeCount = consumeResult.status === "fulfilled" ? consumeResult.value : 0;
+    const releaseCount = releaseResult.status === "fulfilled" ? releaseResult.value : 0;
+
+    // Exactly one of them should have affected the reservation.
+    const totalMutations = consumeCount + releaseCount;
+    expect(totalMutations).toBe(1);
+
+    // Verify the reservation is in a terminal state.
+    const [resRow] = await db
+      .select()
+      .from(inventoryReservations)
+      .where(eq(inventoryReservations.orderId, order.id))
+      .limit(1);
+    expect(["consumed", "released"]).toContain(resRow.status);
+
+    // Verify inventory counters are consistent.
+    const [invRow] = await db
+      .select()
+      .from(inventory)
+      .where(eq(inventory.productId, product.id))
+      .limit(1);
+    if (resRow.status === "consumed") {
+      // Consumed: reserved back to 0, quantityAvailable decremented by 2.
+      expect(invRow.reserved).toBe(0);
+      expect(invRow.quantityAvailable).toBe(8);
+    } else {
+      // Released: reserved back to 0, quantityAvailable unchanged.
+      expect(invRow.reserved).toBe(0);
+      expect(invRow.quantityAvailable).toBe(10);
     }
   });
 });

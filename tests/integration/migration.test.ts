@@ -132,7 +132,7 @@ describe.skipIf(!hasTestDb())("MIGRATION integration tests", () => {
       `),
     );
 
-    const indexes = Array.isArray(result) ? result : ((result as Record<string, unknown>).rows as Array<Record<string, unknown>> ?? []);
+    const indexes = Array.isArray(result) ? result : (((result as unknown) as { rows?: Array<Record<string, unknown>> }).rows ?? []);
 
     const indexNames = indexes.map((row: Record<string, unknown>) => String(row.name ?? row.indexname ?? ""));
 
@@ -317,13 +317,13 @@ describe.skipIf(!hasTestDb())("MIGRATION integration tests", () => {
     // whether drizzle-kit migrate was run. It's not required for our
     // neon-http setup which uses db:push instead. So we just verify
     // that the journal is consistent.
-    const rows = Array.isArray(result) ? result : ((result as Record<string, unknown>).rows as Array<Record<string, unknown>> ?? []);
+    const rows = Array.isArray(result) ? result : (((result as unknown) as { rows?: Array<Record<string, unknown>> }).rows ?? []);
     // If it exists, verify it has entries matching the journal
     if (rows.length > 0 || (Array.isArray(result) && result.length > 0)) {
       const migrationRows = await db.execute(
         sql.raw("SELECT * FROM __drizzle_migrations ORDER BY created_at"),
       );
-      const mRows = Array.isArray(migrationRows) ? migrationRows : ((migrationRows as Record<string, unknown>).rows as Array<Record<string, unknown>> ?? []);
+      const mRows = Array.isArray(migrationRows) ? migrationRows : (((migrationRows as unknown) as { rows?: Array<Record<string, unknown>> }).rows ?? []);
       // Each journal entry should correspond to a migration record
       expect(mRows.length).toBeGreaterThanOrEqual(journal.entries.length);
     }

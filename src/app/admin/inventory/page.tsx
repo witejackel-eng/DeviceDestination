@@ -7,11 +7,13 @@ import {
 } from "@/app/admin/actions/inventory";
 import { InventoryActions } from "@/components/admin/inventory-actions";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Inventory", robots: { index: false, follow: false } };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function AdminInventoryPage({ searchParams }: { searchParams: SearchParams }) {
+  await requireAdmin();
   const query = await searchParams;
   const lowStockOnly = query.lowStock === "1";
   const tab = typeof query.tab === "string" ? query.tab : "stock";

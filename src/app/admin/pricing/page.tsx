@@ -6,11 +6,13 @@ import { products } from "@/db/schema";
 import { formatPrice } from "@/lib/products";
 import { getSettingInt } from "@/lib/settings";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Pricing", robots: { index: false, follow: false } };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function AdminPricingPage({ searchParams }: { searchParams: SearchParams }) {
+  await requireAdmin();
   const query = await searchParams;
   const staleOnly = query.stale === "1";
   let rows: Array<{

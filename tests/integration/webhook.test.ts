@@ -82,6 +82,15 @@ vi.mock("@/lib/inventory", async () => {
   };
 });
 
+// Partial mock of jobs so individual tests can override enqueueDeduplicatedJob.
+vi.mock("@/lib/jobs", async () => {
+  const actual = (await vi.importActual("@/lib/jobs")) as typeof import("@/lib/jobs");
+  return {
+    ...actual,
+    enqueueDeduplicatedJob: vi.fn(actual.enqueueDeduplicatedJob),
+  };
+});
+
 // ─── Test group ────────────────────────────────────────────────────────────
 
 describe.skipIf(!hasTestDb())("PAYMENT WEBHOOK integration tests", () => {
@@ -477,7 +486,7 @@ describe.skipIf(!hasTestDb())("PAYMENT WEBHOOK integration tests", () => {
     const allJobs = await db
       .select()
       .from(jobs)
-      .where(sql`${jobs.payload}::text LIKE '%${order.id}%'`);
+      .where(sql`${jobs.payload}::text LIKE ${`%${order.id}%`}`);
     // Should have exactly 3 jobs: invoice, email, whatsapp
     const invoiceJobs = allJobs.filter((j: { type: string }) => j.type === "generate-invoice");
     const emailJobs = allJobs.filter((j: { type: string }) => j.type === "send-order-email");
@@ -532,14 +541,14 @@ describe.skipIf(!hasTestDb())("PAYMENT WEBHOOK integration tests", () => {
   it("captured payment after reservation expiry enters inventory review when stock is unavailable", async () => {
     // Set up product with very limited stock and already-reserved quantities
     const product = await seedProduct();
-    await seedInventory({ productId: product.id, quantityAvailable: 1, reserved: 1 });
-    // Another order already reserved the 1 available unit
+    await seedInventory({ productId: product.id, quantityAvailable: 1, reserved: 0 });
 
     const { order: otherOrder } = await seedOrderWithPayment(
       { id: product.id },
-      { productId: product.id, quantityAvailable: 1, reserved: 1 },
+      { productId: product.id, quantityAvailable: 1, reserved: 0 },
     );
     const { reserveInventoryForOrder } = await import("@/lib/inventory");
+    // Another order reserves the 1 available unit
     await reserveInventoryForOrder({
       orderId: otherOrder.id,
       items: [{ productId: product.id, quantity: 1 }],

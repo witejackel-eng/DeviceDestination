@@ -35,6 +35,24 @@ function createAuth() {
     session: { cookieCache: { enabled: true, maxAge: 5 * 60 } },
     advanced: { useSecureCookies: process.env.NODE_ENV === "production" },
     plugins: [nextCookies()],
+    user: {
+      additionalFields: {
+        // Expose the DB-level `role` column on `session.user.role` so the
+        // admin authorization layer can consult it. Without this, better-auth
+        // does not load the column and admin access is email-list-only.
+        role: {
+          type: "string",
+          required: false,
+          input: false, // never accept from client during signup/profile update
+          defaultValue: "customer",
+        },
+        mobile: {
+          type: "string",
+          required: false,
+          input: true,
+        },
+      },
+    },
   });
 }
 
@@ -50,5 +68,22 @@ export function getAuth() {
 }
 
 export function isAuthConfigured() {
+  // Auth is only considered fully configured when the secret AND the admin
+  // allowlist are both present. An empty ADMIN_EMAILS means no human can be
+  // authorized, so we treat it as "not configured" for admin purposes —
+  // callers that only need customer auth can still proceed.
   return Boolean(process.env.DATABASE_URL && process.env.BETTER_AUTH_SECRET);
+}
+
+/**
+ * Whether the *admin* authorization layer has everything it needs to make a
+ * positive decision. When this is false, {@link requireAdmin} /
+ * {@link resolveAdmin} fail closed.
+ */
+export function isAuthFullyConfiguredForAdmin() {
+  return Boolean(
+    process.env.DATABASE_URL &&
+      process.env.BETTER_AUTH_SECRET &&
+      (process.env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim()).filter(Boolean).length > 0,
+  );
 }

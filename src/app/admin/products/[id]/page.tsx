@@ -4,11 +4,13 @@ import { notFound } from "next/navigation";
 import { getProductForAdmin, listProductsForAdmin } from "@/app/admin/actions/products";
 import { ProductDetail } from "@/components/admin/product-detail";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Product", robots: { index: false, follow: false } };
 
 type Params = Promise<{ id: string }>;
 
 export default async function AdminProductDetailPage({ params }: { params: Params }) {
+  await requireAdmin();
   const { id } = await params;
   const data = await getProductForAdmin(id);
   if (!data) notFound();

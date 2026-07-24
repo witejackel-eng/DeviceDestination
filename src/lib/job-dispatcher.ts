@@ -107,6 +107,8 @@ async function handleSendOrderEmail(payload: JobPayload): Promise<void> {
     },
     items: record.items,
     totalInclGstPaise: record.order.totalInclGstPaise,
+      subtotalInclGstPaise: record.order.subtotalInclGstPaise,
+      shippingPaise: record.order.shippingPaise,
     includedGstPaise: record.order.includedGstPaise,
   });
   const result = await sendPaidOrderNotifications(
@@ -162,6 +164,8 @@ async function handleSendOrderWhatsapp(payload: JobPayload): Promise<void> {
     },
     items: record.items,
     totalInclGstPaise: record.order.totalInclGstPaise,
+      subtotalInclGstPaise: record.order.subtotalInclGstPaise,
+      shippingPaise: record.order.shippingPaise,
     includedGstPaise: record.order.includedGstPaise,
   });
   const result = await sendPaidOrderNotifications(
@@ -244,6 +248,8 @@ async function handleGenerateInvoice(payload: JobPayload): Promise<void> {
     },
     items,
     totalInclGstPaise: record.order.totalInclGstPaise,
+      subtotalInclGstPaise: record.order.subtotalInclGstPaise,
+      shippingPaise: record.order.shippingPaise,
     includedGstPaise: record.order.includedGstPaise,
   });
   await db

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runJobBatch } from "@/lib/jobs";
+import { runJobBatch, reclaimStaleJobs } from "@/lib/jobs";
 import { reconcileStalePendingPayments, repairIncompletePostPaymentProcessing } from "@/lib/reconciliation";
 import { expirePendingReservations } from "@/lib/inventory";
+import { recoverStaleCheckoutAttempts } from "@/lib/checkout-orchestrator";
 import { isCronConfigured } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { getDb, isDatabaseConfigured } from "@/db/client";
@@ -45,9 +46,11 @@ export async function POST(request: NextRequest) {
   const startedAt = new Date();
 
   const jobsResult = await runJobBatch({ batchSize: 10 });
+  const staleJobsResult = await reclaimStaleJobs();
   const reservationResult = await expirePendingReservations();
   const reconciliationResult = await reconcileStalePendingPayments(30);
   const repairResult = await repairIncompletePostPaymentProcessing(50);
+  const staleCheckoutResult = await recoverStaleCheckoutAttempts({ limit: 50 });
 
   const completedAt = new Date();
   const durationMs = completedAt.getTime() - startedAt.getTime();
@@ -82,18 +85,22 @@ export async function POST(request: NextRequest) {
       triggerSource,
       durationMs,
       jobs: jobsResult,
+      staleJobs: staleJobsResult,
       reservations: reservationResult.expired,
       reconciliation: reconciliationResult,
       repair: repairResult,
+      staleCheckout: staleCheckoutResult,
     },
     "Cron run complete",
   );
 
   return NextResponse.json({
     jobs: jobsResult,
+    staleJobs: staleJobsResult,
     reservationsExpired: reservationResult.expired,
     reconciliation: reconciliationResult,
     repair: repairResult,
+    staleCheckout: staleCheckoutResult,
     durationMs,
     triggerSource,
     timestamp: completedAt.toISOString(),

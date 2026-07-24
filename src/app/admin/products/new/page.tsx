@@ -5,9 +5,11 @@ import { getDb, isDatabaseConfigured } from "@/db/client";
 import { brands, categories } from "@/db/schema";
 import { ProductForm } from "@/components/admin/product-form";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · New product", robots: { index: false, follow: false } };
 
 export default async function NewProductPage() {
+  await requireAdmin();
   let brandRows: Array<{ slug: string; name: string }> = [];
   let categoryRows: Array<{ slug: string; name: string }> = [];
   if (isDatabaseConfigured()) {

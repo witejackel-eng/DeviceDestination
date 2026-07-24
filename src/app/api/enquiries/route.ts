@@ -9,7 +9,7 @@ import { siteConfig } from "@/config/site";
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const limit = await checkRateLimit(`enquiry:${ip}`);
+  const limit = await checkRateLimit("enquiry", ip);
   if (!limit.success)
     return NextResponse.json(
       { error: "Too many messages. Please wait before trying again." },

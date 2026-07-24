@@ -3,9 +3,11 @@ import Link from "next/link";
 import { listSettings } from "@/lib/settings";
 import { SettingsForm } from "@/components/admin/settings-form";
 
+import { requireAdmin } from "@/lib/admin-auth";
 export const metadata: Metadata = { title: "Admin · Settings", robots: { index: false, follow: false } };
 
 export default async function AdminSettingsPage() {
+  await requireAdmin();
   const settings = await listSettings();
   return (
     <div className="container-standard section-space !pt-14">

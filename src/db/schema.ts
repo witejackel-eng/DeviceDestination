@@ -80,6 +80,7 @@ export const checkoutAttemptStatus = pgEnum("checkout_attempt_status", [
   "ready_for_checkout",
   "failed",
   "cancelled",
+  "manual_intervention_required",
 ]);
 
 export const inventoryAdjustmentType = pgEnum("inventory_adjustment_type", [
@@ -111,6 +112,8 @@ export const jobStatus = pgEnum("job_status", [
   "completed",
   "failed",
   "cancelled",
+  "dead_letter",
+  "deferred",
 ]);
 
 export const quoteStatus = pgEnum("quote_status", [
@@ -369,6 +372,49 @@ export const inventoryAdjustments = pgTable(
   ],
 );
 
+/**
+ * Append-only inventory ledger.
+ *
+ * Every atomic inventory mutation (reserve, consume, release, expire, adjust,
+ * reconcile) writes exactly one row to this table. The `operation_id` column
+ * is unique, preventing replay of the same operation. Counters can be
+ * reconciled from the ledger at any time by summing the deltas per product.
+ *
+ * This table is the source of truth for inventory audit. The `inventory`
+ * table's `reserved` and `quantity_available` columns are a denormalised
+ * cache of the ledger's current state.
+ */
+export const inventoryLedger = pgTable(
+  "inventory_ledger",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    operationId: text("operation_id").notNull(),
+    productId: uuid("product_id")
+      .references(() => products.id, { onDelete: "restrict" })
+      .notNull(),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "set null" }),
+    reservationId: uuid("reservation_id").references(() => inventoryReservations.id, {
+      onDelete: "set null",
+    }),
+    operationType: text("operation_type").notNull(),
+    quantityDelta: integer("quantity_delta").notNull(),
+    reservedDelta: integer("reserved_delta").notNull(),
+    availableBefore: integer("available_before"),
+    availableAfter: integer("available_after"),
+    reservedBefore: integer("reserved_before").notNull(),
+    reservedAfter: integer("reserved_after").notNull(),
+    actor: text("actor"),
+    idempotencyKey: text("idempotency_key"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("inventory_ledger_operation_id_idx").on(table.operationId),
+    index("inventory_ledger_product_idx").on(table.productId, table.createdAt),
+    index("inventory_ledger_order_idx").on(table.orderId),
+    index("inventory_ledger_reservation_idx").on(table.reservationId),
+  ],
+);
+
 export const users = pgTable(
   "users",
   {
@@ -568,6 +614,38 @@ export const orderStatusEvents = pgTable(
   (table) => [index("order_status_events_order_idx").on(table.orderId, table.createdAt)],
 );
 
+/**
+ * Dedicated order-access token table.
+ *
+ * Each token is a random cryptographically-secure value, stored as a SHA-256
+ * hash (never plaintext). Tokens are purpose-specific, short-lived, and
+ * revocable. This replaces the old deterministic HMAC-of-order-number token
+ * which never expired and could not be revoked.
+ */
+export const orderAccessTokens = pgTable(
+  "order_access_tokens",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tokenHash: text("token_hash").notNull(),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+    orderNumber: text("order_number").notNull(),
+    purpose: text("purpose").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    useCount: integer("use_count").default(0).notNull(),
+    maxUses: integer("max_uses"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("order_access_tokens_hash_idx").on(table.tokenHash),
+    index("order_access_tokens_order_idx").on(table.orderId),
+    index("order_access_tokens_expires_idx").on(table.expiresAt),
+    index("order_access_tokens_purpose_idx").on(table.purpose, table.expiresAt),
+  ],
+);
+
 export const payments = pgTable(
   "payments",
   {
@@ -594,6 +672,52 @@ export const payments = pgTable(
     uniqueIndex("payment_provider_order_idx").on(table.providerOrderId),
     index("payment_status_idx").on(table.status),
     index("payment_provider_payment_idx").on(table.providerPaymentId),
+  ],
+);
+
+/**
+ * Immutable invoice model.
+ *
+ * Each invoice is generated once from a snapshot of the order and business
+ * settings at issue time. The PDF is stored immutably in Vercel Blob (when
+ * configured) and its SHA-256 hash is recorded for integrity verification.
+ * Historical invoices never change when current business settings change.
+ *
+ * If Blob is not configured, the invoice is created with status 'deferred'
+ * and the invoice-generation job is marked as configuration-deferred.
+ */
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    invoiceNumber: text("invoice_number").notNull(),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "restrict" }),
+    orderNumber: text("order_number").notNull(),
+    sellerSnapshot: jsonb("seller_snapshot").$type<Record<string, unknown>>().notNull(),
+    gstinSnapshot: text("gstin_snapshot"),
+    sellerAddressSnapshot: jsonb("seller_address_snapshot").$type<Record<string, unknown>>().notNull(),
+    customerBillingSnapshot: jsonb("customer_billing_snapshot").$type<Record<string, unknown>>().notNull(),
+    placeOfSupplySnapshot: text("place_of_supply_snapshot"),
+    lineItemsSnapshot: jsonb("line_items_snapshot").$type<unknown[]>().notNull(),
+    priceGstSnapshot: jsonb("price_gst_snapshot").$type<Record<string, unknown>>().notNull(),
+    subtotalPaise: integer("subtotal_paise").notNull(),
+    shippingPaise: integer("shipping_paise").notNull(),
+    includedGstPaise: integer("included_gst_paise").notNull(),
+    finalTotalPaise: integer("final_total_paise").notNull(),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).defaultNow().notNull(),
+    fiscalSequence: integer("fiscal_sequence"),
+    renderingVersion: integer("rendering_version").default(1).notNull(),
+    pdfStorageUrl: text("pdf_storage_url"),
+    pdfStorageKey: text("pdf_storage_key"),
+    pdfSha256: text("pdf_sha256"),
+    status: text("status").default("deferred").notNull(),
+    creditNoteInvoiceId: uuid("credit_note_invoice_id"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("invoices_number_idx").on(table.invoiceNumber),
+    uniqueIndex("invoices_order_active_idx").on(table.orderId),
+    index("invoices_pdf_hash_idx").on(table.pdfSha256),
   ],
 );
 
@@ -802,6 +926,8 @@ export const jobs = pgTable(
     runAfter: timestamp("run_after", { withTimezone: true }).defaultNow().notNull(),
     lockedAt: timestamp("locked_at", { withTimezone: true }),
     lockedBy: text("locked_by"),
+    leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
+    recoveryCount: integer("recovery_count").default(0).notNull(),
     lastError: text("last_error"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     dedupeKey: text("dedupe_key"),
@@ -811,7 +937,11 @@ export const jobs = pgTable(
     index("jobs_status_run_after_idx").on(table.status, table.runAfter),
     index("jobs_type_idx").on(table.type),
     index("jobs_locked_by_idx").on(table.lockedBy),
-    uniqueIndex("jobs_dedupe_key_active_idx").on(table.dedupeKey).where(sql`${table.status} IN ('pending', 'processing', 'completed')`),
+    index("jobs_lease_expires_idx").on(table.leaseExpiresAt),
+    // Dedupe only applies to pending and processing jobs — NOT completed.
+    // This lets a legitimate resend (e.g. admin "resend email") create a new
+    // job even if an old completed job has the same dedupe key.
+    uniqueIndex("jobs_dedupe_key_active_idx").on(table.dedupeKey).where(sql`${table.status} IN ('pending', 'processing')`),
   ],
 );
 
@@ -891,6 +1021,7 @@ export const checkoutAttempts = pgTable(
     providerOrderId: text("provider_order_id"),
     lastCompletedStep: text("last_completed_step"),
     lastError: text("last_error"),
+    interventionReason: text("intervention_reason"),
     attempts: integer("attempts").default(0).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -899,6 +1030,7 @@ export const checkoutAttempts = pgTable(
     uniqueIndex("checkout_attempts_idempotency_key_idx").on(table.idempotencyKey),
     index("checkout_attempts_order_id_idx").on(table.orderId),
     index("checkout_attempts_provider_order_id_idx").on(table.providerOrderId),
+    index("checkout_attempts_status_updated_idx").on(table.status, table.updatedAt),
   ],
 );
 

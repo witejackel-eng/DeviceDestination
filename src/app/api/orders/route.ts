@@ -13,7 +13,7 @@ import { orchestrateCheckout } from "@/lib/checkout-orchestrator";
 export async function POST(request: NextRequest) {
   // ── Rate limit check ───────────────────────────────────────────────────────
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const limit = await checkRateLimit(`checkout:${ip}`);
+  const limit = await checkRateLimit("checkout", ip);
   if (!limit.success) {
     return NextResponse.json(
       { error: "Too many checkout attempts. Please wait and try again." },

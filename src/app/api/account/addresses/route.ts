@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const limit = await checkRateLimit(`address:${ip}`);
+  const limit = await checkRateLimit("admin_action", ip);
   if (!limit.success) {
     return NextResponse.json({ error: "Too many requests. Please wait." }, { status: 429 });
   }

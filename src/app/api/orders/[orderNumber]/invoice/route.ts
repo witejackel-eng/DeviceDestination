@@ -41,6 +41,8 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
     },
     items: lines,
     totalInclGstPaise: record.order.totalInclGstPaise,
+      subtotalInclGstPaise: record.order.subtotalInclGstPaise,
+      shippingPaise: record.order.shippingPaise,
     includedGstPaise: record.order.includedGstPaise,
   });
   return new NextResponse(new Uint8Array(pdf), {
