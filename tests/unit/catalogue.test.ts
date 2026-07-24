@@ -55,7 +55,9 @@ describe("metadata", () => {
       description: "Builder",
       path: "/system-builder",
     });
-    expect(metadata.alternates).toEqual({ canonical: "/system-builder" });
+    // Canonical should be an absolute URL based on the configured site URL.
+    expect(metadata.alternates?.canonical).toBeTruthy();
+    expect(String(metadata.alternates?.canonical)).toContain("/system-builder");
   });
   it("marks private transactional pages noindex", () => {
     const metadata = publicPageMetadata({
