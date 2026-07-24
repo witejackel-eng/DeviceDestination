@@ -80,6 +80,7 @@ export const checkoutAttemptStatus = pgEnum("checkout_attempt_status", [
   "ready_for_checkout",
   "failed",
   "cancelled",
+  "manual_intervention_required",
 ]);
 
 export const inventoryAdjustmentType = pgEnum("inventory_adjustment_type", [
@@ -891,6 +892,7 @@ export const checkoutAttempts = pgTable(
     providerOrderId: text("provider_order_id"),
     lastCompletedStep: text("last_completed_step"),
     lastError: text("last_error"),
+    interventionReason: text("intervention_reason"),
     attempts: integer("attempts").default(0).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -899,6 +901,7 @@ export const checkoutAttempts = pgTable(
     uniqueIndex("checkout_attempts_idempotency_key_idx").on(table.idempotencyKey),
     index("checkout_attempts_order_id_idx").on(table.orderId),
     index("checkout_attempts_provider_order_id_idx").on(table.providerOrderId),
+    index("checkout_attempts_status_updated_idx").on(table.status, table.updatedAt),
   ],
 );
 
