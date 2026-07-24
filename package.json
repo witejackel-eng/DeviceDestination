@@ -26,7 +26,8 @@
     "products:images": "npx tsx scripts/optimize-product-images.ts",
     "products:hero-images": "npx tsx scripts/prepare-hero-product-images.ts",
     "theme:validate": "node scripts/validate-theme.mjs",
-    "test:integration": "echo 'Integration tests pending - see tests/integration/' && exit 0",
+    "test:integration": "vitest run tests/integration",
+    "production:check": "node --import tsx scripts/production-check.ts",
     "test:ci": "npm run lint && npm run typecheck && npm test && npm run products:validate && npm run theme:validate && npm run build",
     "db:check": "npx drizzle-kit check",
     "format": "prettier --write ."
