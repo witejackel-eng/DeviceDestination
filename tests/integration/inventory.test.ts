@@ -316,9 +316,9 @@ describe.skipIf(!hasTestDb())("INVENTORY integration tests", () => {
 
   it("double consume changes stock once", async () => {
     const product = await seedProduct();
-    await seedInventory({ productId: product.id, quantityAvailable: 10, reserved: 2 });
+    await seedInventory({ productId: product.id, quantityAvailable: 10, reserved: 0 });
 
-    const { order } = await seedOrderWithPayment({ id: product.id }, { productId: product.id, quantityAvailable: 10, reserved: 2 });
+    const { order } = await seedOrderWithPayment({ id: product.id }, { productId: product.id, quantityAvailable: 10, reserved: 0 });
 
     const { reserveInventoryForOrder, consumeReservationsForOrder } = await import("@/lib/inventory");
 

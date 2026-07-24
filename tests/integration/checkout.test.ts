@@ -9,7 +9,7 @@
  * is not set.
  */
 
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { eq, sql } from "drizzle-orm";
 import {
   hasTestDb,
@@ -52,11 +52,16 @@ afterAll(() => {
 
 // ─── Mock external services ───────────────────────────────────────────────
 
-const mockRazorpayOrderId = testId("rp_order");
+// Each call to `orders.create` returns a unique provider order id so the
+// unique constraint on `payments.provider_order_id` is never violated across
+// tests or across concurrent calls within a test.
+let mockOrderCounter = 0;
 vi.mock("@/lib/razorpay", () => ({
   getRazorpay: () => ({
     orders: {
-      create: vi.fn().mockResolvedValue({ id: mockRazorpayOrderId }),
+      create: vi.fn().mockImplementation(() =>
+        Promise.resolve({ id: `mock_rp_order_${++mockOrderCounter}_${Date.now()}` }),
+      ),
       fetchPayments: vi.fn().mockResolvedValue({ items: [] }),
     },
     payments: {
@@ -96,6 +101,15 @@ describe.skipIf(!hasTestDb())("CHECKOUT integration tests", () => {
 
   beforeAll(() => {
     db = getTestDb();
+  });
+
+  afterEach(async () => {
+    // Clean up between tests so accumulated rows (especially the unique
+    // `payments.provider_order_id` and `orders.idempotency_key`) don't cause
+    // cross-test contamination.
+    if (hasTestDb()) {
+      await cleanupTestData();
+    }
   });
 
   afterAll(async () => {
