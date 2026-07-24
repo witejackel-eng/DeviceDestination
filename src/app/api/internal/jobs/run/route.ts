@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runJobBatch } from "@/lib/jobs";
+import { runJobBatch, reclaimStaleJobs } from "@/lib/jobs";
 import { reconcileStalePendingPayments, repairIncompletePostPaymentProcessing } from "@/lib/reconciliation";
 import { expirePendingReservations } from "@/lib/inventory";
 import { recoverStaleCheckoutAttempts } from "@/lib/checkout-orchestrator";
@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
   const startedAt = new Date();
 
   const jobsResult = await runJobBatch({ batchSize: 10 });
+  const staleJobsResult = await reclaimStaleJobs();
   const reservationResult = await expirePendingReservations();
   const reconciliationResult = await reconcileStalePendingPayments(30);
   const repairResult = await repairIncompletePostPaymentProcessing(50);
@@ -84,6 +85,7 @@ export async function POST(request: NextRequest) {
       triggerSource,
       durationMs,
       jobs: jobsResult,
+      staleJobs: staleJobsResult,
       reservations: reservationResult.expired,
       reconciliation: reconciliationResult,
       repair: repairResult,
@@ -94,6 +96,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     jobs: jobsResult,
+    staleJobs: staleJobsResult,
     reservationsExpired: reservationResult.expired,
     reconciliation: reconciliationResult,
     repair: repairResult,

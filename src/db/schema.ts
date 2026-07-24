@@ -112,6 +112,8 @@ export const jobStatus = pgEnum("job_status", [
   "completed",
   "failed",
   "cancelled",
+  "dead_letter",
+  "deferred",
 ]);
 
 export const quoteStatus = pgEnum("quote_status", [
@@ -846,6 +848,8 @@ export const jobs = pgTable(
     runAfter: timestamp("run_after", { withTimezone: true }).defaultNow().notNull(),
     lockedAt: timestamp("locked_at", { withTimezone: true }),
     lockedBy: text("locked_by"),
+    leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
+    recoveryCount: integer("recovery_count").default(0).notNull(),
     lastError: text("last_error"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     dedupeKey: text("dedupe_key"),
@@ -855,7 +859,11 @@ export const jobs = pgTable(
     index("jobs_status_run_after_idx").on(table.status, table.runAfter),
     index("jobs_type_idx").on(table.type),
     index("jobs_locked_by_idx").on(table.lockedBy),
-    uniqueIndex("jobs_dedupe_key_active_idx").on(table.dedupeKey).where(sql`${table.status} IN ('pending', 'processing', 'completed')`),
+    index("jobs_lease_expires_idx").on(table.leaseExpiresAt),
+    // Dedupe only applies to pending and processing jobs — NOT completed.
+    // This lets a legitimate resend (e.g. admin "resend email") create a new
+    // job even if an old completed job has the same dedupe key.
+    uniqueIndex("jobs_dedupe_key_active_idx").on(table.dedupeKey).where(sql`${table.status} IN ('pending', 'processing')`),
   ],
 );
 

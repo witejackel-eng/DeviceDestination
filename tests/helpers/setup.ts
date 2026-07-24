@@ -426,6 +426,7 @@ export async function cleanupTestData(): Promise<void> {
     "payment_webhook_events",
     "checkout_attempts",
     "payment_reconciliation_results",
+    "inventory_ledger",
     "jobs",
     "inventory_adjustments",
     "inventory_reservations",
