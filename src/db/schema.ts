@@ -614,6 +614,38 @@ export const orderStatusEvents = pgTable(
   (table) => [index("order_status_events_order_idx").on(table.orderId, table.createdAt)],
 );
 
+/**
+ * Dedicated order-access token table.
+ *
+ * Each token is a random cryptographically-secure value, stored as a SHA-256
+ * hash (never plaintext). Tokens are purpose-specific, short-lived, and
+ * revocable. This replaces the old deterministic HMAC-of-order-number token
+ * which never expired and could not be revoked.
+ */
+export const orderAccessTokens = pgTable(
+  "order_access_tokens",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tokenHash: text("token_hash").notNull(),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+    orderNumber: text("order_number").notNull(),
+    purpose: text("purpose").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    useCount: integer("use_count").default(0).notNull(),
+    maxUses: integer("max_uses"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("order_access_tokens_hash_idx").on(table.tokenHash),
+    index("order_access_tokens_order_idx").on(table.orderId),
+    index("order_access_tokens_expires_idx").on(table.expiresAt),
+    index("order_access_tokens_purpose_idx").on(table.purpose, table.expiresAt),
+  ],
+);
+
 export const payments = pgTable(
   "payments",
   {

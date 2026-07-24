@@ -57,6 +57,13 @@
       "when": 1784888000000,
       "tag": "0007_refunds_atomic",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784890000000,
+      "tag": "0008_order_access_tokens",
+      "breakpoints": true
     }
   ]
 }
