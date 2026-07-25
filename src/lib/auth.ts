@@ -5,12 +5,34 @@ import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import { sendAuthEmail } from "@/lib/notifications";
 
+export function isGoogleAuthConfigured() {
+  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+}
+
 function createAuth() {
   return betterAuth({
     appName: "DeviceDestination",
     secret: process.env.BETTER_AUTH_SECRET!,
     baseURL: process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL,
     database: drizzleAdapter(getDb(), { provider: "pg", schema, usePlural: true }),
+    trustedOrigins: [process.env.BETTER_AUTH_URL, process.env.NEXT_PUBLIC_SITE_URL].filter(
+      (origin): origin is string => Boolean(origin),
+    ),
+    // `role` is server-owned. It is readable in the session so layouts can branch
+    // without a second query, but never writable by the client.
+    user: {
+      additionalFields: {
+        role: { type: "string", required: false, defaultValue: "customer", input: false },
+      },
+    },
+    socialProviders: isGoogleAuthConfigured()
+      ? {
+          google: {
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+          },
+        }
+      : undefined,
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: Boolean(process.env.RESEND_API_KEY),

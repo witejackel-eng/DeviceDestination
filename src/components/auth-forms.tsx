@@ -7,13 +7,18 @@ import { authClient } from "@/lib/auth-client";
 
 const input = "h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3";
 
-export function LoginForm() {
+/**
+ * Secondary sign-in path kept for accounts created before Google sign-in, and
+ * for staff who do not use a Google identity. `next` is already normalised to a
+ * same-origin path by the calling server component.
+ */
+export function PasswordSignIn({ next }: { next: string }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   return (
     <form
-      className="surface-card grid gap-5 p-6 sm:p-8"
+      className="grid gap-5"
       onSubmit={async (event) => {
         event.preventDefault();
         setLoading(true);
@@ -28,11 +33,10 @@ export function LoginForm() {
           setError(result.error.message ?? "Sign in failed.");
           return;
         }
-        router.push("/account");
+        router.push(next);
         router.refresh();
       }}
     >
-      <h1 className="font-display text-4xl font-semibold">Sign in</h1>
       <label className="grid gap-2 text-sm font-bold">
         Email
         <input name="email" type="email" autoComplete="email" required className={input} />
@@ -53,8 +57,8 @@ export function LoginForm() {
           {error}
         </p>
       )}
-      <button className="button-primary w-full" disabled={loading}>
-        {loading ? "Signing in…" : "Sign in"}
+      <button className="button-secondary w-full" disabled={loading}>
+        {loading ? "Signing in…" : "Sign in with email"}
       </button>
       <div className="flex flex-wrap justify-between gap-3 text-sm">
         <Link href="/forgot-password" className="underline">

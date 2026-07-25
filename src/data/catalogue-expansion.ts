@@ -78,7 +78,7 @@ export const exactCatalogueExpansion: Product[] = [
       "An unmanaged eight-port Gigabit PoE+ switch with a 123 W power budget for cameras, access points and VoIP endpoints.",
     longDescription:
       "The GS108PP provides eight auto-negotiating Gigabit copper ports, with PoE+ available on every port. NETGEAR FlexPoE allows the power budget to be changed with a compatible external power supply, while its fanless metal enclosure suits desks, walls and equipment racks. It is an unmanaged switch and does not provide configurable VLAN controls.",
-    images: ["/images/products/NETGEAR-GS108PP.png"],
+    images: ["/images/products/processed/NETGEAR-GS108PP.webp"],
     documents: [
       {
         type: "datasheet",
@@ -127,7 +127,7 @@ export const exactCatalogueExpansion: Product[] = [
       "A 16-port unmanaged Gigabit PoE+ switch with a 183 W power budget for denser camera and business-network deployments.",
     longDescription:
       "The GS116PP supplies Gigabit data and PoE+ power across all 16 copper ports. Its 183 W FlexPoE budget is intended for multiple powered endpoints and can be reduced with compatible NETGEAR power modules. The fanless metal chassis supports desktop, wall and rack placement; configuration features such as managed VLANs are not included.",
-    images: ["/images/products/NETGEAR-GS116PP.png"],
+    images: ["/images/products/processed/NETGEAR-GS116PP.webp"],
     documents: [
       {
         type: "datasheet",
@@ -331,7 +331,7 @@ export const exactCatalogueExpansion: Product[] = [
       "A Linux-based fingerprint, card and password terminal with built-in Wi-Fi and PoE connectivity.",
     longDescription:
       "VEGA+W+POE combines fingerprint, card and password authentication in a compact attendance and access-control terminal. It stores up to 3,000 users and 200,000 transactions, and supports TCP/IP, Wi-Fi, USB host and PoE installation. Door-lock wiring and software licensing should be confirmed for the intended deployment before purchase.",
-    images: ["/images/products/ESSL-VEGA-W-POE.png"],
+    images: ["/images/products/processed/ESSL-VEGA-W-POE.webp"],
     documents: [
       { type: "datasheet", title: "eSSL catalogue", url: "/docs/datasheets/ESSL-VEGA-W-POE.pdf" },
       { type: "manual", title: "User manual", url: "/docs/manuals/ESSL-VEGA-W-POE-manual.pdf" },
@@ -367,7 +367,7 @@ export const exactCatalogueExpansion: Product[] = [
       "A face, fingerprint, card and password attendance terminal with access-control interfaces and TCP/IP connectivity.",
     longDescription:
       "The MB160 is designed for time attendance and basic door access control using face, fingerprint, card or password verification. A 2.8-inch display, TCP/IP and USB-host connectivity support local deployments, while compatible software and optional functions must be scoped separately. It is intended for protected indoor installation.",
-    images: ["/images/products/ESSL-MB160.png"],
+    images: ["/images/products/processed/ESSL-MB160.webp"],
     documents: [
       { type: "datasheet", title: "eSSL catalogue", url: "/docs/datasheets/ESSL-MB160.pdf" },
       { type: "manual", title: "User manual", url: "/docs/manuals/ESSL-MB160-manual.pdf" },
@@ -403,7 +403,7 @@ export const exactCatalogueExpansion: Product[] = [
       "A compact face, fingerprint and card terminal for indoor time-attendance deployments.",
     longDescription:
       "The MB20 combines face, fingerprint and card records in a compact indoor terminal. It supports up to 1,000 users, 2,000 fingerprint templates, 500 faces and 50,000 transactions, with TCP/IP and USB-host communication. Confirm the exact software edition and any door-control requirement before deployment.",
-    images: ["/images/products/ESSL-MB20.png"],
+    images: ["/images/products/processed/ESSL-MB20.webp"],
     documents: [
       { type: "datasheet", title: "eSSL catalogue", url: "/docs/datasheets/ESSL-MB20.pdf" },
       { type: "manual", title: "User manual", url: "/docs/manuals/ESSL-MB20-manual.pdf" },
@@ -437,7 +437,7 @@ export const exactCatalogueExpansion: Product[] = [
       "A compact visible-light face terminal with Wi-Fi, TCP/IP and anti-spoofing protection.",
     longDescription:
       "AiFace Mercury is a compact indoor facial-recognition terminal for attendance and door access. Its 2.8-inch touch display, adjustable supplementary light and anti-spoofing algorithm support up to 800 faces and 150,000 transactions. It connects through TCP/IP or Wi-Fi and requires a compatible 12 VDC power supply and correctly specified door hardware.",
-    images: ["/images/products/ESSL-AIFACE-MERCURY.png"],
+    images: ["/images/products/processed/ESSL-AIFACE-MERCURY.webp"],
     documents: [
       {
         type: "datasheet",
@@ -478,7 +478,7 @@ export const exactCatalogueExpansion: Product[] = [
       "A 4.3-inch facial-recognition terminal with Wi-Fi, TCP/IP, card support and 150,000-transaction capacity.",
     longDescription:
       "AiFace Neptune is an indoor Linux-based terminal for face, optional card and password verification. It stores up to 500 faces, 1,000 users and 150,000 transactions, and communicates over TCP/IP, built-in Wi-Fi or USB host. A binocular camera supports anti-spoofing; compatible software and door hardware remain project-specific.",
-    images: ["/images/products/ESSL-AIFACE-NEPTUNE.png"],
+    images: ["/images/products/processed/ESSL-AIFACE-NEPTUNE.webp"],
     documents: [
       {
         type: "datasheet",

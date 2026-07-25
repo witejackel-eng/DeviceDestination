@@ -4,14 +4,22 @@ import { getDb, isDatabaseConfigured } from "@/db/client";
 import { addresses, customers, orderItems, orders } from "@/db/schema";
 import { createInvoicePdf } from "@/lib/invoice";
 import { verifyOrderConfirmationToken } from "@/lib/order-token";
+import { getSessionUser } from "@/lib/authz";
 
 type Params = Promise<{ orderNumber: string }>;
 
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   const { orderNumber } = await params;
   const token = request.nextUrl.searchParams.get("token") ?? "";
-  if (!verifyOrderConfirmationToken(orderNumber, token))
+
+  // Two independent ways to prove entitlement: the signed confirmation token
+  // emailed at checkout, or a session that owns the order. Ownership is checked
+  // against the database below, never asserted by the request.
+  const tokenValid = verifyOrderConfirmationToken(orderNumber, token);
+  const sessionUser = tokenValid ? null : await getSessionUser();
+  if (!tokenValid && !sessionUser)
     return NextResponse.json({ error: "Invalid invoice link." }, { status: 401 });
+
   if (!isDatabaseConfigured())
     return NextResponse.json({ error: "Invoice storage is unavailable." }, { status: 503 });
   const db = getDb();
@@ -23,6 +31,8 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
     .where(eq(orders.orderNumber, orderNumber))
     .limit(1);
   const record = result[0];
+  if (!tokenValid && record && record.customer.userId !== sessionUser?.id)
+    return NextResponse.json({ error: "Invoice is not available." }, { status: 404 });
   if (!record || record.order.status !== "paid" || !record.order.invoiceNumber)
     return NextResponse.json({ error: "Invoice is not ready yet." }, { status: 404 });
   const lines = await db.select().from(orderItems).where(eq(orderItems.orderId, record.order.id));

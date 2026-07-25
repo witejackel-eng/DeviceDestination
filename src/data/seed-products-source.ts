@@ -396,7 +396,7 @@ export const products = [
     rating: 4,
     shortDescription:
       "8-Channel H.265+ Network Video Recorder supporting up to 8MP resolution, 80Mbps bandwidth, 1 SATA HDD (up to 8TB), HDMI/VGA output, and ONVIF compatibility.",
-    images: ["/images/products/CP-UNR-108F1 1st.jpg"],
+    images: ["/images/products/processed/CP-UNR-108F1 1st.webp"],
     datasheet: "/docs/CP-UNR-108F1.pdf",
     manual: "/docs/CP-UNR-108F1 user manual.pdf",
     specs: {
@@ -446,7 +446,7 @@ export const products = [
     rating: 5,
     shortDescription:
       "Professional 16-Channel 4K Network Video Recorder. Supports up to 12MP cameras, 4K HDMI output, AI Smart Motion Detection, 144Mbps bandwidth, and up to 20TB storage.",
-    images: ["/images/products/CP-UNR-4K2161-V2 1st.jpg"],
+    images: ["/images/products/processed/CP-UNR-4K2161-V2 1st.webp"],
     datasheet: "/docs/CP-UNR-4K2161-V2.pdf",
     manual: "/docs/CP-UNR-4K2161-V2 user manual.pdf",
     specs: {
@@ -503,7 +503,7 @@ export const products = [
     rating: 5,
     shortDescription:
       "Standalone fingerprint time attendance and access control system. Stores 10,000 fingerprints and 1,00,000 transaction logs. Ideal for offices, factories, schools and institutions.",
-    images: ["/images/products/X-990.png"],
+    images: ["/images/products/processed/X-990.webp"],
     datasheet: null,
     manual: null,
     specs: {
@@ -555,7 +555,7 @@ export const products = [
     rating: 4,
     shortDescription:
       "Ultra-slim fingerprint time attendance and access control device with WiFi. Modern design, touch keypad, 3,000 fingerprint capacity. Ideal for modern offices.",
-    images: ["/images/products/F22.png"],
+    images: ["/images/products/processed/F22.webp"],
     datasheet: null,
     manual: null,
     specs: {
@@ -605,7 +605,7 @@ export const products = [
     rating: 5,
     shortDescription:
       'Reliable fingerprint attendance and access control system with 2.8" TFT display, 3,000 fingerprint capacity, TCP/IP & USB connectivity and access control interface.',
-    images: ["/images/products/F18.png"],
+    images: ["/images/products/processed/F18.webp"],
     datasheet: null,
     manual: null,
     specs: {
@@ -656,7 +656,7 @@ export const products = [
     rating: 4,
     shortDescription:
       "IP-based fingerprint terminal working in both network and standalone mode. 1,500 fingerprint capacity, 80,000 logs, Wiegand in/out, supports Master-Slave anti-passback configuration.",
-    images: ["/images/products/Sf100.png"],
+    images: ["/images/products/processed/Sf100.webp"],
     datasheet: null,
     manual: null,
     specs: {
@@ -707,7 +707,7 @@ export const products = [
     rating: 5,
     shortDescription:
       "Fingerprint time attendance and access control with inbuilt battery backup, WiFi, cloud support, and 2,000 user capacity. Ideal for SMEs and growing businesses.",
-    images: ["/images/products/K30 pro.png"],
+    images: ["/images/products/processed/K30 pro.webp"],
     datasheet: null,
     manual: null,
     specs: {
@@ -758,7 +758,7 @@ export const products = [
     rating: 4,
     shortDescription:
       "Compact fingerprint exit reader with RS485 interface and IP65 weather rating. Works with eSSL biometric controllers, InBIO series, and 3rd party access control panels.",
-    images: ["/images/products/FR1200.png"],
+    images: ["/images/products/processed/FR1200.webp"],
     datasheet: null,
     manual: null,
     specs: {
@@ -803,7 +803,7 @@ export const products = [
     rating: 4,
     shortDescription:
       "Entry-level fingerprint attendance and access control device with LAN connectivity, 800 fingerprint capacity, and auto push data support. Best for small offices.",
-    images: ["/images/products/K90 pro.png"],
+    images: ["/images/products/processed/K90 pro.webp"],
     datasheet: null,
     manual: null,
     specs: {
@@ -848,7 +848,7 @@ export const products = [
     rating: 5,
     shortDescription:
       'Advanced visible-light facial recognition attendance and access control system. Anti-spoofing AI, 3,000 face capacity, 5" touch screen, 900MHz dual-core CPU. Works with or without mask.',
-    images: ["/images/products/AiFace-Mars.png"],
+    images: ["/images/products/processed/AiFace-Mars.webp"],
     datasheet: null,
     manual: null,
     specs: {
@@ -903,7 +903,7 @@ export const products = [
     rating: 4,
     shortDescription:
       'Advanced visible-light facial recognition attendance and access control system with built-in HID card reader. Anti-spoofing AI, 3,000 face capacity, 5" touch screen, 900MHz dual-core CPU.',
-    images: ["/images/products/AiFace-Mars.png"],
+    images: ["/images/products/processed/AiFace-Mars.webp"],
     datasheet: null,
     manual: null,
     specs: {

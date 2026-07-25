@@ -135,6 +135,21 @@ button {
   letter-spacing: -0.02em;
 }
 
+/* Dimensional tangerine pill wrapping the highlighted phrase in the hero
+   headline. Inline-block so it wraps as a unit on narrow screens instead of
+   splitting across lines; the padding is em-based so it tracks the type scale. */
+.headline-pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.06em 0.36em 0.14em;
+  color: #fff;
+  background: linear-gradient(168deg, var(--tangerine-lighter) 0%, var(--tangerine) 52%, #e56f00 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.42),
+    inset 0 0 0 1px rgb(255 255 255 / 0.14),
+    0 10px 26px var(--tangerine-shadow);
+}
+
 .display-section {
   font-size: clamp(2.7rem, 6vw, 5.7rem);
   line-height: 0.98;

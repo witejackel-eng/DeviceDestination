@@ -36,10 +36,18 @@ function Highlight({ text, query }: { text: string; query: string }) {
 }
 
 /**
- * Header search. The trigger is icon-only by design — the storefront has a single
- * search entry point and no inline search fields.
+ * The storefront's single search experience. `variant="icon"` is the header
+ * trigger; `variant="banner"` is the one large entry point near the foot of the
+ * homepage. Both open the same panel, so there is only ever one search UI to
+ * learn — and no duplicated search sections competing down the page.
  */
-export function ProductSearch({ className = "" }: { className?: string }) {
+export function ProductSearch({
+  className = "",
+  variant = "icon",
+}: {
+  className?: string;
+  variant?: "icon" | "banner";
+}) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -67,14 +75,30 @@ export function ProductSearch({ className = "" }: { className?: string }) {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <motion.button
-          type="button"
-          className={`header-control ${className}`}
-          aria-label="Search products by exact model"
-          whileTap={reduceMotion ? undefined : { scale: 0.94 }}
-        >
-          <Search size={19} />
-        </motion.button>
+        {variant === "banner" ? (
+          <motion.button
+            type="button"
+            className={`flex min-h-14 w-full items-center gap-3 rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-left transition-colors hover:border-[var(--tangerine-border-hover)] ${className}`}
+            whileTap={reduceMotion ? undefined : { scale: 0.995 }}
+          >
+            <Search size={20} className="shrink-0 text-[var(--tangerine-text)]" />
+            <span className="min-w-0 flex-1 truncate text-[var(--muted)]">
+              Search by model number, product name or specification
+            </span>
+            <span className="hidden shrink-0 rounded-lg border border-[var(--line)] px-2 py-1 text-xs font-bold text-[var(--muted)] sm:inline">
+              /
+            </span>
+          </motion.button>
+        ) : (
+          <motion.button
+            type="button"
+            className={`header-control ${className}`}
+            aria-label="Search products by exact model"
+            whileTap={reduceMotion ? undefined : { scale: 0.94 }}
+          >
+            <Search size={19} />
+          </motion.button>
+        )}
       </Dialog.Trigger>
       <AnimatePresence>
         {open && (

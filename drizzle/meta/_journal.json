@@ -8,6 +8,13 @@
       "when": 1784714355034,
       "tag": "0000_jazzy_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784971094034,
+      "tag": "0001_keen_magma",
+      "breakpoints": true
     }
   ]
 }

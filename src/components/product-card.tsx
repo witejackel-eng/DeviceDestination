@@ -38,7 +38,7 @@ export function ProductCard({ product, compact = false }: { product: Product; co
           alt={`${product.brand} ${product.model} product`}
           fill
           sizes="(max-width: 768px) 80vw, (max-width: 1200px) 40vw, 24vw"
-          className={`object-contain transition-transform duration-500 group-hover:scale-[1.04] ${compact ? "p-6" : "p-8"}`}
+          className="object-contain p-[10%] transition-transform duration-500 group-hover:scale-[1.04]"
         />
         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em]">
           {product.stockStatus === "in_stock" ? "Available" : "Check lead time"}

@@ -23,6 +23,8 @@
     "products:import": "node --import tsx scripts/import-products.ts",
     "products:validate": "node --import tsx scripts/validate-product-data.ts",
     "products:report": "node --import tsx scripts/write-catalogue-report.ts",
+    "products:parity": "node --import tsx scripts/catalogue-parity-snapshot.ts",
+    "images:process": "node scripts/process-product-images.mjs",
     "theme:validate": "node scripts/validate-theme.mjs",
     "format": "prettier --write ."
   },

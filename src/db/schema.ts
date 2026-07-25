@@ -45,6 +45,7 @@ export const userRole = pgEnum("user_role", [
   "catalogue_manager",
   "operations",
   "admin",
+  "owner",
 ]);
 
 export const brands = pgTable(

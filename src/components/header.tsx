@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ChevronDown, Menu, Scale, ShoppingBag, UserRound, X } from "lucide-react";
+import { ChevronDown, Menu, Scale, ShoppingBag, X } from "lucide-react";
 import { catalogue } from "@/data/catalog";
 import { useCartStore } from "@/lib/cart-store";
+import { AccountMenu } from "@/components/account-menu";
 import { Brand } from "@/components/brand";
 import { ProductSearch } from "@/components/product-search";
 import { getPriceMaxAgeDays, siteConfig } from "@/config/site";
@@ -61,7 +62,7 @@ const mobileNav = [
   { href: "/contact", label: "Contact" },
 ] as const;
 
-export function Header() {
+export function Header({ authConfigured = false }: { authConfigured?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [compact, setCompact] = useState(false);
@@ -228,13 +229,7 @@ export function Header() {
               >
                 <Scale size={19} />
               </Link>
-              <Link
-                href="/account"
-                className="header-control hidden sm:inline-flex"
-                aria-label="Account"
-              >
-                <UserRound size={19} />
-              </Link>
+              <AccountMenu authConfigured={authConfigured} />
               <button
                 type="button"
                 onClick={openCart}

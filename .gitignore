@@ -51,3 +51,12 @@ next-env.d.ts
 # browser test output
 playwright-report/
 test-results/
+
+# local scratch
+.tmp/
+
+# generated review screenshots (regenerate: npm run build && node scripts/capture-screenshots.mjs)
+docs/screenshots/review/
+
+# generated catalogue parity reports (regenerate: npm run products:parity)
+reports/

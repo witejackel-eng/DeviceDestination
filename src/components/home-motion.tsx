@@ -16,13 +16,6 @@ export function HomeMotion() {
       duration: 520,
       ease: "out(4)",
     });
-    const pathAnimation = animate("[data-anime-hero-path]", {
-      strokeDashoffset: { from: 650, to: 0 },
-      duration: 1_200,
-      delay: 120,
-      ease: "inOut(3)",
-    });
-
     const logoAnimations: ReturnType<typeof animate>[] = [];
     if (!sessionStorage.getItem("dd-logo-seen")) {
       const scope = "[data-anime-brand-mark]";
@@ -69,15 +62,8 @@ export function HomeMotion() {
         timeline
           .from("[data-hero-copy]", { y: mobile ? 12 : 20, duration: 0.58, stagger: 0.06 })
           .from(
-            "[data-hero-product]",
-            {
-              y: (index) => (mobile ? 14 : index % 2 === 0 ? 34 : -24),
-              rotate: (index) => (mobile ? 0 : index % 2 === 0 ? -2 : 2),
-              scale: 0.97,
-              opacity: 0,
-              duration: 0.68,
-              stagger: 0.05,
-            },
+            "[data-hero-visual]",
+            { y: mobile ? 14 : 26, scale: 0.98, opacity: 0, duration: 0.68 },
             "-=0.34",
           );
 
@@ -126,7 +112,6 @@ export function HomeMotion() {
 
     return () => {
       markAnimation.revert();
-      pathAnimation.revert();
       logoAnimations.forEach((animation) => animation.revert());
       media.revert();
     };

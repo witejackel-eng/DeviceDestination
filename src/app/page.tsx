@@ -9,12 +9,15 @@ import {
   IndianRupee,
   MessageCircle,
   Scale,
+  Search,
 } from "lucide-react";
 import { brands, catalogue, categories } from "@/data/catalog";
 import { ProductCard } from "@/components/product-card";
-import { HeroProducts } from "@/components/hero-products";
+import { HeroComposition } from "@/components/hero-composition";
 import { HomeMotion } from "@/components/home-motion";
+import { PerspectiveGrid } from "@/components/perspective-grid";
 import { PointerField } from "@/components/pointer-field";
+import { ProductSearch } from "@/components/product-search";
 import { CategoryIllustration } from "@/components/category-illustration";
 import { publicPageMetadata } from "@/lib/seo";
 
@@ -77,12 +80,27 @@ export default function Home() {
     catalogue.some((product) => product.brandSlug === brand.slug),
   );
 
+  // Hero composition products, chosen from the live catalogue by identity rather
+  // than position so a catalogue edit cannot silently swap in a different model.
+  const pick = (id: string) => catalogue.find((product) => product.id === id);
+  const heroProduct =
+    pick("cp-unc-da41l3c-d-q") ??
+    catalogue.find((product) => product.categorySlug.includes("camera"))!;
+  const heroRecorder =
+    pick("cp-unr-4k2161-v2") ?? catalogue.find((product) => product.categorySlug === "nvr-systems");
+  const heroBiometric =
+    pick("x-990") ?? catalogue.find((product) => product.categorySlug === "biometric-devices");
+
   return (
     <>
       <HomeMotion />
 
-      <section data-commerce-hero className="overflow-hidden border-b border-[var(--line)]">
-        <div className="container-standard grid items-center gap-9 py-10 sm:py-12 lg:min-h-[660px] lg:grid-cols-[0.94fr_1.06fr] lg:py-8">
+      <section
+        data-commerce-hero
+        className="relative overflow-hidden border-b border-[var(--line)]"
+      >
+        <PerspectiveGrid />
+        <div className="container-standard relative grid items-center gap-10 py-12 sm:py-14 lg:min-h-[680px] lg:grid-cols-[1fr_1fr] lg:gap-14 lg:py-10">
           <div className="relative z-20">
             <div
               data-hero-copy
@@ -95,41 +113,44 @@ export default function Home() {
                 DD
               </span>
               <span className="px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/75">
-                Exact-model security hardware
+                Security hardware, without the installation bundle
               </span>
             </div>
             <h1 data-hero-copy className="display-hero mt-6">
-              Security hardware.
-              <br />
-              <span className="relative inline-block">
-                Find the exact model.
-                <span
-                  className="absolute inset-x-0 -bottom-1 h-2 bg-[var(--tangerine)]"
-                  aria-hidden="true"
-                />
-              </span>
+              Original security hardware{" "}
+              <span className="headline-pill">delivered&nbsp;fast</span>
             </h1>
             <p data-hero-copy className="mt-7 max-w-xl text-lg leading-8 text-[var(--muted)]">
-              Shop cameras, recorders, biometric devices and networking hardware with clear prices
-              and model-specific documents.
+              Shop verified CCTV cameras, recorders, biometric devices and networking hardware with
+              clear specifications, GST-inclusive pricing and fast delivery.
             </p>
             <div data-hero-copy className="mt-8 flex flex-wrap gap-3">
               <Link href="/products" className="button-primary">
-                Shop all products <ArrowRight size={17} />
+                Shop products <ArrowRight size={17} />
               </Link>
-              <Link href="/compare" className="button-secondary">
-                Compare models <Scale size={17} />
+              <Link href="#shop-by-category" className="button-secondary">
+                Browse categories
+              </Link>
+              <Link href="#find-your-model" className="button-quiet">
+                Search by model <Search size={16} />
               </Link>
             </div>
-            <p data-hero-copy className="mt-5 text-sm font-semibold text-[var(--muted)]">
-              GST-inclusive pricing · Exact-model documentation · Secure checkout
+            <p data-hero-copy className="mt-6 text-sm font-semibold text-[var(--muted)]">
+              Original products · GST invoice · Secure checkout · Delivery support
             </p>
           </div>
-          <HeroProducts />
+
+          <div data-hero-visual className="relative z-10">
+            <HeroComposition hero={heroProduct} behind={heroRecorder} beside={heroBiometric} />
+          </div>
         </div>
       </section>
 
-      <section className="py-16 sm:py-20 lg:py-24" data-gsap-categories>
+      <section
+        id="shop-by-category"
+        className="scroll-mt-28 py-16 sm:py-20 lg:py-24"
+        data-gsap-categories
+      >
         <div className="container-standard">
           <div>
             <p className="eyebrow">Shop by category</p>
@@ -272,6 +293,22 @@ export default function Home() {
                 </p>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="find-your-model" className="scroll-mt-28 py-16 sm:py-20">
+        <div className="container-standard">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="eyebrow">Find your model</p>
+            <h2 className="display-section mt-4">Know the model? Find it instantly.</h2>
+            <p className="mt-5 text-lg leading-8 text-[var(--muted)]">
+              Search accepts spaces, hyphens and lower case, so CP UNC DA41L3C D Q finds the same
+              camera as CP-UNC-DA41L3C-D-Q.
+            </p>
+            <div className="mt-8">
+              <ProductSearch variant="banner" />
+            </div>
           </div>
         </div>
       </section>

@@ -44,7 +44,17 @@ async function loadRazorpay() {
   });
 }
 
-export function CheckoutForm() {
+export function CheckoutForm({
+  defaultCustomer = { name: "", email: "" },
+  signedIn = false,
+}: {
+  /**
+   * Name and email from the Google profile. A Google account never carries a
+   * verified delivery address or phone number, so those stay empty and required.
+   */
+  defaultCustomer?: { name: string; email: string };
+  signedIn?: boolean;
+} = {}) {
   const router = useRouter();
   const { items, clear } = useCartStore();
   const [idempotencyKey] = useState(() => crypto.randomUUID());
@@ -63,7 +73,13 @@ export function CheckoutForm() {
     formState: { errors },
   } = useForm<CheckoutInput>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { installationRequested: false, policyConsent: false, website: "" },
+    defaultValues: {
+      name: defaultCustomer.name,
+      email: defaultCustomer.email,
+      installationRequested: false,
+      policyConsent: false,
+      website: "",
+    },
   });
   const input = "h-12 w-full rounded-xl border border-[var(--line)] bg-white px-3";
 
@@ -79,6 +95,12 @@ export function CheckoutForm() {
         },
         body: JSON.stringify({ customer, items }),
       });
+      // The session can expire while the form is open. Send the customer back
+      // through sign-in and return them here; the cart is untouched.
+      if (response.status === 401) {
+        router.push("/login?next=%2Fcheckout");
+        return;
+      }
       const data = (await response.json()) as {
         error?: string;
         mode?: "test" | "razorpay";
@@ -290,7 +312,8 @@ export function CheckoutForm() {
           {submitting ? "Checking order…" : "Continue to secure payment"}
         </button>
         <p className="mt-3 text-center text-xs text-[var(--muted)]">
-          Cart prices are rechecked on the server before payment.
+          Cart prices and stock are rechecked on the server before payment.
+          {signedIn && " Your order and GST invoice will appear in your account."}
         </p>
       </aside>
     </form>

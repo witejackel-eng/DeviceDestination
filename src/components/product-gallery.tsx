@@ -39,7 +39,7 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-contain p-7 sm:p-12"
+              className="object-contain p-[10%]"
             />
           </motion.div>
         </AnimatePresence>

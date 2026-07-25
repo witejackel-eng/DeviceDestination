@@ -19,6 +19,8 @@ import { logger } from "@/lib/logger";
 import { getRazorpay } from "@/lib/razorpay";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { orderRequestSchema } from "@/lib/validation";
+import { getSessionUser } from "@/lib/authz";
+import { isAuthConfigured } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
@@ -36,6 +38,12 @@ export async function POST(request: NextRequest) {
     );
   if (parsed.data.customer.website)
     return NextResponse.json({ error: "Unable to process request." }, { status: 400 });
+
+  // Placing an order requires a signed-in customer wherever authentication is
+  // configured. The session is read server-side; the client cannot assert it.
+  const sessionUser = await getSessionUser();
+  if (isAuthConfigured() && !sessionUser)
+    return NextResponse.json({ error: "Please sign in to place this order." }, { status: 401 });
 
   const previewLines = parsed.data.items.flatMap((line) => {
     const product = catalogue.find((item) => item.id === line.productId);
@@ -166,6 +174,9 @@ export async function POST(request: NextRequest) {
   const [savedCustomer] = await db
     .insert(customers)
     .values({
+      // Ties the order to the authenticated account so /account/orders can prove
+      // ownership without trusting an order number from the browser.
+      userId: sessionUser?.id ?? null,
       name: customer.name,
       email: customer.email,
       mobile: customer.mobile,

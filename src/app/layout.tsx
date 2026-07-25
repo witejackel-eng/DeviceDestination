@@ -8,6 +8,7 @@ import { ConsentGatedAnalytics } from "@/components/consent-gated-analytics";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { CookiePreferencesModal } from "@/components/cookie-preferences-modal";
 import { siteConfig } from "@/config/site";
+import { isAuthConfigured } from "@/lib/auth";
 import "./globals.css";
 
 const barlowCondensed = Barlow_Condensed({
@@ -84,7 +85,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Skip to content
         </a>
-        <Header />
+        <Header authConfigured={isAuthConfigured()} />
         <main id="main-content">{children}</main>
         <Footer />
         <CartDrawer />
