@@ -409,13 +409,15 @@ describe.skipIf(!hasTestDb())("PAYMENT WEBHOOK integration tests", () => {
     const jobsMock = vi.mocked(await import("@/lib/jobs"));
     const origEnqueue = jobsMock.enqueueDeduplicatedJob;
     let enqueueCallCount = 0;
-    jobsMock.enqueueDeduplicatedJob = vi.fn().mockImplementation(async (input: any) => {
-      enqueueCallCount++;
-      if (enqueueCallCount <= 2) {
-        throw new Error("Injected failure: job enqueue failed");
-      }
-      return origEnqueue(input);
-    });
+    jobsMock.enqueueDeduplicatedJob = vi
+      .fn()
+      .mockImplementation(async (input: Parameters<typeof origEnqueue>[0]) => {
+        enqueueCallCount++;
+        if (enqueueCallCount <= 2) {
+          throw new Error("Injected failure: job enqueue failed");
+        }
+        return origEnqueue(input);
+      });
 
     const { finalizeCapturedPayment } = await import("@/lib/payment-processing");
     const result = await finalizeCapturedPayment({

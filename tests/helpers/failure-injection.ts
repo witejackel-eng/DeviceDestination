@@ -84,7 +84,7 @@ function createInjectionError(injection: FailureInjection): Error {
  * // Now call wrappedInsert() — it will throw instead of inserting.
  * ```
  */
-export function createFailableFunction<TArgs extends any[], TResult>(
+export function createFailableFunction<TArgs extends unknown[], TResult>(
   injection: FailureInjection | null,
   point: FailurePoint,
   originalFn: (...args: TArgs) => Promise<TResult>,
@@ -111,10 +111,10 @@ export function createFailableFunction<TArgs extends any[], TResult>(
  *
  * The wrapped function replaces the reservation row insert step.
  */
-export function failReservationInsertion<TResult>(
+export function failReservationInsertion<TValues, TResult>(
   injection: FailureInjection | null,
-  originalInsertFn: (values: any) => Promise<TResult>,
-): (values: any) => Promise<TResult> {
+  originalInsertFn: (values: TValues) => Promise<TResult>,
+): (values: TValues) => Promise<TResult> {
   return createFailableFunction(injection, "reservation_insertion", originalInsertFn);
 }
 
@@ -146,10 +146,10 @@ export function failReservationActivation<TResult>(
  *
  * The wrapped function replaces the payment UPDATE step.
  */
-export function failPaymentUpdate<TResult>(
+export function failPaymentUpdate<TValues, TResult>(
   injection: FailureInjection | null,
-  originalUpdateFn: (paymentId: string, values: any) => Promise<TResult>,
-): (paymentId: string, values: any) => Promise<TResult> {
+  originalUpdateFn: (paymentId: string, values: TValues) => Promise<TResult>,
+): (paymentId: string, values: TValues) => Promise<TResult> {
   return createFailableFunction(injection, "payment_update", originalUpdateFn);
 }
 
@@ -178,10 +178,10 @@ export function failInventoryConsumption<TResult>(
  *
  * The wrapped function replaces the job enqueue step.
  */
-export function failJobEnqueue<TResult>(
+export function failJobEnqueue<TInput, TResult>(
   injection: FailureInjection | null,
-  originalEnqueueFn: (input: any) => Promise<TResult>,
-): (input: any) => Promise<TResult> {
+  originalEnqueueFn: (input: TInput) => Promise<TResult>,
+): (input: TInput) => Promise<TResult> {
   return createFailableFunction(injection, "job_enqueue", originalEnqueueFn);
 }
 
@@ -194,10 +194,10 @@ export function failJobEnqueue<TResult>(
  *
  * The wrapped function replaces the Razorpay API call.
  */
-export function failRazorpayOrderCreation<TResult>(
+export function failRazorpayOrderCreation<TParams, TResult>(
   injection: FailureInjection | null,
-  originalCreateFn: (params: any) => Promise<TResult>,
-): (params: any) => Promise<TResult> {
+  originalCreateFn: (params: TParams) => Promise<TResult>,
+): (params: TParams) => Promise<TResult> {
   return createFailableFunction(injection, "razorpay_order_creation", originalCreateFn);
 }
 
@@ -226,7 +226,7 @@ export function failPaymentReconciliation<TResult>(
  * This is useful for vi.fn() patterns where you want to selectively inject
  * failures in specific test cases.
  */
-export function createMockWithInjection<TArgs extends any[], TResult>(
+export function createMockWithInjection<TArgs extends unknown[], TResult>(
   injection: FailureInjection | null,
   point: FailurePoint,
   originalImplementation?: (...args: TArgs) => Promise<TResult>,

@@ -24,6 +24,15 @@ import {
 } from "@tests/helpers/setup";
 import * as schema from "@/db/schema";
 
+// ─── Raw SQL result shapes ────────────────────────────────────────────────
+// `db.execute` returns a different structure per driver: neon-http yields a
+// bare row array, node-postgres yields `{ rows: [...] }`. These describe both
+// so the introspection queries below stay type-checked.
+
+type TableNameRow = { table_name: string };
+type EnumValueRow = { value?: string; enumlabel?: string };
+type ExecuteResult<TRow> = TRow[] | { rows?: TRow[] };
+
 // ─── Environment setup ────────────────────────────────────────────────────
 
 const envSnapshot = snapshotEnv();
@@ -107,11 +116,13 @@ describe.skipIf(!hasTestDb())("MIGRATION integration tests", () => {
       `),
     );
 
-    const existingTables = (result as any).rows?.map((row: any) => row.table_name) ?? [];
-    // Also check the array format (neon-http returns different structure)
-    const tableNames = Array.isArray(result)
-      ? result.map((row: any) => row.table_name)
-      : existingTables;
+    // Handles both driver shapes (bare array or `{ rows }`). The driver types
+    // rows as `Record<string, unknown>`, so the known column shape of this
+    // query is asserted explicitly; everything downstream stays type-checked.
+    const executed = result as unknown as ExecuteResult<TableNameRow>;
+    const tableNames = Array.isArray(executed)
+      ? executed.map((row) => row.table_name)
+      : (executed.rows?.map((row) => row.table_name) ?? []);
 
     for (const table of expectedTables) {
       expect(tableNames).toContain(table);
@@ -249,11 +260,11 @@ describe.skipIf(!hasTestDb())("MIGRATION integration tests", () => {
         `),
       );
 
-      const dbValues = (result as any).rows?.map((row: any) => row.value) ?? [];
-      // Also check array format
-      const enumValues = Array.isArray(result)
-        ? result.map((row: any) => row.value ?? row.enumlabel)
-        : dbValues;
+      // Handles both driver shapes (bare array or `{ rows }`); see note above.
+      const executed = result as unknown as ExecuteResult<EnumValueRow>;
+      const enumValues = Array.isArray(executed)
+        ? executed.map((row) => row.value ?? row.enumlabel)
+        : (executed.rows?.map((row) => row.value) ?? []);
 
       for (const value of expectedValues) {
         expect(enumValues).toContain(value);

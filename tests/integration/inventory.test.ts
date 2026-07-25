@@ -31,6 +31,9 @@ import {
   type FailureInjection,
 } from "@tests/helpers/failure-injection";
 import { inventory, inventoryReservations, orders } from "@/db/schema";
+// Type-only, aliased: the tests bind the runtime class from a dynamic
+// `await import(...)`, which shadows the name in value position.
+import type { InventoryError as InventoryErrorType } from "@/lib/inventory";
 
 // ─── Environment setup ────────────────────────────────────────────────────
 
@@ -116,7 +119,7 @@ describe.skipIf(!hasTestDb())("INVENTORY integration tests", () => {
       expect.unreachable("Expected InventoryError to be thrown");
     } catch (error) {
       expect(error).toBeInstanceOf(InventoryError);
-      expect((error as any).code).toBe("insufficient_stock");
+      expect((error as InventoryErrorType).code).toBe("insufficient_stock");
     }
 
     // Verify inventory counters NOT changed

@@ -167,8 +167,8 @@ No source cost or margin data is shipped to the client bundle. New sale prices w
 - `reports/catalogue-audit-2026-07-22.json`: machine-readable pre-migration audit.
 - `src/data/catalog.ts`: merged catalogue, corrections, current public-price overrides and expanded search.
 - `src/app/products/page.tsx`: relevant resolution, PoE, authentication, availability and price filters.
-- `src/components/home-motion.tsx`: Anime.js brand entrance and GSAP section reveals.
-- `src/components/hero-products.tsx`: Motion carousel with reduced-motion handling.
+- `src/components/home-motion.tsx`: decorative brand and section entrance animations at the time of this migration. These were removed in 0569a48 along with GSAP and Anime.js; the component is now a no-op.
+- `src/components/hero-products.tsx`: Motion carousel with reduced-motion handling at the time of this migration. Since replaced by `src/lib/home/hero-products.ts`.
 - `src/lib/compare-store.ts`: same-product-group comparison enforcement.
 
 ## 8. Test results

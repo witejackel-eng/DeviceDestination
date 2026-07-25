@@ -2,6 +2,20 @@
 
 Audit date: 2026-07-22
 
+> **Superseded — historical record.** This document describes the tangerine
+> design system and its animation stack as they existed on 2026-07-22. Both have
+> since been replaced:
+>
+> - The tangerine palette (`#FF8A00` and its ramp) gave way to the current
+>   `--accent #FF6A00` system. `scripts/validate-theme.mjs` now actively bans the
+>   old values.
+> - **GSAP and Anime.js were removed in `0569a48`.** Motion is the only animation
+>   runtime. Any statement below about GSAP or Anime.js owning runtime behaviour
+>   is no longer true.
+>
+> Retained because it records why those decisions were made. For the current
+> architecture see [`mainline-delta-audit.md`](./mainline-delta-audit.md).
+
 ## Canonical theme
 
 | Role | Value |

@@ -137,7 +137,7 @@ export async function seedBrand(overrides?: Partial<SeedBrand>): Promise<SeedBra
     slug: `test-brand-${id}`,
   };
   const values = { ...defaults, ...overrides };
-  await db.insert(schema.brands).values(values as any);
+  await db.insert(schema.brands).values(values as typeof schema.brands.$inferInsert);
   return values;
 }
 
@@ -153,7 +153,7 @@ export async function seedCategory(overrides?: Partial<SeedCategory>): Promise<S
     slug: `test-cat-${id}`,
   };
   const values = { ...defaults, ...overrides };
-  await db.insert(schema.categories).values(values as any);
+  await db.insert(schema.categories).values(values as typeof schema.categories.$inferInsert);
   return values;
 }
 
@@ -184,7 +184,7 @@ export async function seedProduct(overrides?: Partial<SeedProduct>): Promise<See
   };
   const values = { ...defaults, ...overrides, id };
   // Remove any overrides that don't belong in the insert
-  await db.insert(schema.products).values(values as any);
+  await db.insert(schema.products).values(values as typeof schema.products.$inferInsert);
   return values;
 }
 
@@ -225,7 +225,7 @@ export async function seedCustomer(overrides?: Partial<SeedCustomer>): Promise<S
     mobile: "9876543210",
   };
   const values = { ...defaults, ...overrides, id };
-  await db.insert(schema.customers).values(values as any);
+  await db.insert(schema.customers).values(values as typeof schema.customers.$inferInsert);
   return values;
 }
 
@@ -243,7 +243,7 @@ export async function seedAddress(customerId: string, overrides?: Partial<SeedAd
     pincode: "400001",
   };
   const values = { ...defaults, ...overrides };
-  await db.insert(schema.addresses).values(values as any);
+  await db.insert(schema.addresses).values(values as typeof schema.addresses.$inferInsert);
   return values;
 }
 
@@ -291,7 +291,7 @@ export async function seedOrderWithPayment(
     idempotencyKey,
   };
   const orderValues = { ...defaults, ...orderOverrides, id: orderId };
-  await db.insert(schema.orders).values(orderValues as any);
+  await db.insert(schema.orders).values(orderValues as typeof schema.orders.$inferInsert);
 
   // Order item
   const orderItemId = testId("oitem");
@@ -305,7 +305,7 @@ export async function seedOrderWithPayment(
     unitPriceInclGstPaise: product.sellingPriceInclGstPaise,
     gstRateBasisPoints: product.gstRateBasisPoints,
   };
-  await db.insert(schema.orderItems).values(orderItemValues as any);
+  await db.insert(schema.orderItems).values(orderItemValues as typeof schema.orderItems.$inferInsert);
 
   // Payment
   const paymentId = testId("pay");
@@ -318,7 +318,7 @@ export async function seedOrderWithPayment(
     amountPaise: totalInclGstPaise,
   };
   const paymentValues = { ...defaultsPayment, ...paymentOverrides, id: paymentId };
-  await db.insert(schema.payments).values(paymentValues as any);
+  await db.insert(schema.payments).values(paymentValues as typeof schema.payments.$inferInsert);
 
   return {
     customer,

@@ -47,5 +47,9 @@ export const modalTiming = {
   secondaryDelay: 0.12, // 120ms
 };
 
-// Ownership rule: Motion handles React state/layout, GSAP owns scroll/hero timelines,
-// and Anime.js owns the DD mark and SVG line micro-choreography.
+// Ownership rule: Motion is the only animation runtime. It owns React state and
+// layout animation, and every entrance, drawer and overlay transition.
+//
+// GSAP and Anime.js were removed in 0569a48, and the decorative scroll and hero
+// timelines they drove went with them. Do not reintroduce a second animation
+// library without a documented requirement that Motion cannot meet.

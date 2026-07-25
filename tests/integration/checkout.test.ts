@@ -39,6 +39,9 @@ import {
   customers,
   addresses,
 } from "@/db/schema";
+// Type-only: erased at compile time, so it does not disturb the dynamic
+// `await import(...)` the tests use to pick up per-test mocks.
+import type { CheckoutResult } from "@/lib/checkout-orchestrator";
 
 // ─── Environment setup ────────────────────────────────────────────────────
 
@@ -205,7 +208,7 @@ describe.skipIf(!hasTestDb())("CHECKOUT integration tests", () => {
 
     // At most one should have created a new checkout (the other gets duplicate/processing)
     const readyOrDuplicate = succeeded.filter(r => {
-      const val = (r as PromiseFulfilledResult<any>).value;
+      const val = (r as PromiseFulfilledResult<CheckoutResult>).value;
       return val.status === "ready_for_checkout" || val.status === "duplicate_completed";
     });
     expect(readyOrDuplicate.length).toBe(2); // Both resolved successfully
