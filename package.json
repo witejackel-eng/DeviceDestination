@@ -8,9 +8,12 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/clean-generated.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "clean:generated": "node scripts/clean-generated.mjs --all",
+    "pretypecheck": "node scripts/clean-generated.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

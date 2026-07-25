@@ -1,6 +1,13 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
+
+// A stray package-lock.json above this directory makes Turbopack infer the wrong
+// workspace root, which changes how files are resolved and traced. Pin it to the
+// project directory so local and CI builds agree.
+const projectRoot = dirname(fileURLToPath(import.meta.url));
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://checkout.razorpay.com`,
@@ -18,6 +25,7 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  turbopack: { root: projectRoot },
   async headers() {
     return [
       {

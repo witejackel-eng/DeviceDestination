@@ -4,14 +4,30 @@
   --color-tangerine: #ff8a00;
   --color-tangerine-light: #ffa62b;
   --color-tangerine-lighter: #ffb347;
+
+  /* Registered here so Tailwind's `font-sans` / `font-mono` utilities resolve to
+     the project faces. `.font-display` stays a plain class below — registering a
+     `--font-display` theme key would generate a conflicting utility. */
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", "Menlo", monospace;
 }
 
 :root {
+  /* ---- Typography roles -------------------------------------------------- */
+  /* Display and body are the same family; the roles stay separate so a future
+     display face can be swapped in without touching every component. */
+  --font-display: var(--font-sans);
+  --font-body: var(--font-sans);
+  --font-technical: var(--font-mono);
+
+  /* ---- Colour ------------------------------------------------------------ */
   --canvas: #f8f5ed;
   --canvas-alt: #f0ece3;
   --surface: #fffefa;
+  --surface-raised: #ffffff;
   --ink: #171513;
   --ink-soft: #3d3935;
+  --ink-contrast: #171513;
   --muted: #716c65;
   --line: rgba(23, 21, 19, 0.16);
   --line-strong: rgba(23, 21, 19, 0.58);
@@ -38,7 +54,64 @@
   --line-on-dark: rgb(var(--canvas-rgb) / 0.14);
   --node-on-dark: rgb(var(--canvas-rgb) / 0.4);
   --success: #24633f;
+  --success-surface: #e8f2ec;
+  --warning: #8a5a00;
+  --warning-surface: #fdf3e0;
+  --warning-border: #e8cfa1;
   --danger: #a92d22;
+  --danger-surface: #fbeceb;
+
+  /* ---- Radius ------------------------------------------------------------ */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-2xl: 24px;
+  --r-full: 9999px;
+
+  /* ---- Spacing ----------------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* ---- Elevation --------------------------------------------------------- */
+  /* The reference uses effectively no shadow; depth comes from border, spacing
+     and contrast. These two exist for surfaces that genuinely float above the
+     page — the cart drawer and the mobile menu — and nothing else. */
+  --shadow-sm: 0 1px 2px rgba(23, 21, 19, 0.06);
+  --shadow-md: 0 16px 40px rgba(23, 21, 19, 0.14);
+
+  /* ---- Motion ------------------------------------------------------------ */
+  /* Durations and curves measured from the reference implementation; see
+     docs/feedforge-reference-audit.md §4. Components arrive in a later phase. */
+  --dur-micro: 180ms;
+  --dur-enter: 450ms;
+  --dur-content: 550ms;
+  --dur-hero: 750ms;
+  --stagger: 70ms;
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-panel: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-sharp: cubic-bezier(0.4, 0.4, 0, 1);
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ---- Layering ---------------------------------------------------------- */
+  --z-base: 0;
+  --z-sticky: 30;
+  --z-header: 50;
+  --z-overlay: 70;
+  --z-panel: 80;
+  --z-toast: 90;
 }
 
 * {
@@ -57,7 +130,7 @@ body {
   overflow-x: clip;
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-body), "Manrope", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-body);
   text-rendering: optimizeLegibility;
 }
 
@@ -69,8 +142,15 @@ h1,
 h2,
 h3,
 .font-display {
-  font-family: var(--font-display), "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Values a customer reads character by character: model numbers, SKUs, order
+   references, technical identifiers. Applied deliberately, never to prose. */
+.font-technical {
+  font-family: var(--font-technical);
+  font-variant-ligatures: none;
 }
 
 a,
@@ -122,17 +202,28 @@ button {
 
 .eyebrow {
   font-size: 0.74rem;
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
+/* Display scale retuned for Plus Jakarta Sans.
+   The previous values (up to 9.25rem) were sized for Barlow Condensed, a
+   condensed face; the same numbers in a normal-width grotesk overflow the
+   container. These track the audited reference scale: 82px/40px for the hero,
+   42px/32px for section headings.
+
+   Line-height stays near 1.05–1.15 rather than the reference's 1.5. That 1.5 is
+   a stylistic choice, not a requirement of the masked line reveal — the mask
+   needs `padding-bottom`/negative `margin-bottom` for descenders, which is
+   independent of leading. Tighter leading keeps the primary call to action above
+   the fold on small screens, which the shop needs and an agency page does not. */
 .display-hero {
-  font-size: clamp(3.75rem, 9vw, 9.25rem);
-  line-height: 0.87;
+  font-size: clamp(2.5rem, 6.5vw, 5.125rem);
+  line-height: 1.06;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 /* Dimensional tangerine pill wrapping the highlighted phrase in the hero
@@ -151,9 +242,10 @@ button {
 }
 
 .display-section {
-  font-size: clamp(2.7rem, 6vw, 5.7rem);
-  line-height: 0.98;
+  font-size: clamp(2rem, 3.6vw, 2.625rem);
+  line-height: 1.14;
   font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
 .button-primary,
@@ -164,14 +256,14 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   padding: 0.8rem 1.15rem;
-  font-weight: 720;
+  font-weight: 700;
   transition:
-    transform 180ms ease,
-    background-color 180ms ease,
-    color 180ms ease,
-    border-color 180ms ease;
+    transform var(--dur-micro) var(--ease-standard),
+    background-color var(--dur-micro) var(--ease-standard),
+    color var(--dur-micro) var(--ease-standard),
+    border-color var(--dur-micro) var(--ease-standard);
 }
 
 .button-primary {

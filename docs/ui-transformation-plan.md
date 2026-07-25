@@ -1,7 +1,11 @@
 # UI transformation plan
 
 Companion to [`feedforge-reference-audit.md`](./feedforge-reference-audit.md).
-Status: **plan only — no implementation has started.**
+
+Status: §1.1 (typography) and §1.2 (token system) **landed in Phase 1**. Section
+3 onward remains plan only. See
+[`implementation-progress.md`](./implementation-progress.md) for what shipped and
+where the values differ from this plan.
 
 ---
 
@@ -18,6 +22,15 @@ and available from Google Fonts, so it is used directly through
 | Display | Plus Jakarta Sans | 700, 800 | Barlow Condensed |
 | Body / UI | Plus Jakarta Sans | 400, 500, 600 | Manrope |
 | Model numbers, SKUs, technical IDs | **Geist Mono** | 400, 500 | *(nothing today)* |
+
+> **Landed in Phase 1.** Both families load through `next/font/google` in
+> `src/app/layout.tsx`, exposing `--font-plus-jakarta` and `--font-geist-mono`.
+> `globals.css` maps them to the `--font-sans` / `--font-mono` Tailwind theme
+> keys and to the `--font-display` / `--font-body` / `--font-technical` roles, so
+> a future display face can be swapped without touching components. A
+> `.font-technical` utility exists for values read character by character;
+> applying it across the storefront and admin happens in the phases that rebuild
+> those surfaces.
 
 Rationale for dropping Barlow Condensed: it is a *condensed* face, which is the
 opposite of the reference's optical character (a wide-ish grotesk that reads
@@ -73,6 +86,16 @@ Motion        to add          Z-index       to add
 
 Radii map to the reference's measured 4/6/9/14/16/24 scale, nudged to the
 values already common in this codebase so the migration is mostly mechanical.
+
+> **Landed in Phase 1**, with these differences from the sketch above:
+> `--warning` ships with `--warning-surface` / `--warning-border` (the admin
+> currently hard-codes `amber-50/200/800`, which those replace), and `--success`
+> / `--danger` gained matching `-surface` tokens for the same reason. A fifth
+> easing, `--ease-sharp` `cubic-bezier(0.4, 0.4, 0, 1)`, was added because
+> `--ease-standard` had to keep its existing project value — see the note on
+> unchanged timings in `implementation-progress.md`. Migrating components off
+> hard-coded radii, shadows and amber literals is deliberately **not** Phase 1
+> work; the tokens exist first, the migration follows in each surface's own phase.
 
 Shadow policy follows the audit: the reference uses **none**. The two tokens
 exist for the cart drawer and mobile menu only. `--tangerine-shadow` glows on

@@ -8,8 +8,8 @@ Branch (recommended): `feat/feedforge-inspired-storefront-admin`
 
 | Phase | Goal | Status |
 | --- | --- | --- |
-| 0 | Audit, test, document, plan | **complete — awaiting approval** |
-| 1 | Repo hygiene + design tokens + typography | not started |
+| 0 | Audit, test, document, plan | **complete — approved** |
+| 1 | Repo hygiene + design tokens + typography | **complete** |
 | 2 | Data layer: database canonical, static fallback | not started |
 | 3 | Admin shell isolation (route groups) | not started |
 | 4 | Motion primitives + library consolidation | not started |
@@ -22,9 +22,88 @@ Branch (recommended): `feat/feedforge-inspired-storefront-admin`
 | 11 | Dashboard | not started |
 | 12 | Accessibility, performance, responsive, full test pass | not started |
 
-No source file has been modified. Files created in Phase 0 are documentation
-only: this file, `feedforge-reference-audit.md`, `ui-transformation-plan.md`,
-`admin-cms-plan.md`.
+Branches:
+
+- `chore/checkpoint-existing-implementation` — baseline commit `fe7a21d`
+- `feat/feedforge-inspired-storefront-admin` — transformation work, branched from
+  the checkpoint
+
+---
+
+## Phase 1 — repository hygiene, typography, design tokens
+
+### Decisions carried in from the Phase 0 review
+
+| Question | Decision |
+| --- | --- |
+| Uncommitted working tree | Preserved. Committed as baseline `fe7a21d`; nothing reverted. |
+| GSAP / Anime.js | Consolidate on Motion, but **remove only in the motion phase**, after reproducing every existing behaviour including the DD logo choreography and confirming reduced-motion parity. Both remain installed and in use. |
+| Typography | Plus Jakarta Sans (headings, display, navigation, buttons, body) + Geist Mono (models, SKUs, technical identifiers, order references, admin data), loaded through `next/font`. |
+| `DATABASE_URL` | Not assumed to hold the 30 products. Both populated and empty/unavailable states must be implemented and tested in Phase 2. |
+
+### Changed files
+
+| File | Change |
+| --- | --- |
+| `scripts/clean-generated.mjs` | **new** — removes duplicate Next route-type declarations, keeping the newest; `--all` resets `.next/dev` |
+| `package.json` | added `clean:generated`; wired `pretypecheck` and `prebuild` so checks always start from a clean generated state |
+| `next.config.ts` | pinned `turbopack.root` to the project directory |
+| `src/app/layout.tsx` | Barlow Condensed + Manrope → Plus Jakarta Sans + Geist Mono |
+| `src/app/globals.css` | typography roles; colour roles; radius, spacing, elevation, motion and z-index scales; retuned display type scale |
+| `src/lib/motion/constants.ts` | duration/easing/stagger tokens matching the CSS custom properties |
+| `scripts/validate-theme.mjs` | asserts the token contract, CSS↔Motion easing agreement, and no retired typeface declarations |
+| `.gitignore` | excludes `.tmp/`, `docs/screenshots/review/`, `reports/` |
+
+### Notes on specific decisions
+
+**Stale artefact handling.** `tsconfig.json` includes `.next/dev/types/**/*.ts`.
+`next dev` writes `routes.d-<HOSTNAME>.ts` and `next build` writes `routes.d.ts`;
+when both survive, `PageProps`/`LayoutProps` are declared twice and the older
+file's `AppRoutes` union is missing newer routes. OneDrive rehydration made this
+recur. `scripts/clean-generated.mjs` keeps only the newest declaration, and
+`pretypecheck`/`prebuild` run it automatically. The artefacts themselves stay
+untracked. This is what turned the Phase 0 typecheck failure into a pass.
+
+**Display scale retuned.** The previous scale (hero up to `9.25rem`, sections up
+to `5.7rem`) was sized for Barlow Condensed. The same numbers in a normal-width
+grotesk overflow their containers, so the scale now tracks the audited reference:
+hero `clamp(2.5rem, 6.5vw, 5.125rem)` (40 → 82px), section
+`clamp(2rem, 3.6vw, 2.625rem)` (32 → 42px).
+
+**Line-height deliberately differs from the reference.** FeedForge uses 1.5 at
+every size. That is a stylistic choice, not a requirement of the masked line
+reveal — the mask needs `padding-bottom` plus a negative `margin-bottom` for
+descenders, which is independent of leading. Tighter leading (1.06 hero, 1.14
+section) keeps the primary call to action above the fold on small screens, which
+this shop needs and an agency page does not.
+
+**No visible timing changed.** `easings.standard` is live in
+`product-gallery.tsx`. Rather than repoint it at the audited
+`cubic-bezier(0.4, 0.4, 0, 1)`, that curve was added as a new `sharp` token and
+`standard` kept at its existing `cubic-bezier(0.22, 1, 0.36, 1)`. Superseded
+duration and easing keys (`fast`, `normal`, `slow`, `cinematic`, `enter`) remain
+as deprecated aliases so no call site changed in this phase.
+
+**Font weights normalised.** `font-weight: 750` and `720` were in use.
+`next/font` loads discrete instances (400–800), so those synthesised. Both are
+now `700`.
+
+### Phase 1 check results
+
+| Command | Result |
+| --- | --- |
+| `npm run lint` | **pass** |
+| `npm run typecheck` | **pass** — exit 0 from a clean generated state, no manual cleanup |
+| `npm run theme:validate` | **pass** — 134 files, 41 design tokens, 5 paired easings |
+| `npm run products:validate` | **pass** — 30 products, 0 defects |
+| `npm test` | **pass** — 6 files, 41 tests |
+| `npm run build` | see change log below |
+
+One issue was introduced and fixed during the phase: the first version of the
+retired-typeface check matched any mention of the old font names, so it flagged
+the code comment explaining why they were replaced. The patterns now match
+declarations only — a `next/font` import identifier, a quoted font-stack entry,
+or a Tailwind arbitrary value.
 
 ---
 
@@ -178,3 +257,5 @@ not in a separate docs-only commit.
 | Date | Phase | Change |
 | --- | --- | --- |
 | 2026-07-25 | 0 | Audit performed; four planning documents created; no source modified. |
+| 2026-07-25 | — | Baseline checkpoint commit `fe7a21d`; `feat/feedforge-inspired-storefront-admin` branched from it. |
+| 2026-07-25 | 1 | Repository/config hygiene, Plus Jakarta Sans + Geist Mono, design-token foundations, motion duration/easing tokens, theme-validation contract. |

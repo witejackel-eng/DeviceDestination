@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow_Condensed, Manrope } from "next/font/google";
+import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CartDrawer } from "@/components/cart-drawer";
@@ -11,16 +11,25 @@ import { siteConfig } from "@/config/site";
 import { isAuthConfigured } from "@/lib/auth";
 import "./globals.css";
 
-const barlowCondensed = Barlow_Condensed({
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
-  variable: "--font-display",
-  display: "swap",
-});
-const manrope = Manrope({
+/**
+ * One text family, one technical family.
+ *
+ * Plus Jakarta Sans carries headings, display type, navigation, buttons and body
+ * copy. Geist Mono is reserved for values a customer has to read character by
+ * character — model numbers, SKUs, order references — where the body face makes
+ * `1`/`l` and `0`/`O` ambiguous. Both are loaded through `next/font/google`, which
+ * self-hosts them at build time; no font file is taken from any reference site.
+ */
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-body",
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-geist-mono",
   display: "swap",
 });
 
@@ -77,7 +86,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   };
 
   return (
-    <html lang="en-IN" className={`${barlowCondensed.variable} ${manrope.variable}`}>
+    <html lang="en-IN" className={`${plusJakartaSans.variable} ${geistMono.variable}`}>
       <body>
         <a
           href="#main-content"
