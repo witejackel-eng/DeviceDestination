@@ -105,6 +105,38 @@ the code comment explaining why they were replaced. The patterns now match
 declarations only — a `next/font` import identifier, a quoted font-stack entry,
 or a Tailwind arbitrary value.
 
+### Environment hazard: OneDrive corrupts `.git` refs
+
+**This happened during Phase 1 and will happen again.**
+
+After the Phase 1 commit, `git status` reported all 365 tracked files as newly
+added and `git log` failed with "your current branch appears to be broken".
+
+Cause: `.git/refs/heads/feat/feedforge-inspired-storefront-admin` contained **41
+NUL bytes** instead of a commit SHA — the file had the right length but no
+content. `main` and the checkpoint ref were untouched, and every commit object
+was intact, so nothing was actually lost; only the branch pointer was destroyed.
+This is the same OneDrive interference that rehydrates `.next` artefacts, applied
+to the Git directory.
+
+Recovery, for reference if it recurs:
+
+```bash
+git fsck --no-progress                 # identifies the broken ref
+git cat-file -p <sha>                  # confirm the commit before restoring
+rm .git/refs/heads/<branch>            # update-ref cannot lock a zeroed ref
+git update-ref refs/heads/<branch> <sha>
+```
+
+The commit SHA can be recovered from `git fsck --lost-found`, the reflog
+(`.git/logs/HEAD`, which survived here), or a sibling branch's history.
+
+**Mitigation to consider before further phases:** move the working copy outside
+the OneDrive-synced tree, or exclude `DeviceDestination/.git` and
+`DeviceDestination/.next` from OneDrive sync. Until then, verify
+`git log --oneline -1` after each commit. A push to `origin` would also give the
+commits a second home — none of this work has been pushed.
+
 ---
 
 ## Phase 0 baseline — check results (2026-07-25)
