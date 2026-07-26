@@ -16,10 +16,11 @@
  */
 
 import { catalogue } from "@/data/catalog";
-import type { Product } from "@/lib/products";
+import { normalizeModel, type Product } from "@/lib/products";
 import type {
   CatalogueDocument,
   CatalogueEnrichedField,
+  CatalogueEnrichmentSource,
   CatalogueImage,
   CatalogueProduct,
   CatalogueSpecGroup,
@@ -116,6 +117,7 @@ export function toCatalogueProduct(product: Product): CatalogueProduct {
     inventory: null,
     // In static mode these fields are native to the source, not enrichment.
     enrichedFields: [],
+    enrichmentSource: null,
     searchText: buildSearchText(product),
   };
 }
@@ -128,32 +130,130 @@ export function getStaticCatalogue(): CatalogueProduct[] {
   return staticCatalogueCache;
 }
 
-let enrichmentIndexCache: Map<string, CatalogueEnrichment> | null = null;
+// ─── Enrichment identity resolution ───────────────────────────────────────
 
 /**
- * Slug-keyed enrichment index. Legacy slugs resolve to the same entry so a
- * renamed database product still matches its static counterpart.
+ * Identity of a database product, used to find its static counterpart.
+ * Only exact identifiers are compared — never a product name or description.
  */
-export function getEnrichmentIndex(): Map<string, CatalogueEnrichment> {
+export type EnrichmentIdentity = {
+  slug: string;
+  legacySlugs: readonly string[];
+  model: string;
+};
+
+export type EnrichmentResolution = {
+  enrichment: CatalogueEnrichment;
+  source: CatalogueEnrichmentSource;
+  /** Set when two or more static products claimed the same identity. */
+  ambiguousVia: "legacy_slug" | "model" | null;
+};
+
+type EnrichmentIndex = {
+  /** Static canonical slug → product index. */
+  byCanonicalSlug: Map<string, number>;
+  /** Static legacy slug → product indexes. Arrays because collisions are possible. */
+  byLegacySlug: Map<string, number[]>;
+  /** Normalised static model → product indexes. */
+  byModel: Map<string, number[]>;
+  entries: CatalogueEnrichment[];
+};
+
+let enrichmentIndexCache: EnrichmentIndex | null = null;
+
+function pushIndex(map: Map<string, number[]>, key: string, index: number): void {
+  const existing = map.get(key);
+  if (existing) existing.push(index);
+  else map.set(key, [index]);
+}
+
+function getEnrichmentIndex(): EnrichmentIndex {
   if (enrichmentIndexCache) return enrichmentIndexCache;
-  const index = new Map<string, CatalogueEnrichment>();
-  for (const product of catalogue) {
-    const entry: CatalogueEnrichment = {
+  const index: EnrichmentIndex = {
+    byCanonicalSlug: new Map(),
+    byLegacySlug: new Map(),
+    byModel: new Map(),
+    entries: [],
+  };
+  catalogue.forEach((product, position) => {
+    index.entries.push({
       useCases: product.useCases,
       relatedProductIds: product.relatedProductIds,
       builderExclusions: product.builderExclusions,
       images: product.images,
       builderCompatibleIds: product.builderCompatibleIds,
-    };
-    index.set(product.slug, entry);
-    for (const legacySlug of product.legacySlugs) index.set(legacySlug, entry);
-  }
+    });
+    // Canonical slugs are unique by catalogue invariant, enforced by
+    // `validateProductCatalogue`; first write wins if that ever regresses.
+    if (!index.byCanonicalSlug.has(product.slug))
+      index.byCanonicalSlug.set(product.slug, position);
+    for (const legacySlug of product.legacySlugs) pushIndex(index.byLegacySlug, legacySlug, position);
+    pushIndex(index.byModel, normalizeModel(product.model), position);
+  });
   enrichmentIndexCache = index;
   return index;
 }
 
-export function getEnrichment(slug: string): CatalogueEnrichment {
-  return getEnrichmentIndex().get(slug) ?? EMPTY_ENRICHMENT;
+function unique(positions: readonly number[]): number[] {
+  return [...new Set(positions)];
+}
+
+/**
+ * Resolve a database product to its static counterpart.
+ *
+ * Precedence, deliberately strict:
+ *
+ *  1. Exact canonical slug.
+ *  2. Unique exact legacy-slug match — the database slug against static legacy
+ *     slugs, the database legacy slugs against static canonical slugs, or an
+ *     intersection of the two legacy sets.
+ *  3. Unique exact model match, compared under `normalizeModel` (the same form
+ *     `validateProductCatalogue` uses to prove models are unique).
+ *  4. Nothing.
+ *
+ * Two or more candidates at step 2 or 3 is an ambiguity, never a guess: no
+ * enrichment is applied and the caller emits a diagnostic. The database product
+ * is always kept either way.
+ */
+export function resolveEnrichment(identity: EnrichmentIdentity): EnrichmentResolution {
+  const index = getEnrichmentIndex();
+
+  const canonical = index.byCanonicalSlug.get(identity.slug);
+  if (canonical !== undefined) {
+    return { enrichment: index.entries[canonical], source: "canonical_slug", ambiguousVia: null };
+  }
+
+  const legacyCandidates: number[] = [
+    // Database canonical slug recorded as a legacy slug on a static product.
+    ...(index.byLegacySlug.get(identity.slug) ?? []),
+    ...identity.legacySlugs.flatMap((legacySlug) => [
+      // Database legacy slug that is still a static canonical slug.
+      ...(index.byCanonicalSlug.has(legacySlug) ? [index.byCanonicalSlug.get(legacySlug)!] : []),
+      // Both sides retired the same slug.
+      ...(index.byLegacySlug.get(legacySlug) ?? []),
+    ]),
+  ];
+  const legacyMatches = unique(legacyCandidates);
+  if (legacyMatches.length === 1) {
+    return {
+      enrichment: index.entries[legacyMatches[0]],
+      source: "legacy_slug",
+      ambiguousVia: null,
+    };
+  }
+  if (legacyMatches.length > 1) {
+    return { enrichment: EMPTY_ENRICHMENT, source: "ambiguous", ambiguousVia: "legacy_slug" };
+  }
+
+  const modelMatches = unique(index.byModel.get(normalizeModel(identity.model)) ?? []);
+  if (modelMatches.length === 1) {
+    return { enrichment: index.entries[modelMatches[0]], source: "model", ambiguousVia: null };
+  }
+  if (modelMatches.length > 1) {
+    return { enrichment: EMPTY_ENRICHMENT, source: "ambiguous", ambiguousVia: "model" };
+  }
+
+  return { enrichment: EMPTY_ENRICHMENT, source: "none", ambiguousVia: null };
 }
 
 /** Test seam — the caches above are module-level and would otherwise leak between suites. */

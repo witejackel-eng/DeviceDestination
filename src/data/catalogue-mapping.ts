@@ -31,7 +31,7 @@ import {
   DEFAULT_SPEC_GROUP,
   PLACEHOLDER_IMAGE_URL,
   buildSearchText,
-  getEnrichment,
+  resolveEnrichment,
 } from "@/data/catalogue-static";
 import {
   findFatalIdentityDefects,
@@ -69,17 +69,33 @@ function toIso(value: Date | null): string | null {
 
 // ─── Child collection mapping ─────────────────────────────────────────────
 
-function mapImages(rows: readonly CatalogueImageRow[]): CatalogueImage[] {
-  return rows
-    .filter((row) => isNonEmpty(row.url))
-    .slice()
-    .sort((a, b) => a.position - b.position || a.url.localeCompare(b.url))
-    .map((row, index) => ({
-      url: row.url,
-      alt: isNonEmpty(row.alt) ? row.alt : "",
-      position: row.position,
-      isPrimary: index === 0,
-    }));
+/**
+ * A public image URL must be root-relative or absolute http(s). Anything else
+ * would render as a broken image, so the row is discarded rather than shown.
+ */
+function isUsableImageUrl(url: string): boolean {
+  if (!isNonEmpty(url)) return false;
+  const trimmed = url.trim();
+  return trimmed.startsWith("/") || /^https?:\/\/\S+$/i.test(trimmed);
+}
+
+function mapImages(rows: readonly CatalogueImageRow[]): {
+  images: CatalogueImage[];
+  discarded: number;
+} {
+  const usable = rows.filter((row) => isUsableImageUrl(row.url));
+  return {
+    discarded: rows.length - usable.length,
+    images: usable
+      .slice()
+      .sort((a, b) => a.position - b.position || a.url.localeCompare(b.url))
+      .map((row, index) => ({
+        url: row.url.trim(),
+        alt: isNonEmpty(row.alt) ? row.alt : "",
+        position: row.position,
+        isPrimary: index === 0,
+      })),
+  };
 }
 
 /**
@@ -246,8 +262,40 @@ function mapProductRow(
 
   const slug = row.slug;
   const model = row.model;
-  const enrichment = getEnrichment(slug);
+  const legacySlugs = mapLegacySlugs(row.legacySlugs, slug);
   const enrichedFields: CatalogueEnrichedField[] = [];
+
+  // ── Static enrichment — canonical slug, then legacy slug, then model ────
+  const resolution = resolveEnrichment({ slug, legacySlugs, model });
+  const enrichment = resolution.enrichment;
+  if (resolution.source === "legacy_slug") {
+    diagnostics.push({
+      code: "enrichment_matched_legacy_slug",
+      productId: slug,
+      message: "static enrichment resolved through a legacy slug, not the canonical slug",
+    });
+  } else if (resolution.source === "model") {
+    diagnostics.push({
+      code: "enrichment_matched_model",
+      productId: slug,
+      message: "static enrichment resolved through the exact model, not a slug",
+    });
+  } else if (resolution.source === "ambiguous") {
+    diagnostics.push({
+      code: "enrichment_ambiguous",
+      productId: slug,
+      message: `static enrichment skipped: more than one static product matches this ${
+        resolution.ambiguousVia === "model" ? "model" : "legacy slug"
+      }`,
+    });
+  } else if (resolution.source === "none") {
+    // Normal for a product created in admin — informational only, never a warning.
+    diagnostics.push({
+      code: "enrichment_absent",
+      productId: slug,
+      message: "no static counterpart; optional enrichment fields are empty",
+    });
+  }
 
   // ── Prices — never fabricated, only discarded when structurally invalid ──
   const sellingPriceInclGstPaise = isValidPricePaise(row.sellingPriceInclGstPaise)
@@ -279,7 +327,15 @@ function mapProductRow(
   }
 
   // ── Images — database, then static counterpart, then placeholder ────────
-  let imageDetails = mapImages(collections.images);
+  const mappedImages = mapImages(collections.images);
+  let imageDetails = mappedImages.images;
+  if (mappedImages.discarded > 0) {
+    diagnostics.push({
+      code: "image_row_discarded",
+      productId: slug,
+      message: `discarded ${mappedImages.discarded} image row(s) with an unusable URL`,
+    });
+  }
   if (imageDetails.length === 0 && enrichment.images.length > 0) {
     imageDetails = enrichment.images.map((url, index) => ({
       url,
@@ -291,8 +347,10 @@ function mapProductRow(
   }
   if (imageDetails.length === 0) {
     imageDetails = [{ url: PLACEHOLDER_IMAGE_URL, alt: row.title, position: 0, isPrimary: true }];
+    // Expected for a product that has not been given images yet — informational,
+    // not a warning. A genuinely malformed row reports `image_row_discarded`.
     diagnostics.push({
-      code: "relation_discarded",
+      code: "image_placeholder_applied",
       productId: slug,
       message: "no product image available; using placeholder",
     });
@@ -325,7 +383,7 @@ function mapProductRow(
     // `checkout-orchestrator` resolves it against `products.slug`.
     id: slug,
     slug,
-    legacySlugs: mapLegacySlugs(row.legacySlugs, slug),
+    legacySlugs,
     model,
     brand: row.brandName,
     brandSlug: row.brandSlug,
@@ -370,6 +428,7 @@ function mapProductRow(
     compatibility,
     inventory: mapInventory(collections.inventory, row.leadTime),
     enrichedFields,
+    enrichmentSource: resolution.source,
     searchText: "",
   };
 

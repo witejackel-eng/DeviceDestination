@@ -72,6 +72,20 @@ export type CatalogueEnrichedField =
   | "builderCompatibleIds"
   | "images";
 
+/**
+ * How a database product was matched to its static counterpart.
+ *
+ * Precedence is canonical slug, then legacy slug, then exact model. `ambiguous`
+ * means two or more static products claimed the identity, so no enrichment was
+ * applied. `none` is the normal state for a product created in admin.
+ */
+export type CatalogueEnrichmentSource =
+  | "canonical_slug"
+  | "legacy_slug"
+  | "model"
+  | "ambiguous"
+  | "none";
+
 // ─── Product ──────────────────────────────────────────────────────────────
 
 export type CatalogueProduct = Product & {
@@ -91,6 +105,8 @@ export type CatalogueProduct = Product & {
   inventory: CatalogueInventory | null;
   /** Which fields on this product came from static enrichment rather than the database. */
   enrichedFields: CatalogueEnrichedField[];
+  /** How the static counterpart was identified. Null in static mode, where it does not apply. */
+  enrichmentSource: CatalogueEnrichmentSource | null;
   /** Precomputed lowercase search corpus. */
   searchText: string;
 };
@@ -103,6 +119,7 @@ export type CatalogueSourceReason =
   | "database"
   | "database_not_configured"
   | "database_unavailable"
+  | "configuration_check_failed"
   | "query_failed"
   | "database_empty"
   | "no_published_products"
@@ -111,12 +128,19 @@ export type CatalogueSourceReason =
 export type CatalogueDiagnosticCode =
   | "database_not_configured"
   | "database_unavailable"
+  | "configuration_check_failed"
   | "query_failed"
   | "database_empty"
   | "no_published_products"
   | "product_mapping_failed"
   | "product_excluded"
   | "relation_discarded"
+  | "image_row_discarded"
+  | "image_placeholder_applied"
+  | "enrichment_matched_legacy_slug"
+  | "enrichment_matched_model"
+  | "enrichment_ambiguous"
+  | "enrichment_absent"
   | "all_products_invalid";
 
 export type CatalogueDiagnostic = {
