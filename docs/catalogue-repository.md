@@ -93,8 +93,8 @@ Never overwritten by static values when a usable database product exists:
 
 ### Static enrichment
 
-Filled from the static catalogue by slug (legacy slugs included) because the
-schema has no representation at all:
+Filled from the static catalogue because the schema has no representation at
+all:
 
 | Field | Reason |
 | --- | --- |
@@ -119,6 +119,56 @@ The `builderCompatibleIds` rule is transitional: nothing writes
 `product_compatibility` today, so every product currently falls through to
 static enrichment. When M6 gives admin a compatibility editor, the database side
 takes over automatically.
+
+### Identity resolution
+
+A database product is matched to its static counterpart by exact identifiers
+only. Precedence is strict and each step must resolve to exactly one static
+product:
+
+| Step | Match | `enrichmentSource` |
+| --- | --- | --- |
+| 1 | database canonical slug ≡ static canonical slug | `canonical_slug` |
+| 2 | any exact legacy-slug match — database slug ∈ static legacy slugs, database legacy slug ≡ static canonical slug, or the two legacy sets intersect | `legacy_slug` |
+| 3 | `normalizeModel(model)` equality | `model` |
+| 4 | nothing matched | `none` |
+
+Two or more distinct static candidates at step 2 or 3 is an **ambiguity**, never
+a guess: no enrichment is applied, `enrichmentSource` is `ambiguous`, a warning
+is emitted, and the database product is kept in full. One static product reached
+by several routes is a match, not a collision.
+
+Model comparison uses `normalizeModel` — the same normalisation
+`validateProductCatalogue` uses to prove models are unique, so it tolerates case
+and separator differences from admin input. Product names, titles and
+descriptions are never compared; there is no fuzzy matching anywhere.
+
+Resolution provenance lives on `CatalogueProduct.enrichmentSource` and in
+diagnostics. It is `null` in static mode, where enrichment does not apply, and
+never reaches the browser. The public `id` remains the database slug regardless
+of how enrichment resolved, so the checkout invariant is unaffected.
+
+Before M1.1 the lookup used a single flat map keyed by the database canonical
+slug alone. A product renamed in admin lost its enrichment silently, and because
+canonical and legacy keys shared one namespace with unconditional writes, a
+legacy slug could overwrite a canonical entry. The current static catalogue has
+no such collision, so the output was correct — but the structure permitted a
+silent wrong answer.
+
+### Image fallback — transitional
+
+Order: database image rows → static counterpart images → placeholder. A row is
+usable only if its URL is root-relative or absolute `http(s)`; anything else is
+discarded so no structurally broken URL reaches a page. "No valid database row"
+and "no row at all" are treated identically.
+
+**This is a migration policy, not the end state.** While admin cannot yet manage
+images, an empty `product_images` collection means "not migrated yet", so
+restoring the static images is right. Once image administration is live, an
+intentionally empty collection should mean "show the placeholder" — an operator
+who deletes every image expects them gone, not silently replaced by legacy
+static assets. M6 owns that switch. It needs no schema column: the distinction
+is whether image administration is active, not a new field.
 
 ### Derived
 
@@ -192,9 +242,38 @@ id. Failure classification and the originating error's constructor name are the
 only things recorded from a driver error; messages and stacks are dropped
 because they routinely embed the connection string. Nothing reaches the browser.
 
-Codes: `database_not_configured` (debug), `database_unavailable`, `query_failed`
-(error), `database_empty`, `no_published_products`, `product_mapping_failed`,
-`product_excluded`, `relation_discarded`, `all_products_invalid` (warn).
+| Code | Level |
+| --- | --- |
+| `database_not_configured` | debug |
+| `enrichment_matched_legacy_slug` | debug |
+| `enrichment_matched_model` | debug |
+| `enrichment_absent` | debug |
+| `image_placeholder_applied` | debug |
+| `database_unavailable` | error |
+| `configuration_check_failed` | error |
+| `query_failed` | error |
+| `database_empty` | warn |
+| `no_published_products` | warn |
+| `product_excluded` | warn |
+| `product_mapping_failed` | warn |
+| `relation_discarded` | warn |
+| `image_row_discarded` | warn |
+| `enrichment_ambiguous` | warn |
+| `all_products_invalid` | warn |
+
+The debug tier is deliberate: a product created in admin has no static
+counterpart and no images yet, and neither is a defect. Warnings are reserved
+for data that is genuinely malformed or ambiguous, so log volume stays
+proportional to real problems.
+
+`isConfigured()` is called inside the error boundary. If it throws — a broken
+environment read, or arbitrary work in a custom adapter — the repository serves
+the static catalogue under reason `configuration_check_failed`, applies the
+failure cooldown, and records only the error's constructor name. `getCatalogue`
+never rejects.
+
+The cooldown is keyed by adapter instance rather than held in a single module
+variable, so a failing adapter cannot suppress an unrelated one.
 
 ## Schema limitations
 
@@ -204,6 +283,7 @@ None require a migration; each is handled in mapping.
 | --- | --- |
 | No storage for `useCases`, `relatedProductIds`, `builderExclusions` | static enrichment |
 | `product_documents` has no `position` | ordered by type, then title, then id |
+| No storage for a product's static counterpart identity | resolved by exact slug/model, never persisted |
 | `product_images` has no `is_primary` | primary = lowest position |
 | `price_source_status` is snake_case, the public contract is kebab-case | normalised in mapping |
 | `Product.specs` is a flat record | groups preserved additively on `CatalogueProduct` |
@@ -211,10 +291,16 @@ None require a migration; each is handled in mapping.
 
 ## Tests
 
-`tests/unit/catalogue-repository.test.ts` — 41 deterministic tests covering
+`tests/unit/catalogue-repository.test.ts` — 56 deterministic tests covering
 fallback paths, database preference, partial validity, ordering, grouping, field
-authority, enrichment, relation repair, integrity, price handling, logging
+authority, enrichment resolution end to end, relation repair, integrity, price
+handling, the image fallback chain, the configuration-check boundary, logging
 safety, bounded access, failure memoisation and selector consistency.
+
+`tests/unit/catalogue-enrichment-resolution.test.ts` — 10 tests for the
+resolution hierarchy against a synthetic catalogue. The real catalogue contains
+no ambiguous identity by construction, so precedence and ambiguity can only be
+exercised with substituted data.
 
 `tests/unit/catalogue-server-boundary.test.ts` — 5 tests enforcing the client
 boundary, including a non-vacuity control proving the import walk resolves.
@@ -225,9 +311,33 @@ it and never falls back to `DATABASE_URL`.
 
 ## What M2 needs from this
 
-- Wrap `getCatalogue` in `unstable_cache` with tags `catalogue`,
-  `product:<slug>`, `category:<slug>`, `brand:<slug>`.
+- Choose a cache strategy (below) and wrap `getCatalogue` — the single load path
+  — with tags `catalogue`, `product:<slug>`, `category:<slug>`, `brand:<slug>`.
 - Use `snapshot.reason` to avoid caching a static-fallback snapshot as though it
-  were authoritative.
+  were authoritative. A `database_unavailable` or `configuration_check_failed`
+  snapshot in particular must not be cached with a long lifetime, or one bad
+  minute freezes the fallback catalogue in place.
 - Point the 8 server routes and the 2 homepage resolvers at the selectors above.
 - Decide rendering mode per route; `/sitemap.ts` included.
+
+### Cache strategy decision — deferred to M2
+
+No caching is implemented in M1.1: no `cacheComponents`, no `unstable_cache`, no
+invalidation calls. M2 must choose between two strategies on the evidence of an
+isolated experiment against current Next.js 16 behaviour, not in advance.
+
+**Strategy A — Cache Components.** `use cache`, `cacheTag`, `cacheLife`,
+`updateTag`, `revalidateTag(tag, "max")`. Requires `cacheComponents: true`,
+which is a global switch: it changes how the whole app treats dynamic APIs and
+prerendering, not just the catalogue. Adopting it demands verification of the
+route map, per-route rendering modes, build output and browser behaviour before
+it can be considered safe.
+
+**Strategy B — the previous cache model.** The existing compatible data-cache
+API, without enabling Cache Components globally. Select this if enabling Cache
+Components changes unrelated application behaviour or expands M2 beyond its
+intended scope.
+
+The M0 baseline route map — 69 routes with their rendering modes, unchanged
+through M1 and M1.1 — is the reference for judging whether Strategy A causes a
+regression.
