@@ -1,4 +1,3 @@
-import { catalogue } from "@/data/catalog";
 import type { Product } from "@/lib/products";
 
 /**
@@ -23,7 +22,11 @@ const preferredBiometricModels = ["X990", "F22+ID+WIFI"];
 /* PoE switch: strongest verified in-stock */
 const preferredSwitchModels = ["GS108PP", "GS116PP"];
 
-export function getFeaturedProducts(max = 8): Product[] {
+/**
+ * Curated featured selection drawn from a supplied collection rather than the
+ * static catalogue, so the homepage uses one canonical snapshot throughout.
+ */
+export function getFeaturedProducts(catalogue: readonly Product[], max = 8): Product[] {
   const selected: Product[] = [];
   const selectedIds = new Set<string>();
 

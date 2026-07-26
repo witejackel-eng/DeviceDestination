@@ -1,4 +1,3 @@
-import { catalogue } from "@/data/catalog";
 import type { Product } from "@/lib/products";
 import { resolveHeroMedia } from "@/lib/home/hero-media";
 
@@ -35,7 +34,14 @@ const fallbackFilters: Record<HeroProductRole, ((p: Product) => boolean)[]> = {
   ],
 };
 
-export function resolveHeroProducts(): HeroProduct[] {
+/**
+ * Resolve the three hero products from a supplied collection.
+ *
+ * Takes products as an argument rather than importing the static catalogue, so
+ * the homepage resolves the hero from the same canonical snapshot it uses for
+ * every other section.
+ */
+export function resolveHeroProducts(catalogue: readonly Product[]): HeroProduct[] {
   const results: HeroProduct[] = [];
   const usedIds = new Set<string>();
 
