@@ -60,19 +60,37 @@ authoritative data.
 
 ## Source selection
 
-| Condition | Source | `reason` |
-| --- | --- | --- |
-| `DATABASE_URL` absent | static | `database_not_configured` |
-| Client initialisation throws | static | `database_unavailable` |
-| Catalogue query throws | static | `query_failed` |
-| No products at all | static | `database_empty` |
-| Products exist, none published | static | `no_published_products` |
-| ≥1 product survives integrity validation | **database** | `database` |
-| 0 products survive integrity validation | static | `all_products_invalid` |
+The database owns the catalogue — **including owning the decision that it is
+empty**. Static data stands in for a configured database in exactly one case: it
+holds no products at all, which is an unseeded database rather than an emptied
+one.
 
-A configured-but-empty database serves the full static catalogue rather than an
-empty shop. A partially malformed database keeps its valid products: only the
-irrecoverable ones are excluded, and each exclusion is logged.
+| Condition | Source | `authority` | `reason` | Products |
+| --- | --- | --- | --- | --- |
+| `DATABASE_URL` absent | static | `static_bootstrap` | `database_not_configured` | 30 |
+| No products at all | static | `static_bootstrap` | `database_empty` | 30 |
+| Products exist, none published | **database** | `database` | `no_published_products` | **0** |
+| 0 products survive integrity validation | **database** | `database` | `all_products_invalid` | **0** |
+| ≥1 product survives integrity validation | database | `database` | `database` | valid only |
+| Configuration check throws | static | `static_degraded` | `configuration_check_failed` | 30 |
+| Client initialisation throws | static | `static_degraded` | `database_unavailable` | 30 |
+| Catalogue query throws | static | `static_degraded` | `query_failed` | 30 |
+
+An administrator who unpublishes every product gets an empty shop, not the 30
+historical products; a total integrity failure is a data-quality problem, not
+permission to republish the historical catalogue. A partially malformed database
+keeps its valid products — only the irrecoverable ones are excluded, each
+exclusion is logged, and missing products are never topped up from static data.
+
+`authority` lets route code tell **intentional emptiness** (`database` with no
+products) from **failure** (`static_degraded`). `pricingAuthority` is `database`
+only for a `database` snapshot, making explicit that fallback prices were not
+verified this request.
+
+This changes nothing about checkout. `checkout-orchestrator` re-reads price from
+the database and rejects when it cannot, so `pricingAuthority` records a fact
+for display code rather than granting anything permission to trust fallback
+prices.
 
 After a connection failure the repository stops re-dialling for 30 seconds, so a
 down database costs one attempt rather than one per server-component render.
@@ -320,24 +338,27 @@ it and never falls back to `DATABASE_URL`.
 - Point the 8 server routes and the 2 homepage resolvers at the selectors above.
 - Decide rendering mode per route; `/sitemap.ts` included.
 
-### Cache strategy decision — deferred to M2
+### Cache strategy — decided in M2A
 
-No caching is implemented in M1.1: no `cacheComponents`, no `unstable_cache`, no
-invalidation calls. M2 must choose between two strategies on the evidence of an
-isolated experiment against current Next.js 16 behaviour, not in advance.
+Measured, not assumed. Full evidence in
+[ADR 0001](adr/0001-catalogue-cache-architecture.md).
 
-**Strategy A — Cache Components.** `use cache`, `cacheTag`, `cacheLife`,
-`updateTag`, `revalidateTag(tag, "max")`. Requires `cacheComponents: true`,
-which is a global switch: it changes how the whole app treats dynamic APIs and
-prerendering, not just the catalogue. Adopting it demands verification of the
-route map, per-route rendering modes, build output and browser behaviour before
-it can be considered safe.
+**Selected: React `cache()` for per-render deduplication, `unstable_cache` for
+cross-request persistence, one `catalogue` tag.** `unstable_cache` is
+deprecated, so this is transitional debt with a named exit — revisit Cache
+Components after M5 settles the pricing clock.
 
-**Strategy B — the previous cache model.** The existing compatible data-cache
-API, without enabling Cache Components globally. Select this if enabling Cache
-Components changes unrelated application behaviour or expands M2 beyond its
-intended scope.
+Cache Components was rejected on evidence: with `cacheComponents: true` the
+build never completed. It rejects `export const dynamic` (used by the admin
+layout and three API routes including the health and readiness probes), then
+fails on `new Date()` in the root-layout footer, and then on `new Date()` inside
+`getPurchaseEligibility` — which is M5's function and out of M2's scope.
 
-The M0 baseline route map — 69 routes with their rendering modes, unchanged
-through M1 and M1.1 — is the reference for judging whether Strategy A causes a
-regression.
+Still no caching is wired up here. M2B implements the policy in the ADR, whose
+single most important rule is: **branch on `snapshot.authority` before writing
+to the cache.** `unstable_cache` was measured caching a degraded static-fallback
+snapshot exactly like authoritative data, so a brief outage would otherwise
+freeze the fallback for the full authoritative lifetime.
+
+The cache-safe payload lives in `src/data/catalogue-cache-payload.ts` and the
+request-scope wrapper in `src/data/catalogue-request-cache.ts`.
