@@ -14,11 +14,16 @@
  * function M2 will wrap in `unstable_cache` with catalogue tags.
  */
 
-import { CatalogueDatabaseError, drizzleCatalogueAdapter } from "@/data/catalogue-db-adapter";
+import {
+  CatalogueDatabaseError,
+  causeNameOf,
+  drizzleCatalogueAdapter,
+} from "@/data/catalogue-db-adapter";
 import { mapDatabaseCatalogue } from "@/data/catalogue-mapping";
 import { getStaticCatalogue } from "@/data/catalogue-static";
 import { logger } from "@/lib/logger";
 import type {
+  CatalogueDatabaseAdapter,
   CatalogueDiagnostic,
   CatalogueLogger,
   CatalogueProduct,
@@ -40,11 +45,15 @@ export type {
 const DEFAULT_FAILURE_COOLDOWN_MS = 30_000;
 
 /**
- * Set after a connection failure so a down database is not re-dialled once per
- * server component render. Query failures are not memoised — they may be
- * transient and the next request should be allowed to try.
+ * Set after a connection or configuration failure so a down database is not
+ * re-dialled once per server component render. Query failures are not memoised
+ * — they may be transient and the next request should be allowed to try.
+ *
+ * Keyed by adapter instance rather than held in a single module variable: the
+ * production adapter is a singleton so behaviour is unchanged, while a failing
+ * adapter in one test can no longer suppress an unrelated adapter elsewhere.
  */
-let unavailableUntil = 0;
+let cooldowns = new WeakMap<CatalogueDatabaseAdapter, number>();
 
 const defaultLogger: CatalogueLogger = {
   debug: (payload, message) => logger.debug(payload, message),
@@ -54,7 +63,7 @@ const defaultLogger: CatalogueLogger = {
 
 /** Test seam. Module-level failure memoisation would otherwise leak between suites. */
 export function resetCatalogueRepositoryState(): void {
-  unavailableUntil = 0;
+  cooldowns = new WeakMap();
 }
 
 // ─── Snapshot assembly ────────────────────────────────────────────────────
@@ -84,10 +93,24 @@ function emit(log: CatalogueLogger, diagnostic: CatalogueDiagnostic): void {
     code: diagnostic.code,
     ...(diagnostic.productId ? { productId: diagnostic.productId } : {}),
   };
-  if (diagnostic.code === "database_not_configured") log.debug(payload, diagnostic.message);
-  else if (diagnostic.code === "database_unavailable" || diagnostic.code === "query_failed")
-    log.error(payload, diagnostic.message);
-  else log.warn(payload, diagnostic.message);
+  switch (diagnostic.code) {
+    // Expected, non-actionable states. A product created in admin with no
+    // static counterpart must not fill the logs with warnings.
+    case "database_not_configured":
+    case "enrichment_matched_legacy_slug":
+    case "enrichment_matched_model":
+    case "enrichment_absent":
+    case "image_placeholder_applied":
+      log.debug(payload, diagnostic.message);
+      return;
+    case "database_unavailable":
+    case "configuration_check_failed":
+    case "query_failed":
+      log.error(payload, diagnostic.message);
+      return;
+    default:
+      log.warn(payload, diagnostic.message);
+  }
 }
 
 // ─── Source selection ─────────────────────────────────────────────────────
@@ -111,14 +134,28 @@ export async function getCatalogue(
     return staticSnapshot(reason, diagnostics);
   };
 
-  if (!adapter.isConfigured()) {
+  // `isConfigured()` reads the environment and, for a custom adapter, may do
+  // arbitrary work. It sits inside the error boundary so `getCatalogue()` keeps
+  // its promise never to reject.
+  let configured: boolean;
+  try {
+    configured = adapter.isConfigured();
+  } catch (error) {
+    cooldowns.set(adapter, now() + cooldownMs);
+    return fallback("configuration_check_failed", {
+      code: "configuration_check_failed",
+      message: `Database configuration check failed (${causeNameOf(error)}); serving the static catalogue`,
+    });
+  }
+
+  if (!configured) {
     return fallback("database_not_configured", {
       code: "database_not_configured",
       message: "Database is not configured; serving the static catalogue",
     });
   }
 
-  if (now() < unavailableUntil) {
+  if (now() < (cooldowns.get(adapter) ?? 0)) {
     return fallback("database_unavailable", {
       code: "database_unavailable",
       message: "Database is in a failure cooldown; serving the static catalogue",
@@ -132,8 +169,8 @@ export async function getCatalogue(
     const kind = error instanceof CatalogueDatabaseError ? error.kind : "query_failed";
     // Only the classification and the error's constructor name are recorded —
     // driver messages routinely embed the connection string.
-    const causeName = error instanceof CatalogueDatabaseError ? error.causeName : "UnknownError";
-    if (kind === "unavailable") unavailableUntil = now() + cooldownMs;
+    const causeName = error instanceof CatalogueDatabaseError ? error.causeName : causeNameOf(error);
+    if (kind === "unavailable") cooldowns.set(adapter, now() + cooldownMs);
     return fallback(kind === "unavailable" ? "database_unavailable" : "query_failed", {
       code: kind === "unavailable" ? "database_unavailable" : "query_failed",
       message:

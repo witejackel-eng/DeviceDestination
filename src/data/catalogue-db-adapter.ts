@@ -49,8 +49,14 @@ export class CatalogueDatabaseError extends Error {
   }
 }
 
-function causeNameOf(error: unknown): string {
-  return error instanceof Error ? error.name : "UnknownError";
+/**
+ * The only thing safe to take from an unknown error: its constructor name, and
+ * only when it looks like an identifier. Messages and stacks are never read —
+ * driver errors routinely embed the connection string.
+ */
+export function causeNameOf(error: unknown): string {
+  const name = error instanceof Error ? error.name : "";
+  return /^[A-Za-z_$][A-Za-z0-9_.$]{0,63}$/.test(name) ? name : "UnknownError";
 }
 
 export const drizzleCatalogueAdapter: CatalogueDatabaseAdapter = {
