@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
+import { CatalogueUnverifiedNotice } from "@/components/catalogue-state";
 import type { Product } from "@/lib/products";
 
 export function CollectionPage({
@@ -8,6 +9,7 @@ export function CollectionPage({
   title,
   description,
   products,
+  degraded = false,
 }: {
   eyebrow: string;
   title: string;
@@ -15,6 +17,8 @@ export function CollectionPage({
   products: Product[];
   accentBg?: string;
   categorySlug?: string;
+  /** The catalogue could not be verified against the database this request. */
+  degraded?: boolean;
 }) {
   return (
     <div style={{ background: "var(--background)" }}>
@@ -26,6 +30,7 @@ export function CollectionPage({
           <Link href="/products" className="button-secondary mt-5">
             Browse all products <ArrowRight size={16} />
           </Link>
+          {degraded && <CatalogueUnverifiedNotice className="mt-5" />}
         </div>
         <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
           {products.map((product) => (
