@@ -99,43 +99,158 @@ describe("source selection — fallback", () => {
     expect(snapshot.products).toHaveLength(STATIC_PRODUCT_COUNT);
   });
 
-  it("returns the complete static catalogue when no products are published", async () => {
-    const adapter = fakeAdapter({ result: queryResult({ totalProductCount: 12 }) });
-    const snapshot = await getCatalogue({ adapter, logger: recordingLogger() });
-
-    expect(snapshot.source).toBe("static");
-    expect(snapshot.reason).toBe("no_published_products");
-    expect(snapshot.products).toHaveLength(STATIC_PRODUCT_COUNT);
-  });
-
-  it("returns the static catalogue when every published product is unusable", async () => {
-    const adapter = fakeAdapter({
-      result: queryResult({
-        products: [productRow({ slug: "" }), productRow({ model: "  " })],
-      }),
-    });
-    const logger = recordingLogger();
-    const snapshot = await getCatalogue({ adapter, logger });
-
-    expect(snapshot.source).toBe("static");
-    expect(snapshot.reason).toBe("all_products_invalid");
-    expect(snapshot.products).toHaveLength(STATIC_PRODUCT_COUNT);
-    expect(logger.entries.some((entry) => entry.payload.code === "all_products_invalid")).toBe(true);
-  });
-
-  it("never renders an empty catalogue for any failure mode", async () => {
+  it("never renders an empty catalogue for a bootstrap or failure state", async () => {
+    // Authoritative-empty states are excluded on purpose — they are covered by
+    // the source-authority suite below, where empty is the correct answer.
     const adapters = [
       fakeAdapter({ configured: false }),
       fakeAdapter({ error: new CatalogueDatabaseError("unavailable", "Error") }),
       fakeAdapter({ error: new CatalogueDatabaseError("query_failed", "Error") }),
       fakeAdapter({ result: queryResult({ totalProductCount: 0 }) }),
-      fakeAdapter({ result: queryResult({ totalProductCount: 5 }) }),
     ];
     for (const adapter of adapters) {
       resetCatalogueRepositoryState();
       const snapshot = await getCatalogue({ adapter, logger: recordingLogger() });
       expect(snapshot.products.length).toBeGreaterThan(0);
+      expect(snapshot.source).toBe("static");
     }
+  });
+});
+
+// ─── M2A: catalogue source authority ──────────────────────────────────────
+//
+// The database owns the catalogue, including owning the decision that it is
+// empty. Only two states let static data stand in for a configured database:
+// nothing configured, and nothing seeded.
+
+describe("source authority", () => {
+  it("bootstraps from static data when the database is not configured", async () => {
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({ configured: false }),
+      logger: recordingLogger(),
+    });
+
+    expect(snapshot.authority).toBe("static_bootstrap");
+    expect(snapshot.pricingAuthority).toBe("unverified");
+    expect(snapshot.products).toHaveLength(STATIC_PRODUCT_COUNT);
+  });
+
+  it("bootstraps from static data when a configured database holds no products", async () => {
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({ result: queryResult({ totalProductCount: 0 }) }),
+      logger: recordingLogger(),
+    });
+
+    expect(snapshot.authority).toBe("static_bootstrap");
+    expect(snapshot.reason).toBe("database_empty");
+    expect(snapshot.products).toHaveLength(STATIC_PRODUCT_COUNT);
+  });
+
+  it("serves an empty authoritative catalogue when products exist but none are published", async () => {
+    const logger = recordingLogger();
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({ result: queryResult({ totalProductCount: 12 }) }),
+      logger,
+    });
+
+    expect(snapshot.source).toBe("database");
+    expect(snapshot.authority).toBe("database");
+    expect(snapshot.reason).toBe("no_published_products");
+    expect(snapshot.products).toEqual([]);
+    expect(snapshot.bySlug.size).toBe(0);
+    // The unpublish decision stands: no historical product is resurrected.
+    expect(snapshot.products.some((product) => product.source === "static")).toBe(false);
+    expect(logger.entries.some((entry) => entry.payload.code === "no_published_products")).toBe(
+      true,
+    );
+  });
+
+  it("serves an empty authoritative catalogue when every published product is invalid", async () => {
+    const logger = recordingLogger();
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({
+        result: queryResult({
+          products: [productRow({ slug: "" }), productRow({ model: "  " })],
+        }),
+      }),
+      logger,
+    });
+
+    expect(snapshot.source).toBe("database");
+    expect(snapshot.authority).toBe("database");
+    expect(snapshot.reason).toBe("all_products_invalid");
+    expect(snapshot.products).toEqual([]);
+    expect(logger.entries.some((entry) => entry.payload.code === "all_products_invalid")).toBe(true);
+    // A data-quality failure must not republish the historical catalogue.
+    expect(
+      logger.entries.every((entry) => !String(entry.message).includes("static catalogue")),
+    ).toBe(true);
+  });
+
+  it("marks every database failure as a degraded static snapshot", async () => {
+    const cases: Array<[ReturnType<typeof fakeAdapter>, string]> = [
+      [fakeAdapter({ error: new CatalogueDatabaseError("unavailable", "E") }), "database_unavailable"],
+      [fakeAdapter({ error: new CatalogueDatabaseError("query_failed", "E") }), "query_failed"],
+    ];
+
+    for (const [adapter, reason] of cases) {
+      resetCatalogueRepositoryState();
+      const snapshot = await getCatalogue({ adapter, logger: recordingLogger() });
+
+      expect(snapshot.source).toBe("static");
+      expect(snapshot.authority).toBe("static_degraded");
+      expect(snapshot.reason).toBe(reason);
+      // Displayable, but nothing here was verified against the database.
+      expect(snapshot.pricingAuthority).toBe("unverified");
+      expect(snapshot.products).toHaveLength(STATIC_PRODUCT_COUNT);
+    }
+  });
+
+  it("marks a failed configuration check as degraded, not bootstrap", async () => {
+    const snapshot = await getCatalogue({
+      adapter: {
+        isConfigured: () => {
+          throw new Error("boom");
+        },
+        loadPublishedCatalogue: async () => queryResult(),
+      },
+      logger: recordingLogger(),
+    });
+
+    expect(snapshot.authority).toBe("static_degraded");
+    expect(snapshot.reason).toBe("configuration_check_failed");
+  });
+
+  it("keeps a partially valid database catalogue authoritative without static top-up", async () => {
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({
+        result: queryResult({
+          products: [productRow({ slug: "valid-one" }), productRow({ slug: "", model: "" })],
+        }),
+      }),
+      logger: recordingLogger(),
+    });
+
+    expect(snapshot.authority).toBe("database");
+    expect(snapshot.pricingAuthority).toBe("database");
+    expect(snapshot.products.map((product) => product.slug)).toEqual(["valid-one"]);
+    // Missing products are not filled in from static data.
+    expect(snapshot.products).toHaveLength(1);
+    expect(snapshot.products.every((product) => product.source === "database")).toBe(true);
+  });
+
+  it("reports database pricing authority only for a database snapshot", async () => {
+    const database = await getCatalogue({
+      adapter: fakeAdapter({ result: queryResult({ products: [productRow({ slug: "p" })] }) }),
+      logger: recordingLogger(),
+    });
+    const bootstrapped = await getCatalogue({
+      adapter: fakeAdapter({ configured: false }),
+      logger: recordingLogger(),
+    });
+
+    expect(database.pricingAuthority).toBe("database");
+    expect(bootstrapped.pricingAuthority).toBe("unverified");
   });
 });
 

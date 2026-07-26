@@ -151,13 +151,59 @@ export type CatalogueDiagnostic = {
   productId?: string;
 };
 
+/**
+ * Who the catalogue in this snapshot belongs to.
+ *
+ * - `database` — the database decided the contents, **including when it decided
+ *   the contents are empty**. An administrator who unpublishes everything gets
+ *   an empty shop, not the historical static catalogue.
+ * - `static_bootstrap` — static data is serving legitimately: no database is
+ *   configured, or a configured database holds no products at all yet.
+ * - `static_degraded` — static data is serving because the database could not
+ *   be reached or read. The catalogue is displayable but unverified.
+ */
+export type CatalogueAuthority = "database" | "static_bootstrap" | "static_degraded";
+
+/**
+ * Whether the prices in this snapshot were read from the canonical database in
+ * this request. `unverified` in both static modes.
+ *
+ * Never a checkout input: `checkout-orchestrator` re-reads price from the
+ * database and rejects when it cannot. This exists so route code can tell the
+ * difference, not so anything can start trusting fallback prices.
+ */
+export type CataloguePricingAuthority = "database" | "unverified";
+
 export type CatalogueSnapshot = {
   source: CatalogueSourceKind;
   reason: CatalogueSourceReason;
+  authority: CatalogueAuthority;
+  pricingAuthority: CataloguePricingAuthority;
   products: CatalogueProduct[];
   /** Lookup by canonical slug and by every legacy slug. */
   bySlug: Map<string, CatalogueProduct>;
   diagnostics: CatalogueDiagnostic[];
+};
+
+/**
+ * Cross-request cache representation of a snapshot.
+ *
+ * Deliberately JSON-safe: no `Map`, no functions, no logger, no adapter, no
+ * `Error`, no `Date`. Diagnostics reduce to counts by typed code — enough for
+ * observability, without persisting runtime detail. `bySlug` is rebuilt on read.
+ */
+export type CatalogueCachePayload = {
+  /** Bumped when the payload shape changes, so stale entries can be rejected. */
+  version: 1;
+  source: CatalogueSourceKind;
+  reason: CatalogueSourceReason;
+  authority: CatalogueAuthority;
+  pricingAuthority: CataloguePricingAuthority;
+  products: CatalogueProduct[];
+  productCount: number;
+  diagnosticCounts: Partial<Record<CatalogueDiagnosticCode, number>>;
+  /** ISO timestamp, so age is readable without carrying a `Date`. */
+  cachedAt: string;
 };
 
 export type CatalogueTaxonomyEntry = {

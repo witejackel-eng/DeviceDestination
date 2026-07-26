@@ -79,12 +79,67 @@ function indexBySlug(products: readonly CatalogueProduct[]): Map<string, Catalog
   return index;
 }
 
-function staticSnapshot(
+/**
+ * Static data serving legitimately — no database configured, or a configured
+ * database with no products at all yet. The full catalogue is restored.
+ */
+function bootstrapSnapshot(
   reason: CatalogueSourceReason,
   diagnostics: CatalogueDiagnostic[],
 ): CatalogueSnapshot {
   const products = getStaticCatalogue();
-  return { source: "static", reason, products, bySlug: indexBySlug(products), diagnostics };
+  return {
+    source: "static",
+    reason,
+    authority: "static_bootstrap",
+    pricingAuthority: "unverified",
+    products,
+    bySlug: indexBySlug(products),
+    diagnostics,
+  };
+}
+
+/**
+ * Static data serving because the database could not be reached or read. The
+ * catalogue is displayable but nothing in it was verified this request, so M2B
+ * route code can surface a degraded-state notice and no caller may treat these
+ * prices as authoritative.
+ */
+function degradedSnapshot(
+  reason: CatalogueSourceReason,
+  diagnostics: CatalogueDiagnostic[],
+): CatalogueSnapshot {
+  const products = getStaticCatalogue();
+  return {
+    source: "static",
+    reason,
+    authority: "static_degraded",
+    pricingAuthority: "unverified",
+    products,
+    bySlug: indexBySlug(products),
+    diagnostics,
+  };
+}
+
+/**
+ * The database decided the contents — including deciding they are empty.
+ * An administrator who unpublishes every product gets an empty shop; the
+ * historical static catalogue is never republished on their behalf.
+ */
+function databaseSnapshot(
+  reason: CatalogueSourceReason,
+  products: CatalogueProduct[],
+  diagnostics: CatalogueDiagnostic[],
+): CatalogueSnapshot {
+  return {
+    source: "database",
+    reason,
+    authority: "database",
+    pricingAuthority: "database",
+    products,
+    bySlug: indexBySlug(products),
+    diagnostics,
+  };
 }
 
 function emit(log: CatalogueLogger, diagnostic: CatalogueDiagnostic): void {
@@ -128,10 +183,21 @@ export async function getCatalogue(
   const cooldownMs = options.failureCooldownMs ?? DEFAULT_FAILURE_COOLDOWN_MS;
   const diagnostics: CatalogueDiagnostic[] = [];
 
-  const fallback = (reason: CatalogueSourceReason, diagnostic: CatalogueDiagnostic) => {
+  const record = (diagnostic: CatalogueDiagnostic) => {
     emit(log, diagnostic);
     diagnostics.push(diagnostic);
-    return staticSnapshot(reason, diagnostics);
+  };
+
+  /** Static data serving legitimately: unconfigured, or a database with nothing in it. */
+  const bootstrap = (reason: CatalogueSourceReason, diagnostic: CatalogueDiagnostic) => {
+    record(diagnostic);
+    return bootstrapSnapshot(reason, diagnostics);
+  };
+
+  /** Static data serving because the database could not be reached or read. */
+  const degraded = (reason: CatalogueSourceReason, diagnostic: CatalogueDiagnostic) => {
+    record(diagnostic);
+    return degradedSnapshot(reason, diagnostics);
   };
 
   // `isConfigured()` reads the environment and, for a custom adapter, may do
@@ -142,21 +208,21 @@ export async function getCatalogue(
     configured = adapter.isConfigured();
   } catch (error) {
     cooldowns.set(adapter, now() + cooldownMs);
-    return fallback("configuration_check_failed", {
+    return degraded("configuration_check_failed", {
       code: "configuration_check_failed",
       message: `Database configuration check failed (${causeNameOf(error)}); serving the static catalogue`,
     });
   }
 
   if (!configured) {
-    return fallback("database_not_configured", {
+    return bootstrap("database_not_configured", {
       code: "database_not_configured",
       message: "Database is not configured; serving the static catalogue",
     });
   }
 
   if (now() < (cooldowns.get(adapter) ?? 0)) {
-    return fallback("database_unavailable", {
+    return degraded("database_unavailable", {
       code: "database_unavailable",
       message: "Database is in a failure cooldown; serving the static catalogue",
     });
@@ -171,7 +237,7 @@ export async function getCatalogue(
     // driver messages routinely embed the connection string.
     const causeName = error instanceof CatalogueDatabaseError ? error.causeName : causeNameOf(error);
     if (kind === "unavailable") cooldowns.set(adapter, now() + cooldownMs);
-    return fallback(kind === "unavailable" ? "database_unavailable" : "query_failed", {
+    return degraded(kind === "unavailable" ? "database_unavailable" : "query_failed", {
       code: kind === "unavailable" ? "database_unavailable" : "query_failed",
       message:
         kind === "unavailable"
@@ -181,13 +247,22 @@ export async function getCatalogue(
   }
 
   if (result.products.length === 0) {
-    const empty = (result.totalProductCount ?? 0) === 0;
-    return fallback(empty ? "database_empty" : "no_published_products", {
-      code: empty ? "database_empty" : "no_published_products",
-      message: empty
-        ? "Database holds no products; serving the static catalogue"
-        : "Database holds no published products; serving the static catalogue",
+    // A database with no rows at all has never been seeded — bootstrapping from
+    // static data is the useful behaviour. A database that holds products but
+    // publishes none has been told to show nothing, and that instruction is
+    // authoritative: restoring 30 historical products would override an
+    // administrator's deliberate decision.
+    if ((result.totalProductCount ?? 0) === 0) {
+      return bootstrap("database_empty", {
+        code: "database_empty",
+        message: "Database holds no products; serving the static catalogue as bootstrap",
+      });
+    }
+    record({
+      code: "no_published_products",
+      message: "Database holds products but none are published; serving an empty catalogue",
     });
+    return databaseSnapshot("no_published_products", [], diagnostics);
   }
 
   const mapped = mapDatabaseCatalogue(result);
@@ -195,19 +270,17 @@ export async function getCatalogue(
   diagnostics.push(...mapped.diagnostics);
 
   if (mapped.products.length === 0) {
-    return fallback("all_products_invalid", {
+    // A data-quality failure, not permission to republish the historical
+    // catalogue. The database is still the authority; it currently has nothing
+    // usable to say.
+    record({
       code: "all_products_invalid",
-      message: `All ${result.products.length} published product(s) failed integrity validation; serving the static catalogue`,
+      message: `All ${result.products.length} published product(s) failed integrity validation; serving an empty catalogue`,
     });
+    return databaseSnapshot("all_products_invalid", [], diagnostics);
   }
 
-  return {
-    source: "database",
-    reason: "database",
-    products: mapped.products,
-    bySlug: indexBySlug(mapped.products),
-    diagnostics,
-  };
+  return databaseSnapshot("database", mapped.products, diagnostics);
 }
 
 // ─── Selectors ────────────────────────────────────────────────────────────
