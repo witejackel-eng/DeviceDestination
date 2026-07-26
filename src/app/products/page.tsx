@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { X } from "lucide-react";
-import { catalogue, brands, categories, searchProducts } from "@/data/catalog";
+import { getCachedCatalogue } from "@/data/catalogue-cache";
+import {
+  deriveBrands,
+  deriveCategories,
+  searchCatalogue,
+  toPublicProduct,
+} from "@/lib/catalogue-view";
+import type { CatalogueProduct } from "@/data/catalogue-types";
 import { ProductCard } from "@/components/product-card";
 import { CatalogueToolbar } from "@/components/catalogue-toolbar";
 import { ProductSearch } from "@/components/product-search";
+import { CatalogueUnavailable, CatalogueUnverifiedNotice } from "@/components/catalogue-state";
 
 export const metadata: Metadata = {
   title: "Security and biometric products",
@@ -15,7 +23,10 @@ export const metadata: Metadata = {
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-function resolutionOf(product: (typeof catalogue)[number]) {
+// Already request-rendered for searchParams; the catalogue behind it is cached.
+export const dynamic = "force-dynamic";
+
+function resolutionOf(product: CatalogueProduct) {
   const value =
     `${product.model} ${product.specs["Max Resolution"] ?? ""} ${product.specs["Max resolution"] ?? ""}`.toLowerCase();
   if (/\b6\s?mp\b|3200\s*[×x]\s*1800/.test(value)) return "6mp";
@@ -24,7 +35,7 @@ function resolutionOf(product: (typeof catalogue)[number]) {
   return "";
 }
 
-function authenticationOf(product: (typeof catalogue)[number]) {
+function authenticationOf(product: CatalogueProduct) {
   const value = `${product.specs.Authentication ?? ""} ${product.title}`.toLowerCase();
   if (value.includes("face")) return "face";
   if (value.includes("fingerprint")) return "fingerprint";
@@ -50,8 +61,15 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   const price = typeof params.price === "string" ? params.price : "";
   const authentication = typeof params.authentication === "string" ? params.authentication : "";
 
-  const queryMatches = new Set(searchProducts(q).map((product) => product.id));
-  let products = catalogue.filter((product) => {
+  const snapshot = await getCachedCatalogue();
+  const categories = deriveCategories(snapshot.products);
+  const brands = deriveBrands(snapshot.products);
+  // A database that publishes nothing is a different state from filters that
+  // match nothing, and must not show the static catalogue.
+  const authoritativeEmpty = snapshot.authority === "database" && snapshot.products.length === 0;
+
+  const queryMatches = new Set(searchCatalogue(snapshot.products, q).map((product) => product.id));
+  let products = snapshot.products.filter((product) => {
     return (
       (!q || queryMatches.has(product.id)) &&
       (!category || product.categorySlug === category) &&
@@ -123,6 +141,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         </p>
       </div>
 
+      {snapshot.authority === "static_degraded" && (
+        <CatalogueUnverifiedNotice className="mb-6 max-w-2xl" />
+      )}
+
       {/* ── Inline search field ─────────────────────────────── */}
       <ProductSearch variant="inline" initialQuery={q} className="mb-4" />
 
@@ -164,10 +186,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           {products.length} {products.length === 1 ? "product" : "products"} sorted by {sortLabels[sort] ?? sort}
         </h2>
 
-        {products.length > 0 ? (
+        {authoritativeEmpty ? (
+          <CatalogueUnavailable />
+        ) : products.length > 0 ? (
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={toPublicProduct(product)} />
             ))}
           </div>
         ) : (

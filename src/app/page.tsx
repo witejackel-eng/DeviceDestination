@@ -11,13 +11,21 @@ import {
   Scale,
   Truck,
 } from "lucide-react";
-import { catalogue } from "@/data/catalog";
+import { getCachedCatalogue } from "@/data/catalogue-cache";
+import { toPublicProducts } from "@/lib/catalogue-view";
+import { CatalogueUnavailable, CatalogueUnverifiedNotice } from "@/components/catalogue-state";
+import type { Product } from "@/lib/products";
 import { ProductCard } from "@/components/product-card";
 import { publicPageMetadata } from "@/lib/seo";
 import { siteConfig } from "@/config/site";
 import { getFeaturedProducts } from "@/lib/featured-products";
 import { resolveHeroProducts, deriveAnnotations } from "@/lib/home/hero-products";
 import { CinematicCommerceHero } from "@/components/home/cinematic-commerce-hero";
+
+// Rendered per request so the homepage reflects the canonical catalogue rather
+// than baking the build-time static fallback into its HTML. The catalogue
+// itself is still cached across requests.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = publicPageMetadata({
   title: "Shop CCTV, biometric and networking hardware",
@@ -34,7 +42,7 @@ const primaryCategories = [
     description: "Dome, bullet and colour models for indoor and outdoor surveillance.",
     href: "/products?q=camera",
     representativeModel: "CP-UNC-DA41L3C-D-Q",
-    filterFn: (p: (typeof catalogue)[number]) => p.categorySlug.includes("camera"),
+    filterFn: (p: Product) => p.categorySlug.includes("camera"),
   },
   {
     slug: "nvr-systems",
@@ -42,7 +50,7 @@ const primaryCategories = [
     description: "Network video recorders and storage for multi-camera setups.",
     href: "/categories/nvr-systems",
     representativeModel: "CP-UNR-108F1",
-    filterFn: (p: (typeof catalogue)[number]) => p.categorySlug.includes("nvr"),
+    filterFn: (p: Product) => p.categorySlug.includes("nvr"),
   },
   {
     slug: "biometric-devices",
@@ -51,7 +59,7 @@ const primaryCategories = [
     href: "/categories/biometric-devices",
     representativeModel: "X990",
     fallbackModel: "F22+ID+WIFI",
-    filterFn: (p: (typeof catalogue)[number]) => p.categorySlug.includes("biometric"),
+    filterFn: (p: Product) => p.categorySlug.includes("biometric"),
   },
   {
     slug: "poe-switches",
@@ -59,7 +67,7 @@ const primaryCategories = [
     description: "Power-over-Ethernet switches and network infrastructure.",
     href: "/categories/poe-switches",
     representativeModel: "GS108PP",
-    filterFn: (p: (typeof catalogue)[number]) => p.categorySlug.includes("poe") || p.categorySlug.includes("switch"),
+    filterFn: (p: Product) => p.categorySlug.includes("poe") || p.categorySlug.includes("switch"),
   },
 ];
 
@@ -78,7 +86,7 @@ const compareSpecRows = [
   { label: "Warranty", key: "warranty" },
 ];
 
-function getCompareSpecValue(product: (typeof catalogue)[number], key: string): string {
+function getCompareSpecValue(product: Product, key: string): string {
   const specs = product.specs;
   switch (key) {
     case "model":
@@ -116,19 +124,36 @@ function getCompareSpecValue(product: (typeof catalogue)[number], key: string): 
   }
 }
 
-export default function Home() {
-  /* Hero products: resolved with fallbacks from real catalogue */
-  const heroProducts = resolveHeroProducts();
+export default async function Home() {
+  /* One request-memoised catalogue load shared by every section below. */
+  const snapshot = await getCachedCatalogue();
+  const catalogue = toPublicProducts(snapshot.products);
+  const authoritativeEmpty = snapshot.authority === "database" && snapshot.products.length === 0;
+  const degraded = snapshot.authority === "static_degraded";
+
+  /* Hero products: resolved with fallbacks from the canonical collection */
+  const heroProducts = resolveHeroProducts(catalogue);
   const annotations = deriveAnnotations(heroProducts);
 
   /* Featured products: curated selection representing multiple categories */
-  const featuredProducts = getFeaturedProducts(8);
+  const featuredProducts = getFeaturedProducts(catalogue, 8);
 
   /* Compare section: 3 specific camera products */
   const compareProducts = compareProductModels
     .map((model) => catalogue.find((p) => p.model === model))
-    .filter((p): p is (typeof catalogue)[number] => p !== undefined && p.stockStatus === "in_stock")
+    .filter((p): p is Product => p !== undefined && p.stockStatus === "in_stock")
     .slice(0, 3);
+
+  /* A database publishing nothing must not fall back to the hero-led layout. */
+  if (authoritativeEmpty) {
+    return (
+      <div className="container-standard section-space !pt-14">
+        <p className="eyebrow">Catalogue</p>
+        <h1 className="display-section mt-4">DeviceDestination</h1>
+        <CatalogueUnavailable className="mt-10" />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -137,6 +162,12 @@ export default function Home() {
           Scroll-driven product narrative with real catalogue products.
           ═══════════════════════════════════════════════════════ */}
       <CinematicCommerceHero heroProducts={heroProducts} annotations={annotations} />
+
+      {degraded && (
+        <div className="container-standard pt-8">
+          <CatalogueUnverifiedNotice className="max-w-2xl" />
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 2 — FOUR PRIMARY CATEGORIES

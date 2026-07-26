@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { brands, catalogue } from "@/data/catalog";
+import { getCachedCatalogue } from "@/data/catalogue-cache";
+import { deriveBrands, toPublicProducts } from "@/lib/catalogue-view";
 import { CollectionPage } from "@/components/collection-page";
 
+// Request-time rendered so a newly published brand resolves without a redeploy.
+export const dynamic = "force-dynamic";
+
 type Params = Promise<{ slug: string }>;
-export function generateStaticParams() {
-  return brands.map((brand) => ({ slug: brand.slug }));
-}
+
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const brand = brands.find((item) => item.slug === slug);
+  const { products } = await getCachedCatalogue();
+  const brand = deriveBrands(products).find((item) => item.slug === slug);
   return brand
     ? {
         title: `${brand.name} products`,
@@ -18,18 +21,23 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       }
     : {};
 }
+
 export default async function BrandPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const brand = brands.find((item) => item.slug === slug);
+  const snapshot = await getCachedCatalogue();
+  const brand = deriveBrands(snapshot.products).find((item) => item.slug === slug);
+  // A brand exists only if the canonical catalogue has products under it.
   if (!brand) notFound();
-  const products = catalogue.filter((product) => product.brandSlug === slug);
+  const products = snapshot.products.filter((product) => product.brandSlug === slug);
+
   return (
     <CollectionPage
       eyebrow="Shop by brand"
       title={brand.name}
       description={`Exact-model ${brand.name} hardware with clear specifications, available documentation and GST-inclusive pricing.`}
-      products={products}
+      products={toPublicProducts(products)}
       accentBg="var(--background)"
+      degraded={snapshot.authority === "static_degraded"}
     />
   );
 }

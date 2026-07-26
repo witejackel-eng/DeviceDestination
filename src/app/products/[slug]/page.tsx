@@ -12,7 +12,8 @@ import {
   Truck,
   Wrench,
 } from "lucide-react";
-import { catalogue, getProduct } from "@/data/catalog";
+import { getCachedCatalogue } from "@/data/catalogue-cache";
+import { resolveProductFromSnapshot, toPublicProducts } from "@/lib/catalogue-view";
 import { formatPrice, calculateDiscountPercent, getPurchaseEligibility } from "@/lib/products";
 import { getPriceMaxAgeDays } from "@/config/site";
 import { ProductGallery } from "@/components/product-gallery";
@@ -27,13 +28,16 @@ import { getSpecChips } from "@/lib/spec-chips";
 
 type Params = Promise<{ slug: string }>;
 
-export function generateStaticParams() {
-  return catalogue.map((product) => ({ slug: product.slug }));
-}
+// No `generateStaticParams`: enumerating routes at build time would freeze the
+// static fallback catalogue into the deployment and a product created in admin
+// afterwards would 404 until the next build. Rendered per request instead, with
+// the catalogue cached across requests.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const snapshot = await getCachedCatalogue();
+  const product = resolveProductFromSnapshot(snapshot, slug);
   if (!product) return { title: "Product not found" };
   return {
     title: `${product.model} — ${product.title}`,
@@ -55,7 +59,8 @@ const documentIcon: Record<string, typeof FileText> = {
 
 export default async function ProductPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const snapshot = await getCachedCatalogue();
+  const product = resolveProductFromSnapshot(snapshot, slug);
   if (!product) notFound();
   if (slug !== product.slug) redirect(`/products/${product.slug}`);
   const compareAt = product.mrpInclGstPaise ?? product.compareAtPriceInclGstPaise;
@@ -65,9 +70,11 @@ export default async function ProductPage({ params }: { params: Params }) {
       : calculateDiscountPercent(product.sellingPriceInclGstPaise, compareAt);
   const eligibility = getPurchaseEligibility(product, { maxAgeDays: getPriceMaxAgeDays() });
   const chips = getSpecChips(product);
-  const related = catalogue
-    .filter((item) => item.categorySlug === product.categorySlug && item.id !== product.id)
-    .slice(0, 4);
+  const related = toPublicProducts(
+    snapshot.products
+      .filter((item) => item.categorySlug === product.categorySlug && item.id !== product.id)
+      .slice(0, 4),
+  );
   const whatsapp = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(`Hello, I need help with ${product.model} (${product.title}).`)}`;
   const siteUrl = siteConfig.url;
 
