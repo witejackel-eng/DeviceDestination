@@ -46,6 +46,11 @@ const enrichedStatic = catalogue.find(
 /** A real static entry that carries related-product references. */
 const relatedStatic = catalogue.find((product) => product.relatedProductIds.length > 0)!;
 
+/** A second, distinct static entry, for precedence assertions. */
+const otherStatic = catalogue.find(
+  (product) => product.slug !== enrichedStatic.slug && product.useCases.length > 0,
+)!;
+
 beforeEach(() => {
   resetCatalogueRepositoryState();
 });
@@ -921,5 +926,321 @@ describe("selectors behave consistently in both modes", () => {
     expect(await listCategories(dbOptions)).toEqual([
       { slug: "dome-cameras", name: "Dome cameras", productCount: 2 },
     ]);
+  });
+});
+
+// ─── M1.1: enrichment resolution end to end ───────────────────────────────
+//
+// Precedence and ambiguity are covered exhaustively against a synthetic
+// catalogue in `catalogue-enrichment-resolution.test.ts`. These assert the
+// resolver is wired into the mapper and reaches the real static catalogue.
+
+describe("enrichment resolution through the repository", () => {
+  async function loadOne(overrides: Parameters<typeof productRow>[0]) {
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({ result: queryResult({ products: [productRow(overrides)] }) }),
+      logger: recordingLogger(),
+    });
+    expect(snapshot.source).toBe("database");
+    return snapshot;
+  }
+
+  it("enriches a product renamed in admin through its legacy slug", async () => {
+    const snapshot = await loadOne({
+      slug: "renamed-by-admin",
+      legacySlugs: [enrichedStatic.slug],
+      model: "ADMIN-ONLY-MODEL-XYZ",
+    });
+    const product = snapshot.products[0];
+
+    expect(product.enrichmentSource).toBe("legacy_slug");
+    expect(product.useCases).toEqual(enrichedStatic.useCases);
+    expect(product.builderExclusions).toEqual(enrichedStatic.builderExclusions);
+    expect(
+      snapshot.diagnostics.some(
+        (diagnostic) => diagnostic.code === "enrichment_matched_legacy_slug",
+      ),
+    ).toBe(true);
+    // The public id stays the database slug — the checkout invariant is unaffected.
+    expect(product.id).toBe("renamed-by-admin");
+  });
+
+  it("enriches through the exact model when no slug resolves", async () => {
+    const snapshot = await loadOne({
+      slug: "unknown-slug-xyz",
+      legacySlugs: null,
+      model: enrichedStatic.model,
+    });
+    const product = snapshot.products[0];
+
+    expect(product.enrichmentSource).toBe("model");
+    expect(product.useCases).toEqual(enrichedStatic.useCases);
+    expect(
+      snapshot.diagnostics.some((diagnostic) => diagnostic.code === "enrichment_matched_model"),
+    ).toBe(true);
+  });
+
+  it("prefers the canonical slug over competing legacy and model candidates", async () => {
+    const snapshot = await loadOne({
+      slug: enrichedStatic.slug,
+      legacySlugs: [otherStatic.slug],
+      model: otherStatic.model,
+    });
+    const product = snapshot.products[0];
+
+    expect(product.enrichmentSource).toBe("canonical_slug");
+    expect(product.useCases).toEqual(enrichedStatic.useCases);
+    expect(product.useCases).not.toEqual(otherStatic.useCases);
+  });
+
+  it("leaves optional fields empty and stays quiet for an admin-created product", async () => {
+    const logger = recordingLogger();
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({
+        result: queryResult({
+          products: [
+            productRow({
+              slug: "admin-only-product",
+              legacySlugs: null,
+              model: "ADMIN-ONLY-MODEL-ABC",
+            }),
+          ],
+        }),
+      }),
+      logger,
+    });
+    const product = snapshot.products[0];
+
+    expect(product.enrichmentSource).toBe("none");
+    expect(product.useCases).toEqual([]);
+    expect(product.relatedProductIds).toEqual([]);
+    expect(product.builderCompatibleIds).toEqual([]);
+    expect(product.builderExclusions).toEqual([]);
+    expect(product.enrichedFields).toEqual([]);
+    // Absent enrichment is normal, not a problem: nothing above debug level.
+    expect(logger.entries.filter((entry) => entry.level !== "debug")).toEqual([]);
+  });
+
+  it("never lets enrichment overwrite database-authoritative values", async () => {
+    const snapshot = await loadOne({
+      slug: "renamed-authoritative",
+      legacySlugs: [enrichedStatic.slug],
+      model: "ADMIN-ONLY-MODEL-DEF",
+      title: "Database title wins",
+      sellingPriceInclGstPaise: 123_400,
+      stockStatus: "quote_only",
+      brandName: "Database brand",
+      brandSlug: "database-brand",
+    });
+    const product = snapshot.products[0];
+
+    expect(product.enrichmentSource).toBe("legacy_slug");
+    expect(product.title).toBe("Database title wins");
+    expect(product.title).not.toBe(enrichedStatic.title);
+    expect(product.sellingPriceInclGstPaise).toBe(123_400);
+    expect(product.stockStatus).toBe("quote_only");
+    expect(product.brand).toBe("Database brand");
+    expect(product.model).toBe("ADMIN-ONLY-MODEL-DEF");
+  });
+
+  it("resolves deterministically across repeated loads", async () => {
+    const rows = queryResult({
+      products: [
+        productRow({ slug: relatedStatic.slug }),
+        productRow({ slug: enrichedStatic.slug }),
+      ],
+    });
+    const first = await getCatalogue({
+      adapter: fakeAdapter({ result: rows }),
+      logger: recordingLogger(),
+    });
+    const second = await getCatalogue({
+      adapter: fakeAdapter({ result: rows }),
+      logger: recordingLogger(),
+    });
+
+    expect(first.products.map((product) => product.enrichmentSource)).toEqual(
+      second.products.map((product) => product.enrichmentSource),
+    );
+    expect(first.products.map((product) => product.useCases)).toEqual(
+      second.products.map((product) => product.useCases),
+    );
+    expect(first.products.map((product) => product.builderCompatibleIds)).toEqual(
+      second.products.map((product) => product.builderCompatibleIds),
+    );
+  });
+
+  it("adds no database round trips", async () => {
+    const adapter = fakeAdapter({
+      result: queryResult({
+        products: [
+          productRow({ slug: enrichedStatic.slug }),
+          productRow({ slug: "renamed-x", legacySlugs: [otherStatic.slug] }),
+          productRow({ slug: "admin-only-y", model: "ADMIN-ONLY-MODEL-GHI" }),
+        ],
+      }),
+    });
+    await getCatalogue({ adapter, logger: recordingLogger() });
+
+    expect(adapter.calls).toBe(1);
+  });
+});
+
+// ─── M1.1: transitional image fallback ────────────────────────────────────
+
+describe("image fallback policy", () => {
+  it("always prefers database image rows over static images", async () => {
+    const row = productRow({ slug: enrichedStatic.slug });
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({
+        result: queryResult({
+          products: [row],
+          images: [imageRow(row.id, { url: "/images/products/db-only.webp", position: 0 })],
+        }),
+      }),
+      logger: recordingLogger(),
+    });
+    const product = snapshot.products[0];
+
+    expect(product.images).toEqual(["/images/products/db-only.webp"]);
+    expect(product.enrichedFields).not.toContain("images");
+  });
+
+  it("falls back to static images only when no valid database image row exists", async () => {
+    const row = productRow({ slug: enrichedStatic.slug });
+    const logger = recordingLogger();
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({
+        result: queryResult({
+          products: [row],
+          // Present but unusable: the fallback must treat this as "no image".
+          images: [
+            imageRow(row.id, { url: "   " }),
+            imageRow(row.id, { url: "not a url at all" }),
+          ],
+        }),
+      }),
+      logger,
+    });
+    const product = snapshot.products[0];
+
+    expect(product.images).toEqual(enrichedStatic.images);
+    expect(product.enrichedFields).toContain("images");
+    expect(logger.entries.some((entry) => entry.payload.code === "image_row_discarded")).toBe(true);
+  });
+
+  it("uses the placeholder only when neither source has an image", async () => {
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({
+        result: queryResult({
+          products: [
+            productRow({ slug: "no-image-anywhere", model: "ADMIN-ONLY-MODEL-JKL" }),
+          ],
+        }),
+      }),
+      logger: recordingLogger(),
+    });
+    const product = snapshot.products[0];
+
+    expect(product.images).toEqual([PLACEHOLDER_IMAGE_URL]);
+    expect(product.enrichedFields).not.toContain("images");
+  });
+
+  it("never emits a structurally broken public image URL", async () => {
+    const row = productRow({ slug: "mixed-image-rows", model: "ADMIN-ONLY-MODEL-MNO" });
+    const snapshot = await getCatalogue({
+      adapter: fakeAdapter({
+        result: queryResult({
+          products: [row],
+          images: [
+            imageRow(row.id, { url: "javascript:alert(1)", position: 0 }),
+            imageRow(row.id, { url: "  ", position: 1 }),
+            imageRow(row.id, { url: "https://cdn.example.com/valid.webp", position: 2 }),
+            imageRow(row.id, { url: "/images/products/valid.webp", position: 3 }),
+          ],
+        }),
+      }),
+      logger: recordingLogger(),
+    });
+    const product = snapshot.products[0];
+
+    expect(product.images).toEqual([
+      "https://cdn.example.com/valid.webp",
+      "/images/products/valid.webp",
+    ]);
+    for (const url of product.images) {
+      expect(url.startsWith("/") || /^https?:\/\//.test(url)).toBe(true);
+    }
+    expect(product.imageDetails[0].isPrimary).toBe(true);
+  });
+});
+
+// ─── M1.1: configuration-check boundary ───────────────────────────────────
+
+describe("configuration check boundary", () => {
+  const SECRET = "postgresql://svc:top-s3cret@db.example.neon.tech/main";
+
+  function throwingAdapter(error: unknown) {
+    return {
+      calls: 0,
+      isConfigured: () => {
+        throw error;
+      },
+      loadPublishedCatalogue: async () => queryResult(),
+    };
+  }
+
+  it("does not reject when isConfigured() throws", async () => {
+    const error = new Error(`env read failed for ${SECRET}`);
+    error.name = "ConfigError";
+    const snapshot = await getCatalogue({
+      adapter: throwingAdapter(error),
+      logger: recordingLogger(),
+    });
+
+    expect(snapshot.source).toBe("static");
+    expect(snapshot.reason).toBe("configuration_check_failed");
+    expect(snapshot.products).toHaveLength(STATIC_PRODUCT_COUNT);
+  });
+
+  it("survives a non-Error thrown from isConfigured()", async () => {
+    const snapshot = await getCatalogue({
+      adapter: throwingAdapter(SECRET),
+      logger: recordingLogger(),
+    });
+
+    expect(snapshot.source).toBe("static");
+    expect(snapshot.products).toHaveLength(STATIC_PRODUCT_COUNT);
+  });
+
+  it("redacts the configuration failure in logs and diagnostics", async () => {
+    const error = new Error(`cannot parse ${SECRET}`);
+    error.name = "ConfigError";
+    const logger = recordingLogger();
+    const snapshot = await getCatalogue({ adapter: throwingAdapter(error), logger });
+
+    const text = `${loggedText(logger)} ${JSON.stringify(snapshot.diagnostics)}`;
+    expect(text).not.toContain(SECRET);
+    expect(text).not.toContain("top-s3cret");
+    expect(text).not.toContain("db.example.neon.tech");
+    expect(text).toContain("ConfigError");
+    expect(logger.entries.some((entry) => entry.payload.code === "configuration_check_failed")).toBe(
+      true,
+    );
+  });
+
+  it("does not let one failing adapter suppress an unrelated one", async () => {
+    const failing = throwingAdapter(new Error("boom"));
+    const healthy = fakeAdapter({
+      result: queryResult({ products: [productRow({ slug: "healthy-product" })] }),
+    });
+
+    const failed = await getCatalogue({ adapter: failing, logger: recordingLogger() });
+    const ok = await getCatalogue({ adapter: healthy, logger: recordingLogger() });
+
+    expect(failed.source).toBe("static");
+    expect(ok.source).toBe("database");
+    expect(ok.products.map((product) => product.slug)).toEqual(["healthy-product"]);
+    expect(healthy.calls).toBe(1);
   });
 });
