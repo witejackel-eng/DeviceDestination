@@ -203,6 +203,38 @@ M2B should therefore begin with one global `catalogue` tag plus targeted
 tag only when a measurement — not an intuition — shows the global invalidation
 is too expensive.
 
+## M2B implementation results
+
+The architecture above was implemented in `src/data/catalogue-cache.ts` and the
+degraded bypass was measured in a production build **before** any route depended
+on it. Two controlled arms, three requests each:
+
+| Request | healthy callback invocations | degraded callback invocations |
+| --- | --- | --- |
+| 1 | 1 | 1 |
+| 2 | **1** | **2** |
+| 3 | **1** | **3** |
+
+The healthy arm stops incrementing, proving the harness detects persistence; the
+degraded arm runs on every request, proving a rejected callback leaves no entry.
+The sentinel was caught each time and the 30-product fallback still served.
+
+Confirmed a second time in the real application: with an unreachable
+`DATABASE_URL`, every request logged `query_failed` and re-ran the cache
+callback, and the unverified notice rendered while browsing stayed enabled.
+
+Two behaviours worth recording:
+
+- **Stale-while-revalidate wins over degraded.** With a healthy entry already
+  cached, a subsequent database failure serves the cached healthy snapshot while
+  revalidation throws. This is desirable — users see the last good catalogue
+  rather than the static fallback — and still writes nothing degraded. The
+  degraded notice appears only when no usable entry is cached.
+- **One lifetime, not three.** `revalidate` is fixed at definition time and the
+  authority is only known after the loader runs, so the per-authority table
+  below could not be expressed with one cache entry. All persisted snapshots use
+  300 s; the deviation is documented in `docs/catalogue-repository.md`.
+
 ## Consequences
 
 - `unstable_cache` is deprecated. This is transitional debt with a named exit:

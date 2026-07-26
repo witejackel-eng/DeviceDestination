@@ -327,6 +327,72 @@ boundary, including a non-vacuity control proving the import walk resolves.
 PostgreSQL. Requires `TEST_DATABASE_URL`; skips with an explicit reason without
 it and never falls back to `DATABASE_URL`.
 
+## Server cutover (M2B)
+
+Eight server surfaces read the canonical repository through
+`src/data/catalogue-cache.ts`:
+
+| Surface | Rendering | Was |
+| --- | --- | --- |
+| `/` | ƒ dynamic | ○ static |
+| `/products` | ƒ dynamic | ƒ dynamic (unchanged) |
+| `/products/[slug]` | ƒ dynamic | ● SSG |
+| `/categories/[slug]` | ƒ dynamic | ● SSG |
+| `/brands` | ƒ dynamic | ○ static |
+| `/brands/[slug]` | ƒ dynamic | ● SSG |
+| `/downloads` | ƒ dynamic | ○ static |
+| `/sitemap.xml` | ƒ dynamic | ○ static |
+
+Reading `unstable_cache` does not by itself make a page dynamic, so these would
+have been prerendered at build time with the static fallback baked into their
+HTML — there is no `DATABASE_URL` at build. The three SSG routes additionally
+dropped `generateStaticParams`, which would have frozen the fallback catalogue
+into the deployment and 404'd any product created in admin afterwards. The data
+behind every one of them is still cached across requests. No auth, admin,
+checkout, order, API or unrelated public route changed mode.
+
+### Public states
+
+| Snapshot | Treatment |
+| --- | --- |
+| `database` with products | normal catalogue |
+| `database` with none (`no_published_products`, `all_products_invalid`) | `CatalogueUnavailable` — "temporarily unavailable online", contact link, no products |
+| `static_degraded` | catalogue browseable plus `CatalogueUnverifiedNotice` |
+| `static_bootstrap` | normal catalogue, no notice |
+
+`/products` keeps its "No exact match." state for filters that match nothing in
+a valid catalogue, which is deliberately distinct from an authoritative-empty
+database.
+
+### Cache lifetime deviation
+
+`unstable_cache` fixes `revalidate` at definition time and the authority is only
+known after the loader runs, so per-authority lifetimes cannot be expressed by
+one entry. Every persisted snapshot uses **300 s**. Unconfigured bootstrap goes
+3600 s → 300 s (no database cost) and unseeded bootstrap 60 s → 300 s (newly
+seeded products may take up to five minutes to appear until M4 adds admin
+invalidation). Degraded snapshots remain uncached entirely.
+
+**Stale-while-revalidate nuance, measured:** when a healthy snapshot is already
+cached and the database then fails, Next serves the cached healthy entry while
+the revalidation attempt throws the sentinel. Users keep seeing the last good
+catalogue rather than the static fallback, and no degraded snapshot is written.
+The degraded notice therefore appears only when no usable cached entry exists.
+
+### Client boundary
+
+Routes pass `toPublicProduct` projections, so `specGroups`, `imageDetails`,
+`documentDetails`, `compatibility`, `inventory` and `searchText` do not reach
+the browser. **The application is server-side database-backed; it is not yet
+fully database-backed.** Fifteen client modules still import `@/data/catalog`
+and are M3's scope — the list is pinned in
+`tests/unit/catalogue-cutover.test.ts`, which M3 must shrink to empty:
+
+`app/cart/page.tsx`, `lib/cart-store.ts`, `lib/compare-store.ts`, and
+`components/{add-to-cart, cart-drawer, checkout-form, compare-toggle,
+compare-tray, comparison-page, mobile-product-bar, product-actions,
+product-card, product-search, recently-viewed, system-builder}`.
+
 ## What M2 needs from this
 
 - Choose a cache strategy (below) and wrap `getCatalogue` — the single load path
